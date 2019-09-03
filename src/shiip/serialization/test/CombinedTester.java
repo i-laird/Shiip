@@ -1,0 +1,48 @@
+package shiip.serialization.test;/* shiip.serialization.test.CombinedTester.java 1.0 9/02/2019
+ *
+ * Copyright 2019 Ian Laird
+ */
+
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import shiip.serialization.Deframer;
+import shiip.serialization.Framer;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Performs testing for the {@link Deframer} and the {@link Framer}.
+ *
+ * @version 1.0
+ * @author Ian Laird
+ */
+@DisplayName("Combined Tester")
+public class CombinedTester{
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    Framer framer = new Framer(outputStream);
+
+    /**
+     * frames and then deframes a message to ensure that it
+     * is identical to the original message.
+     */
+    @Test
+    @DisplayName("CombinedFunctionality")
+    void testCombinedFunctionality(){
+        byte [] framedMessage = null, deframedBytes = null;
+        try {
+            framer.putFrame(FramerTester.TEST_MESSAGE_1);
+            framedMessage = outputStream.toByteArray();
+
+            Deframer deframer = new Deframer(new ByteArrayInputStream(framedMessage));
+            deframedBytes = deframer.getFrame();
+            assertArrayEquals(FramerTester.TEST_MESSAGE_1, deframedBytes);
+        }catch(IOException e){
+            fail(e.getMessage());
+        }
+    }
+}
