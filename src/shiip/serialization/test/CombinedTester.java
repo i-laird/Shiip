@@ -33,14 +33,15 @@ public class CombinedTester{
      * is identical to the original message.
      */
     @Test
-    @DisplayName("CombinedFunctionality")
+    @DisplayName("frame and deframe a message and see that it is unchanged")
     void testCombinedFunctionality(){
         byte [] framedMessage = null, deframedBytes = null;
         try {
             framer.putFrame(FramerTester.TEST_MESSAGE_1);
             framedMessage = outputStream.toByteArray();
 
-            Deframer deframer = new Deframer(new ByteArrayInputStream(framedMessage));
+            Deframer deframer = new Deframer(
+                    new ByteArrayInputStream(framedMessage));
             deframedBytes = deframer.getFrame();
             assertArrayEquals(FramerTester.TEST_MESSAGE_1, deframedBytes);
         }catch(IOException e){

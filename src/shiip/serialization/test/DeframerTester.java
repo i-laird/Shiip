@@ -11,10 +11,14 @@ package shiip.serialization.test;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import shiip.serialization.Deframer;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static shiip.serialization.Framer.HEADER_SIZE;
@@ -31,9 +35,14 @@ public class DeframerTester {
 
     // public static final String TEST_STRING_1 = "how are you?";
     // public static byte [] TEST_BYTE_ARRAY_1 = null;
-    public static final String [] TEST_STRINGS = {"how are you"};
+    public static final String [] TEST_STRINGS =
+            {"how are you",
+             "hi \n\n\n\n\n ????",
+             "abcdef"};
     public static byte [] [] BYTE_REPRESENTATIONS_OF_STRINGS
                              = new byte [TEST_STRINGS.length] [];
+
+    public static final byte MAX_BYTE = (byte)0xFF;
 
     /**
      * Used to test that Io Exceptions are properly handled.
@@ -46,7 +55,8 @@ public class DeframerTester {
         /* An IOException is thrown whenever a read is attempted */
 
         /**
-         * Default Constructor. Simply calls the default constructor for a {@link InputStream}
+         * Default Constructor. Simply calls the default constructor
+         *     for a {@link InputStream}
          */
         BrokenInputStream(){
             super();
@@ -99,25 +109,31 @@ public class DeframerTester {
     /**
      * Tests passing null to the default constructor.
      */
-    @DisplayName("ConstructorNull")
+    @DisplayName("Passing null to the constructor")
     @Test
-    public void ConstructorNullTest(){
-        assertThrows( NullPointerException.class,  () -> new Deframer(null));
+    public void testConstructorNull(){
+        assertThrows(
+                NullPointerException.class,  () -> new Deframer(null));
     }
 
     /**
      * tests that messages can be correctly deframed
      *
      * @see Deframer
+     * @param testString the String that is being tested
+     * @param byteRepresentationOfStrings framed testString
+     * @param displayName the name to be displayed for the test
      */
-    @DisplayName("CorrectUsage")
-    @Test
-    public void testCorrectUsage(){
+    @DisplayName("correct usage")
+    @ParameterizedTest(name = "{2}")
+    @MethodSource("testsSource")
+    public void testCorrectUsage(String testString,
+                byte [] byteRepresentationOfStrings, String displayName){
         Deframer deframer = new Deframer(
-                new ByteArrayInputStream(BYTE_REPRESENTATIONS_OF_STRINGS[0]));
+                new ByteArrayInputStream(byteRepresentationOfStrings));
         try {
             byte[] deframedMessage = deframer.getFrame();
-            assertArrayEquals(deframedMessage, TEST_STRINGS[0].getBytes());
+            assertArrayEquals(deframedMessage, testString.getBytes());
         }catch(IOException e){
             fail(e.getMessage());
         }
@@ -127,7 +143,7 @@ public class DeframerTester {
      * Tests that a {@link EOFException} is thrown when the input stream has
      * an early EOF.
      */
-    @DisplayName("EarlyEOF")
+    @DisplayName("Early EOF")
     @Test
     void testEarlyEOF(){
 
@@ -139,10 +155,21 @@ public class DeframerTester {
     }
 
     /**
+     * Tests that a {@link EOFException} is thrown when the input stream has too short of a header
+     */
+    @DisplayName("5 byte header")
+    @Test
+    void testShortHeader(){
+        byte [] shortHeader = new byte[]{0,0,0,1,2,3,4,5};
+        Deframer deframer = new Deframer(new ByteArrayInputStream(shortHeader));
+        assertThrows(EOFException.class, deframer::getFrame);
+    }
+
+    /**
      * Tests that a {@link EOFException} is thrown when the input stream is
      * empty.
      */
-    @DisplayName("EmptyInputStream")
+    @DisplayName("Empty Input Stream")
     @Test
     void testEmptyInputStream(){
         Deframer deframer =
@@ -153,12 +180,43 @@ public class DeframerTester {
     /**
      * Tests that a {@link IOException} is thrown when there is a i/o error.
      */
-    @DisplayName("IOException")
+    @DisplayName("IO Exception on read")
     @Test
-    void TestIOException(){
+    void testIOException(){
         Deframer deframer = new Deframer(new BrokenInputStream());
         assertThrows(IOException.class, deframer::getFrame);
     }
 
+    /**
+     * Tests that a {@link IllegalArgumentException} is thrown when the length
+     * of the payload is given to be too long
+     */
+    @DisplayName("Too long of payload")
+    @Test
+    void testIllegalArgumentException(){
+        byte [] tooLongOfPayload = new byte [3000];
+        tooLongOfPayload[0] = MAX_BYTE;
+        tooLongOfPayload[1] = MAX_BYTE;
+        tooLongOfPayload[2] = MAX_BYTE;
+        Deframer deframer = new Deframer(new ByteArrayInputStream(tooLongOfPayload));
+        assertThrows(IllegalArgumentException.class, () -> deframer.getFrame());
+    }
+
+    /**
+     * Creates arguments for the successful execution test
+     * @return arguments consisting of a byte array
+     *         and String description of the test
+     */
+    private static Stream<Arguments> testsSource(){
+        return Stream.of(
+                //first test the polynomials
+                Arguments.of(TEST_STRINGS[0],
+                        BYTE_REPRESENTATIONS_OF_STRINGS[0], "greeting"),
+                Arguments.of(TEST_STRINGS[1],
+                        BYTE_REPRESENTATIONS_OF_STRINGS[1], "has newlines"),
+                Arguments.of(TEST_STRINGS[2],
+                        BYTE_REPRESENTATIONS_OF_STRINGS[2], "minimum length")
+        );
+    }
 
 }

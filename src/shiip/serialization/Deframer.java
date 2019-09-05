@@ -14,8 +14,13 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /* the size of a shiip message prefix */
-import static shiip.serialization.Framer.HEADER_SIZE;
 import static shiip.serialization.Framer.PREFIX_SIZE;
+
+/*the maximum allowed size of a payload*/
+import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
+
+/*the size of a shiip header*/
+import static shiip.serialization.Framer.HEADER_SIZE;
 
 /**
  * Able to deframe a message sent using the shiip protocol.
@@ -34,7 +39,8 @@ public class Deframer {
      * @param in where shiip protocol messages will be read from
      */
     public Deframer(InputStream in){
-        this.in = Objects.requireNonNull(in, "Null is not allowed for the input stream");
+        this.in = Objects.requireNonNull(in,
+                "Null is not allowed for the input stream");
     }
 
     /**
@@ -45,6 +51,7 @@ public class Deframer {
      * @throws IOException if the input stream has an i/o error
      * @throws EOFException if the prefix bytes cannot be properly read or
      *                      if an EOF is encountered prematurely
+     * @throws IllegalArgumentException if the payload is too long
      */
     public byte [] getFrame() throws IOException{
         int prefixBytesRead = 0;
@@ -58,6 +65,11 @@ public class Deframer {
         }
 
         int length = ByteBuffer.wrap(prefixBytes).getInt();
+
+        if(length > MAXIMUM_PAYLOAD_SIZE){
+            throw new IllegalArgumentException(
+                    "maximum greater than the allowed payload size of 2048");
+        }
 
         length += HEADER_SIZE;
 

@@ -22,7 +22,8 @@ public class Framer {
     public static final int PREFIX_SIZE = 3;
     public static final int MAXIMUM_PAYLOAD_SIZE = 2048;
     public static final int HEADER_SIZE = 6;
-    public static final int MAXIMUM_PAYLOAD_AND_HEADER_SIZE = MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE;
+    public static final int MAXIMUM_PAYLOAD_AND_HEADER_SIZE =
+            MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE;
 
     private OutputStream out = null;
 
@@ -32,15 +33,16 @@ public class Framer {
      * @param out where shiip protocol messages will be sent to
      */
     public Framer(OutputStream out){
-        this.out = Objects.requireNonNull(out, "Output stream cannot be null");
+        this.out = Objects.requireNonNull(out,
+                "Output stream cannot be null");
     }
 
     /**
      * Frames a message and then sends it in the associated output stream.
      *
      * @param message the message that is to be framed
-     * @throws IOException if the frame payload is longer than 2048 bytes
-     * @throws IOException if the message is not at least 6 bytes long
+     * @throws IllegalArgumentException if the frame payload is longer than 2048 bytes
+     * @throws IllegalArgumentException if the message is not at least 6 bytes long
      * @throws NullPointerException if the message is null
      */
     public void putFrame(byte [] message) throws IOException, NullPointerException{
@@ -48,16 +50,19 @@ public class Framer {
 
         //see if the message is too long (the six bytes of header are not included)
         if(message.length > MAXIMUM_PAYLOAD_AND_HEADER_SIZE){
-            throw new IOException("The frame payload is too long");
+            throw new IllegalArgumentException("The frame payload is too long");
         }
 
         //see if the message is too short
         if(message.length < HEADER_SIZE){
-            throw new IOException("The 24 bit header must be included");
+            throw new IllegalArgumentException("The 24 bit header must be included");
         }
 
 
-        byte [] lengthAsBytes = ByteBuffer.allocate(4).putInt(message.length - HEADER_SIZE).array();
+        byte [] lengthAsBytes = ByteBuffer
+                .allocate(4)
+                .putInt(message.length - HEADER_SIZE)
+                .array();
 
         //only use the last three bytes
         byte [] framedMessage = new byte [message.length + PREFIX_SIZE ];

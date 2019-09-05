@@ -36,6 +36,13 @@ public class FramerTester {
     public static byte [] TEST_MESSAGE_1 = "hello world :)".getBytes(),
                           TEST_MESSAGE_2 = new byte[MAXIMUM_PAYLOAD_AND_HEADER_SIZE],
                           TEST_MESSAGE_3 = getUTF16("( ͡° ͜ʖ ͡°)"),
+                          TEST_MESSAGE_4 = "<<>>?/8GETPOST/DELETE".getBytes(),
+                          LONG_MESSAGE   = ("There once was a man Herman\n"   +
+                                           "he wrote a book about a whale"    +
+                                           "and a \n\n\n\n\ncrazy"            +
+                                           "sailor trying to get him. I read" +
+                                           "that book and it was veryyyy long")
+                                           .getBytes(),
                           SIMPLE_TEST_MESSAGE = new byte [] {1,2,3,4,5,6};
     public static byte [] TOO_SHORT_MESSAGE = "hi".getBytes();
 
@@ -49,7 +56,8 @@ public class FramerTester {
     private class BrokenOutputStream extends OutputStream {
 
         /**
-         * Default Constructor. Simply calls the default constructor for a {@link OutputStream}
+         * Default Constructor. Simply calls the default constructor
+         *     for a {@link OutputStream}
          */
         BrokenOutputStream(){
             super();
@@ -62,7 +70,8 @@ public class FramerTester {
          */
         @Override
         public void write(byte[] bytes) throws IOException {
-            throw new IOException("Testing that Io Exceptions are correctly handled");
+            throw new IOException(
+                    "Testing that Io Exceptions are correctly handled");
         }
 
         /**
@@ -72,7 +81,8 @@ public class FramerTester {
          */
         @Override
         public void write(byte[] bytes, int i, int i1) throws IOException {
-            throw new IOException("Testing that Io Exceptions are correctly handled");
+            throw new IOException(
+                    "Testing that Io Exceptions are correctly handled");
         }
 
         /**
@@ -82,7 +92,8 @@ public class FramerTester {
          */
         @Override
         public void write(int i) throws IOException {
-            throw new IOException("Testing that Io Exceptions are correctly handled");
+            throw new IOException(
+                    "Testing that Io Exceptions are correctly handled");
         }
     }
 
@@ -95,8 +106,9 @@ public class FramerTester {
      */
     @DisplayName("frameConstructorNull")
     @Test
-    public void frameConstructorNullTest(){
-        assertThrows( NullPointerException.class,  () -> new Framer(null));
+    public void testFrameConstructorNull(){
+        assertThrows( NullPointerException.class,
+                () -> new Framer(null));
     }
 
     /**
@@ -105,30 +117,36 @@ public class FramerTester {
      */
     @DisplayName("nullMessage")
     @Test
-    public void nullMessageTest(){
-        assertThrows( NullPointerException.class,  () -> toTest.putFrame(null));
+    public void testNullMessage(){
+        assertThrows( NullPointerException.class,
+                () -> toTest.putFrame(null));
     }
 
     /**
-     * tests that a {@link IOException} is thrown when the payload is longer
+     * tests that a {@link IllegalArgumentException} is thrown
+     *     when the payload is longer
      * than 2048 bytes
      */
-    @DisplayName("framePayloadTooLong")
+    @DisplayName("frame Payload Too Long")
     @Test
-    public void framePayloadTooLongTest(){
-        byte [] tooLongByteArray = new byte [MAXIMUM_PAYLOAD_AND_HEADER_SIZE + 1];
-        assertThrows(IOException.class, () -> toTest.putFrame(tooLongByteArray));
+    public void testFramePayloadTooLong(){
+        byte [] tooLongByteArray =
+                new byte [MAXIMUM_PAYLOAD_AND_HEADER_SIZE + 1];
+        assertThrows(IllegalArgumentException.class,
+                () -> toTest.putFrame(tooLongByteArray));
     }
 
     /**
-     * tests that an {@link IOException} is thrown when a header is not included
+     * tests that an {@link IllegalArgumentException} is
+     *     thrown when a header is not included
      * in the message
      */
     @DisplayName("TooShortToContainHeader")
     @Test
     public void testTooShortToContainHeader(){
-        /* if the message is not at least 6 bytes longer a header is not present */
-        assertThrows(IOException.class, () -> toTest.putFrame(TOO_SHORT_MESSAGE));
+        /* if the message is not at least 6 bytes a header notpresent */
+        assertThrows(IllegalArgumentException.class,
+                () -> toTest.putFrame(TOO_SHORT_MESSAGE));
     }
 
     /**
@@ -153,13 +171,14 @@ public class FramerTester {
     public void testSuccessfulOperation(byte [] message, String testDescription ){
         byte [] framedMessage = null;
 
-        //make sure that there are no old bytes stored in the byte array output stream
+        //make sure that there are no old bytes stored in the
+        // byte array output stream
         outputToBytes.reset();
 
         try {
             toTest.putFrame(message);
         }catch(IOException e){
-            fail("this is bad");
+            fail("Unexpected I/O exception: " + e.getMessage());
         }
 
         framedMessage = outputToBytes.toByteArray();
@@ -168,11 +187,13 @@ public class FramerTester {
         assertEquals(framedMessage.length, message.length + PREFIX_SIZE);
 
         //see that the intended header and payload are preserved
-        byte [] newHeaderAndPayload = Arrays.copyOfRange(framedMessage, PREFIX_SIZE, PREFIX_SIZE + message.length);
+        byte [] newHeaderAndPayload = Arrays.copyOfRange(framedMessage,
+                PREFIX_SIZE, PREFIX_SIZE + message.length);
         assertArrayEquals(newHeaderAndPayload, message);
 
-        //now get the 3 byte int from the new message and make sure it is correct
-        byte [] prefixLength = Arrays.copyOfRange(framedMessage, 0, PREFIX_SIZE);
+        //now get the 3 byte int from the new message and make sure it's correct
+        byte [] prefixLength = Arrays.copyOfRange(framedMessage,
+                0, PREFIX_SIZE);
         byte [] intBuffer = new byte[4];
 
         //zero the first byte because the given integer is unsigned
@@ -206,7 +227,8 @@ public class FramerTester {
     byte [] performFrame(byte [] expectedBytes, byte [] testMessage){
         byte [] framedBytes = null;
 
-        //make sure that there are no old bytes stored in the byte array output stream
+        //make sure that there are no old bytes stored in the
+        // byte array output stream
         outputToBytes.reset();
 
         try {
@@ -230,7 +252,9 @@ public class FramerTester {
                 //first test the polynomials
                 Arguments.of(TEST_MESSAGE_1,         "simple_test"),
                 Arguments.of(TEST_MESSAGE_2,         "maximum payload size test"),
-                Arguments.of(TEST_MESSAGE_3,         "UTF-16 test")
+                Arguments.of(TEST_MESSAGE_3,         "UTF-16 test"),
+                Arguments.of(TEST_MESSAGE_4,         "uncommon characters"),
+                Arguments.of(LONG_MESSAGE,           "longer message")
         );
     }
 
