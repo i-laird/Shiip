@@ -1,7 +1,11 @@
-package shiip.serialization.test;/* shiip.serialization.test.DeframerTester.java 1.0 8/31/2019
- *
- * Copyright 2019 Ian Laird
- */
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 0
+ * Class: Data Comm
+ *******************************************************/
+
+
+package shiip.serialization.test;
 
 
 import org.junit.jupiter.api.BeforeAll;
