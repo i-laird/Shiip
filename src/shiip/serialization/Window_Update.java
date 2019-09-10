@@ -15,6 +15,7 @@ package shiip.serialization;
  */
 public class Window_Update extends Message {
 
+    private int increment;
     /**
      * Creates Window_Update message from given values
      *
@@ -23,7 +24,8 @@ public class Window_Update extends Message {
      * @throws BadAttributeException if attribute invalid (set protocol spec)
      */
     public Window_Update(int streamID, int increment) throws BadAttributeException{
-
+        this.streamId = streamID;
+        this.setIncrement(increment);
     }
 
     /**
@@ -32,7 +34,7 @@ public class Window_Update extends Message {
      * @return increment value
      */
     public int getIncrement(){
-
+        return this.increment;
     }
 
     /**
@@ -42,12 +44,16 @@ public class Window_Update extends Message {
      * @throws BadAttributeException if invalid
      */
     public void setIncrement(int increment) throws BadAttributeException{
-
+        //the allowed range for increment is 1 to the maximum value of an int
+        if (increment < 1)
+            throw new BadAttributeException("invalid value for increment: " + Integer.toString(increment), "increment");
+        this.increment = increment;
     }
 
     /**
      * Returns string of the form
      * Window_Update: StreamID=<streamid> increment=<inc>
+     *
      *     For example :
      * Window_Update: StreamID=5 increment=1024
      *
@@ -55,6 +61,7 @@ public class Window_Update extends Message {
      */
     @Override
     public java.lang.String toString(){
-
+        return "Window_Update: StreamID=" + Integer.toString(streamId) +
+                " increment=" + Integer.toString(increment);
     }
 }

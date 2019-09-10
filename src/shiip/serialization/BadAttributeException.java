@@ -7,6 +7,7 @@
 package shiip.serialization;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Thrown if problem with attribute
@@ -15,6 +16,8 @@ import java.io.Serializable;
  * @author Ian laird
  */
 public class BadAttributeException extends Exception implements Serializable {
+
+    private String attribute = null;
 
     /**
      * Constructs a BadAttributeException with given message, attribute,
@@ -28,7 +31,8 @@ public class BadAttributeException extends Exception implements Serializable {
     public BadAttributeException(java.lang.String message,
                                  java.lang.String attribute,
                                  java.lang.Throwable cause){
-
+        super(message, cause);
+        this.attribute = attribute;
     }
 
     /**
@@ -40,7 +44,8 @@ public class BadAttributeException extends Exception implements Serializable {
      */
     public BadAttributeException(java.lang.String message,
                                  java.lang.String attribute){
-
+        super(message);
+        this.attribute = attribute;
     }
 
     /**
@@ -49,6 +54,6 @@ public class BadAttributeException extends Exception implements Serializable {
      * @return attribute name
      */
     public java.lang.String getAttribute(){
-
+        return this.attribute;
     }
 }

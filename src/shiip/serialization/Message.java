@@ -7,6 +7,8 @@
 
 package shiip.serialization;
 
+import java.util.Arrays;
+
 /**
  * Represents a SHiiP message
  *
@@ -14,7 +16,11 @@ package shiip.serialization;
  * @author Ian laird
  */
 public class Message {
+    protected int streamId;
+    byte typeCode;
+    protected byte [] ALLOWED_TYPE_CODES = new byte [] {(byte)0x0, (byte)0x4, (byte)0x8};
 
+    static final int SETTINGS_STREAM_IDENTIFIER = 0x0;
     /**
      * Deserializes message from given bytes
      * @param msgBytes message bytes
@@ -27,7 +33,9 @@ public class Message {
      * is null + needed.
      * @throws BadAttributeException if validation failure
      */
-    public static Message decode​(byte[] msgBytes, com.twitter.hpack.Decoder decoder)  throws BadAttributeException{
+    public static Message decode​(byte[] msgBytes,
+            com.twitter.hpack.Decoder decoder)
+            throws BadAttributeException{
 
     }
     public byte [] encode(com.twitter.hpack.Encoder encoder){
@@ -40,7 +48,7 @@ public class Message {
      * @return type code
      */
     public byte getCode(){
-
+        return this.typeCode;
     }
 
     /**
@@ -49,7 +57,7 @@ public class Message {
      * @return stream ID
      */
     public int getStreamId(){
-
+        return this.streamId;
     }
 
     /**
@@ -60,6 +68,11 @@ public class Message {
      * @throws BadAttributeException
      */
     public void setStreamId( int streamId) throws BadAttributeException{
+        this.ensureValidStreamId(streamId);
+        this.streamId = streamId;
+    }
 
+    protected void ensureValidStreamId( int streamId) throws BadAttributeException{
+        //for just a message by itself there are no requirments for the stream id
     }
 }

@@ -92,4 +92,11 @@ public class Data extends Message {
     public java.lang.String toString(){
 
     }
+
+    @Override
+    protected void ensureValidStreamId(int streamId) throws BadAttributeException {
+        if(streamId == Message.SETTINGS_STREAM_IDENTIFIER)
+            throw new BadAttributeException("0x0 not allowed as " +
+                    "stream identifier for data frame", "streamId");
+    }
 }
