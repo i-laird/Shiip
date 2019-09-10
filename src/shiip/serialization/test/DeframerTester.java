@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import shiip.serialization.Deframer;
 
 import java.io.*;
@@ -21,8 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static shiip.serialization.Framer.HEADER_SIZE;
-import static shiip.serialization.Framer.PREFIX_SIZE;
 
 /**
  * Performs testing for the {@link Deframer}.
@@ -32,6 +31,9 @@ import static shiip.serialization.Framer.PREFIX_SIZE;
  */
 @DisplayName("Deframer Tester")
 public class DeframerTester {
+
+    public static final int PREFIX_SIZE = 3;
+    public static final int HEADER_SIZE = 6;
 
     // public static final String TEST_STRING_1 = "how are you?";
     // public static byte [] TEST_BYTE_ARRAY_1 = null;

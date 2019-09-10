@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static shiip.serialization.Framer.*;
 
 /**
  * Performs testing for the {@link Framer}.
@@ -32,6 +31,12 @@ import static shiip.serialization.Framer.*;
  */
 @DisplayName("Framer Tester")
 public class FramerTester {
+
+    public static final int MAXIMUM_PAYLOAD_SIZE = 16384;
+    public static final int PREFIX_SIZE = 3;
+    public static final int HEADER_SIZE = 6;
+    public static final int MAXIMUM_PAYLOAD_AND_HEADER_SIZE =
+            MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE;
 
     public static byte [] TEST_MESSAGE_1 = "hello world :)".getBytes(),
                           TEST_MESSAGE_2 = new byte[MAXIMUM_PAYLOAD_AND_HEADER_SIZE],
@@ -45,6 +50,7 @@ public class FramerTester {
                                            .getBytes(),
                           SIMPLE_TEST_MESSAGE = new byte [] {1,2,3,4,5,6};
     public static byte [] TOO_SHORT_MESSAGE = "hi".getBytes();
+
 
     /**
      * Used to test that Io Exceptions are properly handled.

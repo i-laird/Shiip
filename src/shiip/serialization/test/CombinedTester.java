@@ -8,6 +8,7 @@ package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 import shiip.serialization.Deframer;
 import shiip.serialization.Framer;
 
