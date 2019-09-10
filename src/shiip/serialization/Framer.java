@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 public class Framer {
     public static final int PREFIX_SIZE = 3;
-    public static final int MAXIMUM_PAYLOAD_SIZE = 2048;
+    public static final int MAXIMUM_PAYLOAD_SIZE = 16384;
     public static final int HEADER_SIZE = 6;
     public static final int MAXIMUM_PAYLOAD_AND_HEADER_SIZE =
             MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE;
