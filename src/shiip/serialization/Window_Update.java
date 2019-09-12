@@ -24,7 +24,7 @@ public class Window_Update extends Message {
      * @throws BadAttributeException if attribute invalid (set protocol spec)
      */
     public Window_Update(int streamID, int increment) throws BadAttributeException{
-        this.streamId = streamID;
+        this.setStreamId(streamID);
         this.setIncrement(increment);
     }
 

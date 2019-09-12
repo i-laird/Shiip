@@ -7,6 +7,9 @@
 
 package shiip.serialization;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * Data message
  *
@@ -14,6 +17,9 @@ package shiip.serialization;
  * @author Ian laird
  */
 public class Data extends Message {
+
+    private byte [] data;
+    private boolean isEnd = false;
 
     /**
      * Creates Data message from given values
@@ -24,16 +30,9 @@ public class Data extends Message {
      * @throws BadAttributeException if attribute invalid (set protocol spec)
      */
     public Data(int streamID, boolean isEnd, byte[] data) throws BadAttributeException{
-
-    }
-
-    /**
-     *
-     * @param obj
-     * @return
-     */
-    public boolean equals​(java.lang.Object obj){
-
+        this.setStreamId(streamID);
+        this.setEnd(isEnd);
+        this.setData(data);
     }
 
     /**
@@ -41,17 +40,7 @@ public class Data extends Message {
      * @return
      */
     public byte [] getData(){
-
-    }
-
-    @Override
-    public int hashCode(){
-
-    }
-
-    @Override
-    public boolean equald(Object obj){
-
+        return this.data;
     }
 
     /**
@@ -59,7 +48,7 @@ public class Data extends Message {
      * @return end value
      */
     public boolean isEnd(){
-
+        return this.isEnd;
     }
 
     /**
@@ -68,7 +57,10 @@ public class Data extends Message {
      * @throws BadAttributeException if invalid
      */
     public void setData(byte [] data) throws BadAttributeException{
-
+        if(Objects.isNull(data)){
+            throw new BadAttributeException("data cannot be null", "data", new NullPointerException());
+        }
+        this.data = data.clone();
     }
 
     /**
@@ -76,7 +68,7 @@ public class Data extends Message {
      * @param end end value
      */
     public void setEnd(boolean end){
-
+        this.isEnd = end;
     }
 
     /**
@@ -90,12 +82,14 @@ public class Data extends Message {
      */
     @Override
     public java.lang.String toString(){
-
+        return "Data: StreamID=" + Integer.toString(this.streamId)
+                + " isEnd=" + (this.isEnd ? "true" : "false")
+                + " data=" + Integer.toString(data.length);
     }
 
     @Override
     protected void ensureValidStreamId(int streamId) throws BadAttributeException {
-        if(streamId == Message.SETTINGS_STREAM_IDENTIFIER)
+        if(streamId == Message.REQUIRED_SETTINGS_STREAM_ID)
             throw new BadAttributeException("0x0 not allowed as " +
                     "stream identifier for data frame", "streamId");
     }
@@ -103,5 +97,23 @@ public class Data extends Message {
     @Override
     public byte getCode() {
         return Message.DATA_TYPE;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Data data1 = (Data) o;
+        return isEnd == data1.isEnd &&
+                Arrays.equals(data, data1.data) &&
+                streamId == data1.streamId;
+    }
+
+    @Override
+    public int hashCode() {
+
+        int result = Objects.hash(isEnd, streamId);
+        result = 31 * result + Arrays.hashCode(data);
+        return result;
     }
 }

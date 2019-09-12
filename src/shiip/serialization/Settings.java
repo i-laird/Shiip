@@ -21,6 +21,7 @@ public class Settings extends Message{
      *     (not thrown in this case)
      */
     public Settings() throws BadAttributeException{
+        this.setStreamId(REQUIRED_SETTINGS_STREAM_ID);
     }
 
     /**
@@ -38,7 +39,7 @@ public class Settings extends Message{
 
     @Override
     protected void ensureValidStreamId(int streamId) throws BadAttributeException {
-        if(streamId != Message.SETTINGS_STREAM_IDENTIFIER)
+        if(streamId != Message.REQUIRED_SETTINGS_STREAM_ID)
             throw new BadAttributeException("only 0x0 allowed as " +
                     "stream identifier for settings frame", "streamId");
     }

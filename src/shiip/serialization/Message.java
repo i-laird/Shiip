@@ -7,6 +7,7 @@
 
 package shiip.serialization;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -19,11 +20,17 @@ public class Message {
     protected int streamId;
     protected byte [] ALLOWED_TYPE_CODES = new byte [] {(byte)0x0, (byte)0x4, (byte)0x8};
 
-    protected static final int SETTINGS_STREAM_IDENTIFIER = 0x0;
-    protected static final byte TYPE_NOT_SET = 0xFF;
-    protected static final byte DATA_TYPE = 0x0;
-    protected static final byte SETTINGS_TYPE = 0x4;
-    protected static final byte WINDOW_UPDATE_TYPE = 0x8;
+    protected static final byte TYPE_NOT_SET = (byte)0xFF;
+    protected static final byte DATA_TYPE = (byte)0x0;
+    protected static final byte SETTINGS_TYPE = (byte)0x4;
+    protected static final byte WINDOW_UPDATE_TYPE = (byte)0x8;
+
+    protected static final int REQUIRED_SETTINGS_STREAM_ID = 0X0;
+    protected static final int DATA_BAD_FLAG = 0x8;
+    protected static final int DATA_END_STREAM = 0x1;
+    protected static final int HEADER_SIZE = 6;
+    protected static final int WINDOW_UPDATE_INCREMENT_SIZE;
+
     /**
      * Deserializes message from given bytes
      * @param msgBytes message bytes
@@ -40,9 +47,47 @@ public class Message {
             com.twitter.hpack.Decoder decoder)
             throws BadAttributeException{
 
+        int length = msgBytes.length;
+        ByteBuffer bb = ByteBuffer.wrap(msgBytes, 0, HEADER_SIZE);
+        byte type = bb.get();
+        byte flags = bb.get();
+        int streamId = bb.getInt();
+        Message toReturn = null;
+        switch(type){
+            case DATA_TYPE:
+                byte [] data = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length - HEADER_SIZE);
+                boolean end_stream = ((flags & DATA_END_STREAM) == (byte)1);
+                toReturn = new Data(streamId, end_stream,  data);
+                break;
+            case SETTINGS_TYPE:
+                if(streamId != REQUIRED_SETTINGS_STREAM_ID){
+                    throw new BadAttributeException("Settings stream id must be 0x0", "stream id");
+                }
+                toReturn = new Settings();
+                break;
+            case WINDOW_UPDATE_TYPE:
+
+                /* make sure that the necessary paylaod bytes are present */
+                if(msgBytes.length != (HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE)){
+                    throw new BadAttributeException("Payload of Window_Update" +
+                            " frame must be 32 bits long", "payload");
+                }
+                /* clear out the R bit so that it is 0 (the R bit is the
+                 most significant bit*/
+                msgBytes[HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE - 1] &= 0x8000;
+                ByteBuffer bb2 = ByteBuffer.wrap(msgBytes, HEADER_SIZE, WINDOW_UPDATE_INCREMENT_SIZE);
+                int increment = bb2.getInt();
+                toReturn = new Window_Update(streamId, increment);
+                break;
+
+             /* This is if the type of the packet is not recognized */
+            default:
+                throw new BadAttributeException("Unrecognized packet type: " + Byte.toString(type), "type");
+        }
+        return toReturn;
     }
     public byte [] encode(com.twitter.hpack.Encoder encoder){
-
+        return null;
     }
 
     /**
