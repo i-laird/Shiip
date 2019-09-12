@@ -20,8 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Message Tester")
 public class MessageTester {
 
-    private static final int MAX_HEADER_TABLE_SIZE = 4096,
-                             MAX_HEADER_SIZE = 6;
+    private static Encoder
     private static Decoder decoder = null;
     //private static Encoder encoder = null;
 

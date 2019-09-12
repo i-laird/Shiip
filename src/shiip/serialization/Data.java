@@ -99,4 +99,9 @@ public class Data extends Message {
             throw new BadAttributeException("0x0 not allowed as " +
                     "stream identifier for data frame", "streamId");
     }
+
+    @Override
+    public byte getCode() {
+        return Message.DATA_TYPE;
+    }
 }

@@ -17,10 +17,13 @@ import java.util.Arrays;
  */
 public class Message {
     protected int streamId;
-    byte typeCode;
     protected byte [] ALLOWED_TYPE_CODES = new byte [] {(byte)0x0, (byte)0x4, (byte)0x8};
 
-    static final int SETTINGS_STREAM_IDENTIFIER = 0x0;
+    protected static final int SETTINGS_STREAM_IDENTIFIER = 0x0;
+    protected static final byte TYPE_NOT_SET = 0xFF;
+    protected static final byte DATA_TYPE = 0x0;
+    protected static final byte SETTINGS_TYPE = 0x4;
+    protected static final byte WINDOW_UPDATE_TYPE = 0x8;
     /**
      * Deserializes message from given bytes
      * @param msgBytes message bytes
@@ -48,7 +51,7 @@ public class Message {
      * @return type code
      */
     public byte getCode(){
-        return this.typeCode;
+        return Message.TYPE_NOT_SET;
     }
 
     /**
