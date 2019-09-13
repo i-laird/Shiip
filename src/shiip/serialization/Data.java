@@ -7,6 +7,7 @@
 
 package shiip.serialization;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -69,6 +70,24 @@ public class Data extends Message {
      */
     public void setEnd(boolean end){
         this.isEnd = end;
+    }
+
+    @Override
+    public byte [] encode(com.twitter.hpack.Encoder encoder){
+
+        /* first need to encode the header */
+        ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + this.getData().length);
+        createByteArray.put(DATA_TYPE);
+        createByteArray.put(this.isEnd ? DATA_END_STREAM : NO_FLAGS);
+        createByteArray.putInt(this.getStreamId());
+        byte [] header = createByteArray.array();
+
+        /* now need to add the payload to the header */
+        byte [] toReturn = Arrays.copyOf(header, HEADER_SIZE + this.getData().length);
+        for(int i = HEADER_SIZE; i < HEADER_SIZE + this.getData().length; i++){
+            toReturn[i] = this.getData()[i - HEADER_SIZE];
+        }
+        return toReturn;
     }
 
     /**

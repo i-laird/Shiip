@@ -7,6 +7,8 @@
 
 package shiip.serialization;
 
+import java.nio.ByteBuffer;
+
 /**
  * Settings message
  *
@@ -43,4 +45,19 @@ public class Settings extends Message{
             throw new BadAttributeException("only 0x0 allowed as " +
                     "stream identifier for settings frame", "streamId");
     }
+
+    @Override
+    public byte [] encode(com.twitter.hpack.Encoder encoder){
+        ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE);
+        createByteArray.put(SETTINGS_TYPE);
+        createByteArray.put(REQUIRED_SETTINGS_FLAGS);
+        createByteArray.putInt(this.getStreamId());
+        return createByteArray.array();
+    }
+
+    @Override
+    public byte getCode() {
+        return Message.SETTINGS_TYPE;
+    }
+
 }

@@ -7,6 +7,9 @@
 
 package shiip.serialization;
 
+import java.nio.ByteBuffer;
+import java.util.Objects;
+
 /**
  * Window_Update frame
  *
@@ -63,5 +66,34 @@ public class Window_Update extends Message {
     public java.lang.String toString(){
         return "Window_Update: StreamID=" + Integer.toString(streamId) +
                 " increment=" + Integer.toString(increment);
+    }
+
+    @Override
+    public byte [] encode(com.twitter.hpack.Encoder encoder){
+        ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE);
+        createByteArray.put(WINDOW_UPDATE_TYPE);
+        createByteArray.put(NO_FLAGS);
+        createByteArray.putInt(this.getStreamId());
+        createByteArray.putInt(this.getIncrement());
+        return createByteArray.array();
+    }
+
+    @Override
+    public byte getCode() {
+        return Message.WINDOW_UPDATE_TYPE;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Window_Update that = (Window_Update) o;
+        return increment == that.increment && this.streamId == that.streamId;
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(increment, streamId);
     }
 }

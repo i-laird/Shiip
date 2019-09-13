@@ -9,6 +9,7 @@ package shiip.serialization;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Represents a SHiiP message
@@ -29,7 +30,11 @@ public class Message {
     protected static final int DATA_BAD_FLAG = 0x8;
     protected static final int DATA_END_STREAM = 0x1;
     protected static final int HEADER_SIZE = 6;
-    protected static final int WINDOW_UPDATE_INCREMENT_SIZE;
+    protected static final int WINDOW_UPDATE_INCREMENT_SIZE = 4;
+    protected static final byte NO_FLAGS = 0x0;
+    protected static final int WINDOW_UPDATE_STREAM_IDENTIFIER = 4;
+    protected static final int CLEAR_ALL_BUT_R_BIT = 0x7F;
+    protected static final byte REQUIRED_SETTINGS_FLAGS = 0x1;
 
     /**
      * Deserializes message from given bytes
@@ -46,7 +51,7 @@ public class Message {
     public static Message decode​(byte[] msgBytes,
             com.twitter.hpack.Decoder decoder)
             throws BadAttributeException{
-
+        msgBytes = Objects.requireNonNull(msgBytes, "The message cannot be null");
         int length = msgBytes.length;
         ByteBuffer bb = ByteBuffer.wrap(msgBytes, 0, HEADER_SIZE);
         byte type = bb.get();
@@ -55,8 +60,12 @@ public class Message {
         Message toReturn = null;
         switch(type){
             case DATA_TYPE:
-                byte [] data = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length - HEADER_SIZE);
-                boolean end_stream = ((flags & DATA_END_STREAM) == (byte)1);
+                byte [] data = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length);
+                boolean end_stream = ((flags & DATA_END_STREAM) != (byte)0);
+                boolean bad_bit = ((flags & DATA_BAD_FLAG) != (byte)0);
+                if(bad_bit){
+                    throw new BadAttributeException("The Bad flag was set (0x8)", "flags");
+                }
                 toReturn = new Data(streamId, end_stream,  data);
                 break;
             case SETTINGS_TYPE:
@@ -74,7 +83,7 @@ public class Message {
                 }
                 /* clear out the R bit so that it is 0 (the R bit is the
                  most significant bit*/
-                msgBytes[HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE - 1] &= 0x8000;
+                msgBytes[HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE - 1] &= CLEAR_ALL_BUT_R_BIT;
                 ByteBuffer bb2 = ByteBuffer.wrap(msgBytes, HEADER_SIZE, WINDOW_UPDATE_INCREMENT_SIZE);
                 int increment = bb2.getInt();
                 toReturn = new Window_Update(streamId, increment);
@@ -86,6 +95,7 @@ public class Message {
         }
         return toReturn;
     }
+
     public byte [] encode(com.twitter.hpack.Encoder encoder){
         return null;
     }

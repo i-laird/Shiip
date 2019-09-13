@@ -4,6 +4,7 @@ import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import shiip.serialization.BadAttributeException;
 import shiip.serialization.Data;
@@ -102,7 +103,7 @@ public class MessageTester {
      * the stream identifier is one
      * the payload is 4 octets and contains 1
      */
-    private static byte [] GOOD_WINDOW_UPDATE_ONE = {0x04, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01};
+    private static byte [] GOOD_WINDOW_UPDATE_ONE = {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01};
 
     /*
      * an example window update frame
@@ -111,7 +112,7 @@ public class MessageTester {
      * the stream identifier is one
      * the payload is 4 octets and the R bit is set
      */
-    private static byte [] GOOD_WINDOW_UPDATE_TWO = {0x04, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x01};
+    private static byte [] GOOD_WINDOW_UPDATE_TWO = {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x01};
 
     /*
      * an example window update frame
@@ -120,7 +121,7 @@ public class MessageTester {
      * the stream identifier is one
      * the payload is 3 octets BAD!!! and contains 1
      */
-    private static byte [] BAD_WINDOW_UPDATE_ONE = {0x04, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01};
+    private static byte [] BAD_WINDOW_UPDATE_ONE = {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01};
 
     @BeforeAll
     public static void main(){
@@ -131,12 +132,14 @@ public class MessageTester {
 
         }
     }
+
+    @Nested
     @DisplayName("Decoding Tests")
     public class DecodingTester {
         @DisplayName("testing null msg")
         @Test
         void testNullMsgBytes() {
-            assertThrows(BadAttributeException.class,
+            assertThrows(NullPointerException.class,
                     () -> Message.decode​(null, decoder));
         }
 
@@ -202,12 +205,6 @@ public class MessageTester {
         @Test
         void testSettingsFrameBadStreamIdentifier() {
             assertThrows(BadAttributeException.class, () -> Message.decode​(BAD_SETTINGS_ONE, decoder));
-        }
-
-        @DisplayName("Setting frame with bad flags (0x0)")
-        @Test
-        void testSettingsFrameBadFlags() {
-            assertThrows(BadAttributeException.class, () -> Message.decode​(BAD_SETTINGS_TWO, decoder));
         }
 
         @DisplayName("Make sure Window Update frames are properly recognized")
