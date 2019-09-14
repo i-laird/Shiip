@@ -59,7 +59,7 @@ public class Deframer {
         //get the length of the frame from the first 3 bytes
         byte [] prefixBytes = new byte[4];
         prefixBytes[0] = (byte)0;
-        prefixBytesRead = in.read(prefixBytes, 1, PREFIX_SIZE);
+        prefixBytesRead = in.readNBytes(prefixBytes, 1, PREFIX_SIZE);
         if(prefixBytesRead < PREFIX_SIZE){
             throw new EOFException("Unable to read Prefix Bytes");
         }
@@ -75,7 +75,7 @@ public class Deframer {
 
         byte [] message = new byte [length];
 
-        int numBytesRead = in.read(message, 0, length);
+        int numBytesRead = in.readNBytes(message, 0, length);
 
         if(numBytesRead < length){
             throw new EOFException("Premature EOF encountered");

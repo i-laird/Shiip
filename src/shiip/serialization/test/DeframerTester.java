@@ -167,6 +167,14 @@ public class DeframerTester {
         assertThrows(EOFException.class, deframer::getFrame);
     }
 
+    @DisplayName("normal one")
+    @Test
+    void testNormal(){
+        byte [] shortHeader = new byte[]{0,0,0,0,0,0,0,0,0};
+        Deframer deframer = new Deframer(new ByteArrayInputStream(shortHeader));
+        assertDoesNotThrow(deframer::getFrame);
+    }
+
     /**
      * Tests that a {@link EOFException} is thrown when the input stream is
      * empty.
