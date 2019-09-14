@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import shiip.serialization.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static shiip.serialization.test.TestingConstants.*;
 
 
 /**
@@ -28,18 +29,6 @@ public class MessageTester {
 
     private static Encoder encoder = null;
     private static Decoder decoder = null;
-
-    protected static final byte DATA_TYPE = (byte)0x0;
-    protected static final byte SETTINGS_TYPE = (byte)0x4;
-    protected static final byte WINDOW_UPDATE_TYPE = (byte)0x8;
-    protected static final byte NO_FLAGS = 0x0;
-    protected static final byte HIGHEST_BIT_IN_BYTE = (byte)0X128;
-
-    protected static final int FLAG_POS_IN_HEADER = 1;
-    protected static final byte REQUIRED_SETTINGS_FLAGS_SERIALIZATION = 0x1;
-    protected static final int BYTE_CONTAINING_R_BIT_LOCATION = 3;
-    protected static final int BYTE_CONTAINING_SECOND_R_BIT_WINDOW_UPDATE = 7;
-
 
     private static byte [] TEST_HEADER_1 =
             {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0};

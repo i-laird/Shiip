@@ -22,6 +22,9 @@ import java.nio.ByteBuffer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static shiip.serialization.test.TestingConstants.PREFIX_SIZE;
+import static shiip.serialization.test.TestingConstants.HEADER_SIZE;
+
 
 /**
  * Performs testing for the {@link Deframer}.
@@ -31,9 +34,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @DisplayName("Deframer Tester")
 public class DeframerTester {
-
-    public static final int PREFIX_SIZE = 3;
-    public static final int HEADER_SIZE = 6;
 
     // public static final String TEST_STRING_1 = "how are you?";
     // public static byte [] TEST_BYTE_ARRAY_1 = null;
