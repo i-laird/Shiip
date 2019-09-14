@@ -1,3 +1,8 @@
+/*******************************************************
+ * Author: Ian Laird, Andrew Walker
+ * Assignment: Prog 1
+ * Class: Data Comm
+ *******************************************************/
 package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;

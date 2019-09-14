@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird, Andrew Walker
+ * Assignment: Prog 1
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.serialization.test;
 
 import com.twitter.hpack.Decoder;
@@ -167,6 +173,12 @@ public class MessageTester {
         }
     }
 
+    /**
+     * Performs testing for decoding of {@link shiip.serialization.Message}.
+     *
+     * @version 1.0
+     * @author Ian Laird, Andrew Walker
+     */
     @Nested
     @DisplayName("Decoding Tests")
     public class DecodingTester {
@@ -274,10 +286,23 @@ public class MessageTester {
         }
     }
 
+    /**
+     * Performs testing for encoding of {@link shiip.serialization.Message}.
+     *
+     * @version 1.0
+     * @author Ian Laird, Andrew Walker
+     */
     @Nested
     @DisplayName("Encoding Tests")
     public class EncodingTests{
 
+
+        /**
+         * Performs testing for encoding of flags
+         *
+         * @version 1.0
+         * @author Ian Laird, Andrew Walker
+         */
         @Nested
         public class FlagsTests{
 
