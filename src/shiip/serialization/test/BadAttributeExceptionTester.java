@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Performs testing for the {@link shiip.serialization.BadAttributeException}.
  *
  * @version 1.0
- * @author Ian Laird
+ * @author Ian Laird, Andrew Walker
  */
 @DisplayName("Bad Attribute Exception Tester")
 public class BadAttributeExceptionTester {
@@ -62,10 +62,18 @@ public class BadAttributeExceptionTester {
     public void testNullInThreeParamConstructor(){
         Throwable cause = new testException("test thrown exception");
         assertAll(
-                () -> assertDoesNotThrow(() -> (new BadAttributeException(testMessage, testAttribute, null))),
-                () -> assertDoesNotThrow(() -> (new BadAttributeException(testMessage, null, cause))),
-                () -> assertDoesNotThrow(() -> (new BadAttributeException(null, testAttribute, cause))),
-                () -> assertDoesNotThrow(() -> (new BadAttributeException(null, null, null)))
+                () -> assertDoesNotThrow(
+                        () -> (new BadAttributeException(
+                                testMessage, testAttribute, null))),
+                () -> assertDoesNotThrow(
+                        () -> (new BadAttributeException(
+                                testMessage, null, cause))),
+                () -> assertDoesNotThrow(
+                        () -> (new BadAttributeException(
+                                null, testAttribute, cause))),
+                () -> assertDoesNotThrow(
+                        () -> (new BadAttributeException(
+                                null, null, null)))
         );
     }
 
@@ -73,9 +81,12 @@ public class BadAttributeExceptionTester {
     @Test
     public void testNullInTwoParamConstructor(){
         assertAll(
-            () -> assertDoesNotThrow(() -> new BadAttributeException(testMessage, null)),
-            () -> assertDoesNotThrow(() -> new BadAttributeException(null, testAttribute)),
-            () -> assertDoesNotThrow(() -> new BadAttributeException(null, null))
+            () -> assertDoesNotThrow(
+                    () -> new BadAttributeException(testMessage, null)),
+            () -> assertDoesNotThrow(
+                    () -> new BadAttributeException(null, testAttribute)),
+            () -> assertDoesNotThrow(
+                    () -> new BadAttributeException(null, null))
         );
     }
 }

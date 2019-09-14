@@ -6,10 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import shiip.serialization.BadAttributeException;
-import shiip.serialization.Data;
-import shiip.serialization.Message;
-import shiip.serialization.Settings;
+import shiip.serialization.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Performs testing for the {@link shiip.serialization.Message}.
  *
  * @version 1.0
- * @author Ian Laird
+ * @author Ian Laird, Andrew Walker
  */
 @DisplayName("Message Tester")
 public class MessageTester {
@@ -29,9 +26,19 @@ public class MessageTester {
     protected static final byte DATA_TYPE = (byte)0x0;
     protected static final byte SETTINGS_TYPE = (byte)0x4;
     protected static final byte WINDOW_UPDATE_TYPE = (byte)0x8;
+    protected static final byte NO_FLAGS = 0x0;
+    protected static final byte HIGHEST_BIT_IN_BYTE = (byte)0X128;
 
-    private static byte [] TEST_HEADER_1 = {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0};
-    private static byte [] TEST_HEADER_BAD_TYPE  = {(byte)0xEE,0x0,0x0,0x0,0x0,0x1};
+    protected static final int FLAG_POS_IN_HEADER = 1;
+    protected static final byte REQUIRED_SETTINGS_FLAGS_SERIALIZATION = 0x1;
+    protected static final int BYTE_CONTAINING_R_BIT_LOCATION = 3;
+    protected static final int BYTE_CONTAINING_SECOND_R_BIT_WINDOW_UPDATE = 7;
+
+
+    private static byte [] TEST_HEADER_1 =
+            {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0};
+    private static byte [] TEST_HEADER_BAD_TYPE  =
+            {(byte)0xEE,0x0,0x0,0x0,0x0,0x1};
 
     /*
      * an example data frame that has a six byte payload
@@ -40,8 +47,10 @@ public class MessageTester {
      * the stream identifier is one
      * the contents are 0,1,2,3,4,5
      */
-    private static byte [] GOOD_DATA_ONE = {0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
+    private static byte [] GOOD_DATA_ONE =
+            {0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
     private static Data CORRECT_DATA_ONE = null;
+    private static byte [] CORRECT_DATA_ONE_ENCODED = null;
 
     /*
      * an example data frame that has a six byte payload
@@ -50,7 +59,8 @@ public class MessageTester {
      * the stream identifier is one
      * the contents are 0,1,2,3,4,5
      */
-    private static byte [] BAD_DATA_ONE = {0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
+    private static byte [] BAD_DATA_ONE =
+            {0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
 
     /*
      * an example data frame that has a six byte payload
@@ -59,8 +69,8 @@ public class MessageTester {
      * the stream identifier is zero
      * the contents are 0,1,2,3,4,5
      */
-    private static byte [] BAD_DATA_TWO = {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
-
+    private static byte [] BAD_DATA_TWO =
+            {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
 
     /*
      * an example settings frame that has no payload
@@ -68,8 +78,10 @@ public class MessageTester {
      * the flags are 1
      * the stream identifier is zero
      */
-    private static byte [] GOOD_SETTINGS_ONE = {0x04, 0x01, 0x00, 0x00, 0x00, 0x00};
+    private static byte [] GOOD_SETTINGS_ONE =
+            {0x04, 0x01, 0x00, 0x00, 0x00, 0x00};
     private static Settings CORRECT_SETTINGS_ONE = null;
+    private static byte [] CORRECT_SETTINGS_ENCODED = null;
 
     /*
      * an example settings frame that has no payload
@@ -78,7 +90,8 @@ public class MessageTester {
      * the stream identifier is zero
      * there is a two byte payload
      */
-    private static byte [] GOOD_SETTINGS_TWO = {0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    private static byte [] GOOD_SETTINGS_TWO =
+            {0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
     /*
      * an example data frame that has no payload
@@ -86,7 +99,8 @@ public class MessageTester {
      * the flags are 1
      * the stream identifier is one (error)
      */
-    private static byte [] BAD_SETTINGS_ONE = {0x04, 0x01, 0x00, 0x00, 0x00, 0x01};
+    private static byte [] BAD_SETTINGS_ONE =
+            {0x04, 0x01, 0x00, 0x00, 0x00, 0x01};
 
     /*
      * an example data frame that has no payload
@@ -94,7 +108,8 @@ public class MessageTester {
      * the flags are 0 (error!)
      * the stream identifier is zero
      */
-    private static byte [] BAD_SETTINGS_TWO = {0x04, 0x00, 0x00, 0x00, 0x00, 0x00};
+    private static byte [] BAD_SETTINGS_TWO =
+            {0x04, 0x00, 0x00, 0x00, 0x00, 0x00};
 
     /*
      * an example window update frame
@@ -103,7 +118,11 @@ public class MessageTester {
      * the stream identifier is one
      * the payload is 4 octets and contains 1
      */
-    private static byte [] GOOD_WINDOW_UPDATE_ONE = {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01};
+    private static byte [] GOOD_WINDOW_UPDATE_ONE =
+            {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01};
+    private static Window_Update CORRECT_WINDOW_UPDATE_ONE = null;
+    private static byte [] CORRECT_WINDOw_UPDATE_ENCODED = null;
+
 
     /*
      * an example window update frame
@@ -112,7 +131,8 @@ public class MessageTester {
      * the stream identifier is one
      * the payload is 4 octets and the R bit is set
      */
-    private static byte [] GOOD_WINDOW_UPDATE_TWO = {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x01};
+    private static byte [] GOOD_WINDOW_UPDATE_TWO =
+            {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x01};
 
     /*
      * an example window update frame
@@ -121,13 +141,27 @@ public class MessageTester {
      * the stream identifier is one
      * the payload is 3 octets BAD!!! and contains 1
      */
-    private static byte [] BAD_WINDOW_UPDATE_ONE = {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01};
+    private static byte [] BAD_WINDOW_UPDATE_ONE =
+            {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01};
 
     @BeforeAll
     public static void main(){
         try {
-            CORRECT_DATA_ONE = new Data(1, false, new byte[]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05});
-            CORRECT_SETTINGS_ONE = new Settings();
+            CORRECT_DATA_ONE =
+                    new Data(1,
+                            false, new byte[]
+                            {0x00, 0x01, 0x02, 0x03, 0x04, 0x05});
+            CORRECT_SETTINGS_ONE =
+                    new Settings();
+            CORRECT_WINDOW_UPDATE_ONE =
+                    new Window_Update(1,1);
+
+            CORRECT_DATA_ONE_ENCODED =
+                    CORRECT_DATA_ONE.encode(null);
+            CORRECT_SETTINGS_ENCODED =
+                    CORRECT_SETTINGS_ONE.encode(null);
+            CORRECT_WINDOw_UPDATE_ENCODED =
+                    CORRECT_WINDOW_UPDATE_ONE.encode(null);
         }catch(BadAttributeException e){
 
         }
@@ -146,7 +180,8 @@ public class MessageTester {
         @DisplayName("Invalid Type")
         @Test
         void testInvalidType() {
-            assertThrows(BadAttributeException.class, () -> Message.decode​(TEST_HEADER_BAD_TYPE, decoder));
+            assertThrows(BadAttributeException.class,
+                    () -> Message.decode​(TEST_HEADER_BAD_TYPE, decoder));
         }
 
         @DisplayName("Make sure Data frames are properly recognized")
@@ -175,13 +210,15 @@ public class MessageTester {
         @DisplayName("Data Frame with the bad bit set")
         @Test
         void testDataFrameBadBit() {
-            assertThrows(BadAttributeException.class, () -> Message.decode​(BAD_DATA_ONE, decoder));
+            assertThrows(BadAttributeException.class,
+                    () -> Message.decode​(BAD_DATA_ONE, decoder));
         }
 
         @DisplayName("Data Frame with zero stream identifier")
         @Test
         void testDataFrameStreamIdentifierZero() {
-            assertThrows(BadAttributeException.class, () -> Message.decode​(BAD_DATA_TWO, decoder));
+            assertThrows(BadAttributeException.class,
+                    () -> Message.decode​(BAD_DATA_TWO, decoder));
         }
 
         @DisplayName("Make sure Settings frames are properly recognized")
@@ -198,20 +235,23 @@ public class MessageTester {
         @DisplayName("Settings Frame with a payload")
         @Test
         void testSettingsFramePayload() {
-            assertDoesNotThrow(() -> Message.decode​(GOOD_SETTINGS_TWO, decoder));
+            assertDoesNotThrow(
+                    () -> Message.decode​(GOOD_SETTINGS_TWO, decoder));
         }
 
         @DisplayName("Setting frame with bad stream identifier")
         @Test
         void testSettingsFrameBadStreamIdentifier() {
-            assertThrows(BadAttributeException.class, () -> Message.decode​(BAD_SETTINGS_ONE, decoder));
+            assertThrows(BadAttributeException.class,
+                    () -> Message.decode​(BAD_SETTINGS_ONE, decoder));
         }
 
         @DisplayName("Make sure Window Update frames are properly recognized")
         @Test
         void testWindowUpdateFrameRecognized() {
             try {
-                Message message = Message.decode​(GOOD_WINDOW_UPDATE_ONE, decoder);
+                Message message =
+                        Message.decode​(GOOD_WINDOW_UPDATE_ONE, decoder);
                 assertEquals(message.getCode(), WINDOW_UPDATE_TYPE);
             } catch (BadAttributeException e) {
                 fail(e.getMessage());
@@ -222,19 +262,95 @@ public class MessageTester {
         @DisplayName("Window Update R bit of payload set")
         @Test
         void testWindowsUpdateRPaylaod() {
-            assertDoesNotThrow(() -> Message.decode​(GOOD_WINDOW_UPDATE_TWO, decoder));
+            assertDoesNotThrow(
+                    () -> Message.decode​(GOOD_WINDOW_UPDATE_TWO, decoder));
         }
 
         @DisplayName("Window Update too short of payload")
         @Test
         void testWindowsUpdateFrameShort() {
-            assertThrows(BadAttributeException.class, () -> Message.decode​(BAD_WINDOW_UPDATE_ONE, decoder));
+            assertThrows(BadAttributeException.class,
+                    () -> Message.decode​(BAD_WINDOW_UPDATE_ONE, decoder));
         }
     }
 
+    @Nested
     @DisplayName("Encoding Tests")
     public class EncodingTests{
 
+        @Nested
+        public class FlagsTests{
+
+            @DisplayName("Test all data flags are unset")
+            @Test
+            public void testDataFlagsUnset(){
+                assertEquals(NO_FLAGS,
+                        CORRECT_DATA_ONE_ENCODED[FLAG_POS_IN_HEADER]);
+            }
+
+            @DisplayName("Test all settings flags are unset")
+            @Test
+            public void testSettingsFlagsUnset(){
+                assertEquals(REQUIRED_SETTINGS_FLAGS_SERIALIZATION,
+                        CORRECT_SETTINGS_ENCODED[FLAG_POS_IN_HEADER]);
+            }
+
+            @DisplayName("Test all Window_Update flags are unset")
+            @Test
+            public void testWindowUpdateFlagsUnset(){
+                assertEquals(NO_FLAGS,
+                        CORRECT_WINDOw_UPDATE_ENCODED[FLAG_POS_IN_HEADER]);
+            }
+
+        }
+        @DisplayName("R bit stays upset when sending all message types")
+        @Test
+        public void testRBit(){
+            assertAll(
+                    () -> assertEquals(
+                            (byte)(CORRECT_DATA_ONE_ENCODED
+                                    [BYTE_CONTAINING_R_BIT_LOCATION]
+                                    & HIGHEST_BIT_IN_BYTE),
+                            (byte)0),
+                    () -> assertEquals(
+                            (byte)(CORRECT_SETTINGS_ENCODED
+                                    [BYTE_CONTAINING_R_BIT_LOCATION]
+                                    & HIGHEST_BIT_IN_BYTE),
+                            (byte)0),
+                    () -> assertEquals((byte)(CORRECT_WINDOw_UPDATE_ENCODED
+                                    [BYTE_CONTAINING_R_BIT_LOCATION]
+                                    & HIGHEST_BIT_IN_BYTE),
+                            (byte)0)
+            );
+        }
+
+        @DisplayName("Additional R bit stays unset Window_Update")
+        @Test
+        public void testSecondRBitWindowUpdate(){
+            assertEquals((byte)(CORRECT_WINDOw_UPDATE_ENCODED
+                            [BYTE_CONTAINING_SECOND_R_BIT_WINDOW_UPDATE]
+                            & HIGHEST_BIT_IN_BYTE),
+                    (byte)0);
+        }
+
+        @DisplayName("Test Data encoding is being performed properly")
+        @Test
+        public void testDataEncoding(){
+            assertArrayEquals(GOOD_DATA_ONE, CORRECT_DATA_ONE_ENCODED);
+        }
+
+        @DisplayName("Test Settings encoding is being performed properly")
+        @Test
+        public void testSettingsEncoding(){
+            assertArrayEquals(GOOD_SETTINGS_ONE, CORRECT_SETTINGS_ENCODED);
+        }
+
+        @DisplayName("Test Window_Update encoding is being performed properly")
+        @Test
+        public void testWindowUpdateEncoding(){
+            assertArrayEquals(GOOD_WINDOW_UPDATE_ONE,
+                    CORRECT_WINDOw_UPDATE_ENCODED);
+        }
     }
 }
 
