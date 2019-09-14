@@ -1,5 +1,5 @@
 /*******************************************************
- * Author: Ian Laird, Andrew Walker
+ * Author: Ian Laird, Andrew walker
  * Assignment: Prog 1
  * Class: Data Comm
  *******************************************************/
@@ -13,9 +13,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import shiip.serialization.*;
+import static shiip.serialization.test.TestingConstants.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static shiip.serialization.test.TestingConstants.*;
 
 
 /**
@@ -139,8 +139,11 @@ public class MessageTester {
     private static byte [] BAD_WINDOW_UPDATE_ONE =
             {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01};
 
+    /**
+     * init the static objects
+     */
     @BeforeAll
-    public static void main(){
+    public static void initialize(){
         try {
             CORRECT_DATA_ONE =
                     new Data(1,
@@ -163,7 +166,7 @@ public class MessageTester {
     }
 
     /**
-     * Performs testing for decoding of {@link shiip.serialization.Message}.
+     * Performs decoding a {@link shiip.serialization.Message}.
      *
      * @version 1.0
      * @author Ian Laird, Andrew Walker
@@ -171,6 +174,10 @@ public class MessageTester {
     @Nested
     @DisplayName("Decoding Tests")
     public class DecodingTester {
+
+        /**
+         * null msg
+         */
         @DisplayName("testing null msg")
         @Test
         void testNullMsgBytes() {
@@ -178,6 +185,9 @@ public class MessageTester {
                     () -> Message.decode​(null, decoder));
         }
 
+        /**
+         * invalid message type
+         */
         @DisplayName("Invalid Type")
         @Test
         void testInvalidType() {
@@ -185,6 +195,9 @@ public class MessageTester {
                     () -> Message.decode​(TEST_HEADER_BAD_TYPE, decoder));
         }
 
+        /**
+         * data frame type recognized
+         */
         @DisplayName("Make sure Data frames are properly recognized")
         @Test
         void testDataFrameRecognized() {
@@ -196,6 +209,9 @@ public class MessageTester {
             }
         }
 
+        /**
+         * data frame decoding
+         */
         @DisplayName("Make sure Data frames are properly read in")
         @Test
         void testDataFrameReadIn() {
@@ -208,6 +224,9 @@ public class MessageTester {
             }
         }
 
+        /**
+         * bad bit in data frame
+         */
         @DisplayName("Data Frame with the bad bit set")
         @Test
         void testDataFrameBadBit() {
@@ -215,6 +234,9 @@ public class MessageTester {
                     () -> Message.decode​(BAD_DATA_ONE, decoder));
         }
 
+        /**
+         * data frame stream id is 0
+         */
         @DisplayName("Data Frame with zero stream identifier")
         @Test
         void testDataFrameStreamIdentifierZero() {
@@ -222,6 +244,9 @@ public class MessageTester {
                     () -> Message.decode​(BAD_DATA_TWO, decoder));
         }
 
+        /**
+         * setting frame id
+         */
         @DisplayName("Make sure Settings frames are properly recognized")
         @Test
         void testSettingsFrameRecognized() {
@@ -233,6 +258,9 @@ public class MessageTester {
             }
         }
 
+        /**
+         * settings frame has a payload
+         */
         @DisplayName("Settings Frame with a payload")
         @Test
         void testSettingsFramePayload() {
@@ -240,6 +268,9 @@ public class MessageTester {
                     () -> Message.decode​(GOOD_SETTINGS_TWO, decoder));
         }
 
+        /**
+         * settings frame invalid stream id
+         */
         @DisplayName("Setting frame with bad stream identifier")
         @Test
         void testSettingsFrameBadStreamIdentifier() {
@@ -247,6 +278,9 @@ public class MessageTester {
                     () -> Message.decode​(BAD_SETTINGS_ONE, decoder));
         }
 
+        /**
+         * window update id
+         */
         @DisplayName("Make sure Window Update frames are properly recognized")
         @Test
         void testWindowUpdateFrameRecognized() {
@@ -259,7 +293,9 @@ public class MessageTester {
             }
         }
 
-
+        /**
+         * window update r bit test
+         */
         @DisplayName("Window Update R bit of payload set")
         @Test
         void testWindowsUpdateRPaylaod() {
@@ -267,6 +303,9 @@ public class MessageTester {
                     () -> Message.decode​(GOOD_WINDOW_UPDATE_TWO, decoder));
         }
 
+        /**
+         * window update payload too short
+         */
         @DisplayName("Window Update too short of payload")
         @Test
         void testWindowsUpdateFrameShort() {
@@ -276,7 +315,7 @@ public class MessageTester {
     }
 
     /**
-     * Performs testing for encoding of {@link shiip.serialization.Message}.
+     * Performs encoding a {@link shiip.serialization.Message}.
      *
      * @version 1.0
      * @author Ian Laird, Andrew Walker
@@ -285,9 +324,8 @@ public class MessageTester {
     @DisplayName("Encoding Tests")
     public class EncodingTests{
 
-
         /**
-         * Performs testing for encoding of flags
+         * Performs flags tests
          *
          * @version 1.0
          * @author Ian Laird, Andrew Walker
@@ -295,6 +333,9 @@ public class MessageTester {
         @Nested
         public class FlagsTests{
 
+            /**
+             * data flags unset
+             */
             @DisplayName("Test all data flags are unset")
             @Test
             public void testDataFlagsUnset(){
@@ -302,6 +343,9 @@ public class MessageTester {
                         CORRECT_DATA_ONE_ENCODED[FLAG_POS_IN_HEADER]);
             }
 
+            /**
+             * settings flags unset
+             */
             @DisplayName("Test all settings flags are unset")
             @Test
             public void testSettingsFlagsUnset(){
@@ -309,6 +353,9 @@ public class MessageTester {
                         CORRECT_SETTINGS_ENCODED[FLAG_POS_IN_HEADER]);
             }
 
+            /**
+             * window update flags unset
+             */
             @DisplayName("Test all Window_Update flags are unset")
             @Test
             public void testWindowUpdateFlagsUnset(){
@@ -317,6 +364,18 @@ public class MessageTester {
             }
 
         }
+
+        /**
+         * null for the encoder
+         */
+        @Test
+        public void testNullEncoder(){
+            assertDoesNotThrow(()->CORRECT_DATA_ONE.encode(null));
+        }
+
+        /**
+         * testing the r bit
+         */
         @DisplayName("R bit stays upset when sending all message types")
         @Test
         public void testRBit(){
@@ -338,6 +397,9 @@ public class MessageTester {
             );
         }
 
+        /**
+         * second r bit in the window update
+         */
         @DisplayName("Additional R bit stays unset Window_Update")
         @Test
         public void testSecondRBitWindowUpdate(){
@@ -347,18 +409,27 @@ public class MessageTester {
                     (byte)0);
         }
 
+        /**
+         * data encoding
+         */
         @DisplayName("Test Data encoding is being performed properly")
         @Test
         public void testDataEncoding(){
             assertArrayEquals(GOOD_DATA_ONE, CORRECT_DATA_ONE_ENCODED);
         }
 
+        /**
+         * settings encoding
+         */
         @DisplayName("Test Settings encoding is being performed properly")
         @Test
         public void testSettingsEncoding(){
             assertArrayEquals(GOOD_SETTINGS_ONE, CORRECT_SETTINGS_ENCODED);
         }
 
+        /**
+         * window update encoding
+         */
         @DisplayName("Test Window_Update encoding is being performed properly")
         @Test
         public void testWindowUpdateEncoding(){

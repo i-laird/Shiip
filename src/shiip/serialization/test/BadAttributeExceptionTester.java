@@ -1,8 +1,9 @@
 /*******************************************************
- * Author: Ian Laird, Andrew Walker
+ * Author: Ian Laird, Andrew walker
  * Assignment: Prog 1
  * Class: Data Comm
  *******************************************************/
+
 package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +23,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BadAttributeExceptionTester {
 
     private static final String testMessage = "test message",
-                                testAttribute = "test attribute";
+            testAttribute = "test attribute";
 
+    /**
+     * testing exception
+     *
+     * @version 1.0
+     * @author Ian Laird, Andrew Walker
+     */
     private class testException extends Throwable{
         public testException(){
             super();
@@ -32,12 +39,20 @@ public class BadAttributeExceptionTester {
             super(message);
         }
 
+        /**
+         * tests object equality
+         * @param o other object
+         * @return if the objects are equal
+         */
         @Override
         public boolean equals(Object o) {
             return this.getMessage().equals(((testException)o).getMessage());
         }
     }
 
+    /**
+     * 2 param constructor
+     */
     @DisplayName("testing two parameter constructor")
     @Test
     public void testTwoParamConstructor(){
@@ -49,6 +64,9 @@ public class BadAttributeExceptionTester {
         );
     }
 
+    /**
+     * 3 param constructor
+     */
     @DisplayName("testing three param")
     @Test
     public void testThreeParamConstructor(){
@@ -62,6 +80,9 @@ public class BadAttributeExceptionTester {
         );
     }
 
+    /**
+     * null in 3 param
+     */
     @DisplayName("testing null for 3 param constructor (nulls allowed")
     @Test
     public void testNullInThreeParamConstructor(){
@@ -82,16 +103,19 @@ public class BadAttributeExceptionTester {
         );
     }
 
+    /**
+     * null in 2 param
+     */
     @DisplayName("testing null for 2 param constructor (nulls allowed")
     @Test
     public void testNullInTwoParamConstructor(){
         assertAll(
-            () -> assertDoesNotThrow(
-                    () -> new BadAttributeException(testMessage, null)),
-            () -> assertDoesNotThrow(
-                    () -> new BadAttributeException(null, testAttribute)),
-            () -> assertDoesNotThrow(
-                    () -> new BadAttributeException(null, null))
+                () -> assertDoesNotThrow(
+                        () -> new BadAttributeException(testMessage, null)),
+                () -> assertDoesNotThrow(
+                        () -> new BadAttributeException(null, testAttribute)),
+                () -> assertDoesNotThrow(
+                        () -> new BadAttributeException(null, null))
         );
     }
 }
