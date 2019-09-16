@@ -33,6 +33,7 @@ import static shiip.serialization.test.TestingConstants.*;
 @DisplayName("Framer Tester")
 public class FramerTester {
 
+    public static int MAXIMUM_PAYLOAD_AND_HEADER_SIZE = MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE;
     public static byte [] TEST_MESSAGE_1 = "hello world :)".getBytes(),
                           TEST_MESSAGE_2 = new byte[MAXIMUM_PAYLOAD_AND_HEADER_SIZE],
                           TEST_MESSAGE_3 = getUTF16("( ͡° ͜ʖ ͡°)"),

@@ -1,9 +1,3 @@
-/*******************************************************
- * Author: Ian Laird, Andrew Walker
- * Assignment: Prog 1
- * Class: Data Comm
- *******************************************************/
-
 package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
@@ -16,18 +10,16 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import shiip.serialization.BadAttributeException;
 import shiip.serialization.Data;
+import static shiip.serialization.test.TestingConstants.DATA_TYPE;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Performs testing for the {@link shiip.serialization.Data}.
- *
- * @version 1.0
- * @author Ian Laird, Andrew Walker
+ * Tests the Data class
  */
-public class DataTest {
+public class DataTester {
 
     /**
      * Tests the constructor of Data
@@ -124,7 +116,7 @@ public class DataTest {
         public void testConstructorCode() {
             assertDoesNotThrow(() -> {
                 Data data = new Data(1, false, new byte[]{});
-                assertEquals((byte) 0x0, data.getCode());
+                assertEquals(DATA_TYPE, data.getCode());
             });
         }
     }

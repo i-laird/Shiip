@@ -114,7 +114,7 @@ public class Message {
      *
      * @return stream ID
      */
-    public int getStreamId(){
+    public int getStreamID(){
         return this.streamId;
     }
 
@@ -125,12 +125,26 @@ public class Message {
      * @param streamId new stream id value
      * @throws BadAttributeException
      */
-    public void setStreamId( int streamId) throws BadAttributeException{
+    public void setStreamID(int streamId) throws BadAttributeException{
         this.ensureValidStreamId(streamId);
         this.streamId = streamId;
     }
 
     protected void ensureValidStreamId( int streamId) throws BadAttributeException{
         //for just a message by itself there are no requirments for the stream id
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Message message = (Message) o;
+        return streamId == message.streamId;
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(streamId);
     }
 }

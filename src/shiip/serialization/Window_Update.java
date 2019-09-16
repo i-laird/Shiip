@@ -27,7 +27,7 @@ public class Window_Update extends Message {
      * @throws BadAttributeException if attribute invalid (set protocol spec)
      */
     public Window_Update(int streamID, int increment) throws BadAttributeException{
-        this.setStreamId(streamID);
+        this.setStreamID(streamID);
         this.setIncrement(increment);
     }
 
@@ -73,7 +73,7 @@ public class Window_Update extends Message {
         ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE);
         createByteArray.put(WINDOW_UPDATE_TYPE);
         createByteArray.put(NO_FLAGS);
-        createByteArray.putInt(this.getStreamId());
+        createByteArray.putInt(this.getStreamID());
         createByteArray.putInt(this.getIncrement());
         return createByteArray.array();
     }

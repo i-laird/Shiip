@@ -7,115 +7,103 @@
 package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import shiip.serialization.BadAttributeException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 
 /**
- * Performs testing for the {@link shiip.serialization.BadAttributeException}.
+ * Performs testing for the {@link BadAttributeException}.
  *
  * @version 1.0
  * @author Ian Laird, Andrew Walker
  */
-@DisplayName("Bad Attribute Exception Tester")
 public class BadAttributeExceptionTester {
 
-    private static final String testMessage = "test message",
-            testAttribute = "test attribute";
+    private static final String message = "message";
+    private static final String attribute = "attribute";
 
     /**
-     * testing exception
+     * Performs tests on the two param constructor of BadAttributeException
      *
      * @version 1.0
      * @author Ian Laird, Andrew Walker
      */
-    private class testException extends Throwable{
-        public testException(){
-            super();
-        }
-        public testException(String message){
-            super(message);
+    @Nested
+    @DisplayName("Two Param Constructor")
+    public class TwoParamConstructor {
+        /**
+         * Testing valid values
+         */
+        @DisplayName("Valid values")
+        @Test
+        public void testTwoParamConstructor(){
+            BadAttributeException exception = new BadAttributeException(
+                    message, attribute);
+            assertAll(
+                () -> assertEquals(attribute, exception.getAttribute()),
+                () -> assertEquals(message, exception.getMessage())
+            );
         }
 
         /**
-         * tests object equality
-         * @param o other object
-         * @return if the objects are equal
+         * Testing null values
          */
-        @Override
-        public boolean equals(Object o) {
-            return this.getMessage().equals(((testException)o).getMessage());
+        @DisplayName("Null values")
+        @Test
+        public void testNullInTwoParamConstructor(){
+            assertAll(
+                () -> assertDoesNotThrow(
+                    () -> new BadAttributeException(message, null)),
+                () -> assertDoesNotThrow(
+                    () -> new BadAttributeException(null, attribute)),
+                () -> assertDoesNotThrow(
+                    () -> new BadAttributeException(null, null))
+            );
         }
     }
 
-    /**
-     * 2 param constructor
-     */
-    @DisplayName("testing two parameter constructor")
-    @Test
-    public void testTwoParamConstructor(){
-        BadAttributeException exception = new BadAttributeException(
-                testMessage, testAttribute);
-        assertAll(
-                () -> assertEquals(testAttribute, exception.getAttribute()),
-                () -> assertEquals(testMessage, exception.getMessage())
-        );
-    }
 
-    /**
-     * 3 param constructor
-     */
-    @DisplayName("testing three param")
-    @Test
-    public void testThreeParamConstructor(){
-        Throwable cause = new testException("test thrown exception");
-        BadAttributeException exception = new BadAttributeException(
-                testMessage, testAttribute, cause);
-        assertAll(
-                () -> assertEquals(testAttribute, exception.getAttribute()),
-                () -> assertEquals(testMessage, exception.getMessage()),
+    @Nested
+    @DisplayName("Three Param Constructor")
+    public class ThreeParamConstructor {
+        /**
+         * Testing valid values
+         */
+        @DisplayName("Valid values")
+        @Test
+        public void testThreeParamConstructor(){
+            Throwable cause = new Throwable();
+            BadAttributeException exception = new BadAttributeException(
+                    message, attribute, cause);
+            assertAll(
+                () -> assertEquals(attribute, exception.getAttribute()),
+                () -> assertEquals(message, exception.getMessage()),
                 () -> assertEquals(cause, exception.getCause())
-        );
-    }
+            );
+        }
 
-    /**
-     * null in 3 param
-     */
-    @DisplayName("testing null for 3 param constructor (nulls allowed")
-    @Test
-    public void testNullInThreeParamConstructor(){
-        Throwable cause = new testException("test thrown exception");
-        assertAll(
+        /**
+         * Testing null values
+         */
+        @DisplayName("Null values")
+        @Test
+        public void testNullInThreeParamConstructor(){
+            Throwable cause = new Throwable();
+            assertAll(
                 () -> assertDoesNotThrow(
-                        () -> (new BadAttributeException(
-                                testMessage, testAttribute, null))),
+                    () -> (new BadAttributeException(message, attribute, null))),
                 () -> assertDoesNotThrow(
-                        () -> (new BadAttributeException(
-                                testMessage, null, cause))),
+                    () -> (new BadAttributeException(message, null, cause))),
                 () -> assertDoesNotThrow(
-                        () -> (new BadAttributeException(
-                                null, testAttribute, cause))),
+                    () -> (new BadAttributeException(null, attribute, cause))),
                 () -> assertDoesNotThrow(
-                        () -> (new BadAttributeException(
-                                null, null, null)))
-        );
-    }
-
-    /**
-     * null in 2 param
-     */
-    @DisplayName("testing null for 2 param constructor (nulls allowed")
-    @Test
-    public void testNullInTwoParamConstructor(){
-        assertAll(
-                () -> assertDoesNotThrow(
-                        () -> new BadAttributeException(testMessage, null)),
-                () -> assertDoesNotThrow(
-                        () -> new BadAttributeException(null, testAttribute)),
-                () -> assertDoesNotThrow(
-                        () -> new BadAttributeException(null, null))
-        );
+                    () -> (new BadAttributeException(null, null, null)))
+            );
+        }
     }
 }

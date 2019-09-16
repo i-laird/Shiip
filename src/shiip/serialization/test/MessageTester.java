@@ -19,12 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
- * Performs testing for the {@link shiip.serialization.Message}.
+ * Performs testing for the {@link Message}.
  *
  * @version 1.0
  * @author Ian Laird, Andrew Walker
  */
-@DisplayName("Message Tester")
 public class MessageTester {
 
     private static Encoder encoder = null;
@@ -144,15 +143,11 @@ public class MessageTester {
      */
     @BeforeAll
     public static void initialize(){
-        try {
-            CORRECT_DATA_ONE =
-                    new Data(1,
-                            false, new byte[]
-                            {0x00, 0x01, 0x02, 0x03, 0x04, 0x05});
-            CORRECT_SETTINGS_ONE =
-                    new Settings();
-            CORRECT_WINDOW_UPDATE_ONE =
-                    new Window_Update(1,1);
+        assertDoesNotThrow(() -> {
+            CORRECT_DATA_ONE = new Data(1,false,
+                                new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05});
+            CORRECT_SETTINGS_ONE = new Settings();
+            CORRECT_WINDOW_UPDATE_ONE = new Window_Update(1,1);
 
             CORRECT_DATA_ONE_ENCODED =
                     CORRECT_DATA_ONE.encode(null);
@@ -160,29 +155,28 @@ public class MessageTester {
                     CORRECT_SETTINGS_ONE.encode(null);
             CORRECT_WINDOw_UPDATE_ENCODED =
                     CORRECT_WINDOW_UPDATE_ONE.encode(null);
-        }catch(BadAttributeException e){
-
-        }
+        });
     }
 
     /**
-     * Performs decoding a {@link shiip.serialization.Message}.
+     * Performs decoding a {@link Message}.
      *
      * @version 1.0
      * @author Ian Laird, Andrew Walker
      */
     @Nested
-    @DisplayName("Decoding Tests")
-    public class DecodingTester {
+    @DisplayName("decode")
+    public class Decode {
 
         /**
          * null msg
          */
-        @DisplayName("testing null msg")
+        @DisplayName("Null")
         @Test
         void testNullMsgBytes() {
-            assertThrows(NullPointerException.class,
-                    () -> Message.decode​(null, decoder));
+            assertThrows(NullPointerException.class, () -> {
+                Message.decode(null, decoder);
+            });
         }
 
         /**
@@ -191,131 +185,163 @@ public class MessageTester {
         @DisplayName("Invalid Type")
         @Test
         void testInvalidType() {
-            assertThrows(BadAttributeException.class,
-                    () -> Message.decode​(TEST_HEADER_BAD_TYPE, decoder));
+            assertThrows(BadAttributeException.class,() -> {
+                Message.decode(TEST_HEADER_BAD_TYPE, decoder);
+            });
         }
 
         /**
-         * data frame type recognized
+         *
          */
-        @DisplayName("Make sure Data frames are properly recognized")
-        @Test
-        void testDataFrameRecognized() {
-            try {
-                Message message = Message.decode​(GOOD_DATA_ONE, decoder);
-                assertEquals(message.getCode(), DATA_TYPE);
-            } catch (BadAttributeException e) {
-                fail(e.getMessage());
+        @Nested
+        @DisplayName("Data")
+        public class DataType{
+
+            /**
+             * Data Type
+             */
+            @DisplayName("Valid Type")
+            @Test
+            void testDataFrameRecognized() {
+                assertDoesNotThrow(() -> {
+                    Message message = Message.decode(GOOD_DATA_ONE, decoder);
+                    assertNotNull(message);
+                    assertEquals(message.getCode(), DATA_TYPE);
+                });
+            }
+
+            /**
+             * Valid Data frame
+             */
+            @DisplayName("Valid Frame")
+            @Test
+            void testDataFrameReadIn() {
+                assertDoesNotThrow(() -> {
+                    Message message = Message.decode(GOOD_DATA_ONE, decoder);
+                    Data data = (Data) message;
+                    assertEquals(data, CORRECT_DATA_ONE);
+                });
+            }
+
+            /**
+             * Data with bad bit set
+             */
+            @DisplayName("Bad Bit Set")
+            @Test
+            void testDataFrameBadBit() {
+                assertThrows(BadAttributeException.class, () -> {
+                    Message.decode(BAD_DATA_ONE, decoder);
+                });
+            }
+
+            /**
+             * Data with streamID of 0
+             */
+            @DisplayName("Bad streamID")
+            @Test
+            void testDataFrameStreamIdentifierZero() {
+                assertThrows(BadAttributeException.class, () -> {
+                    Message.decode(BAD_DATA_TWO, decoder);
+                });
+            }
+        }
+
+        @Nested
+        @DisplayName("Settings")
+        public class SettingsType {
+            /**
+             * Settings Type
+             */
+            @DisplayName("Valid Type")
+            @Test
+            void testSettingsFrameRecognized() {
+                assertDoesNotThrow(() -> {
+                    Message message = Message.decode(GOOD_SETTINGS_ONE, decoder);
+                    assertNotNull(message);
+                    assertEquals(message.getCode(), SETTINGS_TYPE);
+                });
+            }
+
+            /**
+             * Valid Settings with payload
+             */
+            @DisplayName("Valid with Payload")
+            @Test
+            void testSettingsFramePayload() {
+                assertDoesNotThrow(() -> {
+                    Message.decode(GOOD_SETTINGS_TWO, decoder);
+                });
+            }
+
+            /**
+             * Invalid streamID
+             */
+            @DisplayName("Bad StreamID")
+            @Test
+            void testSettingsFrameBadStreamIdentifier() {
+                assertThrows(BadAttributeException.class, () -> {
+                    Message.decode(BAD_SETTINGS_ONE, decoder);
+                });
+            }
+
+            /**
+             * Invalid Flags
+             */
+            @DisplayName("Bad Flags")
+            @Test
+            void testSettingsFrameBadFlags() {
+                assertDoesNotThrow(() -> {
+                    Message.decode(BAD_SETTINGS_TWO, decoder);
+                });
             }
         }
 
         /**
-         * data frame decoding
+         *
          */
-        @DisplayName("Make sure Data frames are properly read in")
-        @Test
-        void testDataFrameReadIn() {
-            try {
-                Message message = Message.decode​(GOOD_DATA_ONE, decoder);
-                Data data = (Data) message;
-                assertEquals(data, CORRECT_DATA_ONE);
-            } catch (BadAttributeException e) {
-                fail(e.getMessage());
+        @Nested
+        @DisplayName("Window_Update")
+        public class WindowUpdateType {
+
+            /**
+             * Window_Update Type
+             */
+            @DisplayName("Valid Type")
+            @Test
+            void testWindowUpdateFrameRecognized() {
+                assertDoesNotThrow(() -> {
+                    Message message =
+                            Message.decode(GOOD_WINDOW_UPDATE_ONE, decoder);
+                    assertEquals(message.getCode(), WINDOW_UPDATE_TYPE);
+                });
             }
-        }
 
-        /**
-         * bad bit in data frame
-         */
-        @DisplayName("Data Frame with the bad bit set")
-        @Test
-        void testDataFrameBadBit() {
-            assertThrows(BadAttributeException.class,
-                    () -> Message.decode​(BAD_DATA_ONE, decoder));
-        }
-
-        /**
-         * data frame stream id is 0
-         */
-        @DisplayName("Data Frame with zero stream identifier")
-        @Test
-        void testDataFrameStreamIdentifierZero() {
-            assertThrows(BadAttributeException.class,
-                    () -> Message.decode​(BAD_DATA_TWO, decoder));
-        }
-
-        /**
-         * setting frame id
-         */
-        @DisplayName("Make sure Settings frames are properly recognized")
-        @Test
-        void testSettingsFrameRecognized() {
-            try {
-                Message message = Message.decode​(GOOD_SETTINGS_ONE, decoder);
-                assertEquals(message.getCode(), SETTINGS_TYPE);
-            } catch (BadAttributeException e) {
-                fail(e.getMessage());
+            /**
+             * R bit
+             */
+            @DisplayName("R Bit")
+            @Test
+            void testWindowsUpdateRPaylaod() {
+                assertDoesNotThrow(() -> {
+                    Message.decode(GOOD_WINDOW_UPDATE_TWO, decoder);
+                });
             }
-        }
 
-        /**
-         * settings frame has a payload
-         */
-        @DisplayName("Settings Frame with a payload")
-        @Test
-        void testSettingsFramePayload() {
-            assertDoesNotThrow(
-                    () -> Message.decode​(GOOD_SETTINGS_TWO, decoder));
-        }
-
-        /**
-         * settings frame invalid stream id
-         */
-        @DisplayName("Setting frame with bad stream identifier")
-        @Test
-        void testSettingsFrameBadStreamIdentifier() {
-            assertThrows(BadAttributeException.class,
-                    () -> Message.decode​(BAD_SETTINGS_ONE, decoder));
-        }
-
-        /**
-         * window update id
-         */
-        @DisplayName("Make sure Window Update frames are properly recognized")
-        @Test
-        void testWindowUpdateFrameRecognized() {
-            try {
-                Message message =
-                        Message.decode​(GOOD_WINDOW_UPDATE_ONE, decoder);
-                assertEquals(message.getCode(), WINDOW_UPDATE_TYPE);
-            } catch (BadAttributeException e) {
-                fail(e.getMessage());
+            /**
+             * Payload too short
+             */
+            @DisplayName("Missing Payload")
+            @Test
+            void testWindowsUpdateFrameShort() {
+                assertThrows(BadAttributeException.class, () -> {
+                    Message.decode(BAD_WINDOW_UPDATE_ONE, decoder);
+                });
             }
-        }
-
-        /**
-         * window update r bit test
-         */
-        @DisplayName("Window Update R bit of payload set")
-        @Test
-        void testWindowsUpdateRPaylaod() {
-            assertDoesNotThrow(
-                    () -> Message.decode​(GOOD_WINDOW_UPDATE_TWO, decoder));
-        }
-
-        /**
-         * window update payload too short
-         */
-        @DisplayName("Window Update too short of payload")
-        @Test
-        void testWindowsUpdateFrameShort() {
-            assertThrows(BadAttributeException.class,
-                    () -> Message.decode​(BAD_WINDOW_UPDATE_ONE, decoder));
         }
     }
 
     /**
-     * Performs encoding a {@link shiip.serialization.Message}.
+     * Performs encoding a {@link Message}.
      *
      * @version 1.0
      * @author Ian Laird, Andrew Walker
@@ -336,7 +362,7 @@ public class MessageTester {
             /**
              * data flags unset
              */
-            @DisplayName("Test all data flags are unset")
+            @DisplayName("Data Flags Unset")
             @Test
             public void testDataFlagsUnset(){
                 assertEquals(NO_FLAGS,
@@ -346,7 +372,7 @@ public class MessageTester {
             /**
              * settings flags unset
              */
-            @DisplayName("Test all settings flags are unset")
+            @DisplayName("Settings Flags Unset")
             @Test
             public void testSettingsFlagsUnset(){
                 assertEquals(REQUIRED_SETTINGS_FLAGS_SERIALIZATION,
@@ -356,7 +382,7 @@ public class MessageTester {
             /**
              * window update flags unset
              */
-            @DisplayName("Test all Window_Update flags are unset")
+            @DisplayName("Window_Update Flags Unset")
             @Test
             public void testWindowUpdateFlagsUnset(){
                 assertEquals(NO_FLAGS,
@@ -369,6 +395,7 @@ public class MessageTester {
          * null for the encoder
          */
         @Test
+        @DisplayName("Null Encoder")
         public void testNullEncoder(){
             assertDoesNotThrow(()->CORRECT_DATA_ONE.encode(null));
         }
@@ -376,7 +403,7 @@ public class MessageTester {
         /**
          * testing the r bit
          */
-        @DisplayName("R bit stays upset when sending all message types")
+        @DisplayName("R Bit Unset")
         @Test
         public void testRBit(){
             assertAll(
@@ -400,7 +427,7 @@ public class MessageTester {
         /**
          * second r bit in the window update
          */
-        @DisplayName("Additional R bit stays unset Window_Update")
+        @DisplayName("R Bit Unset - Window_Update")
         @Test
         public void testSecondRBitWindowUpdate(){
             assertEquals((byte)(CORRECT_WINDOw_UPDATE_ENCODED
@@ -412,7 +439,7 @@ public class MessageTester {
         /**
          * data encoding
          */
-        @DisplayName("Test Data encoding is being performed properly")
+        @DisplayName("Valid Data Encoding")
         @Test
         public void testDataEncoding(){
             assertArrayEquals(GOOD_DATA_ONE, CORRECT_DATA_ONE_ENCODED);
@@ -421,7 +448,7 @@ public class MessageTester {
         /**
          * settings encoding
          */
-        @DisplayName("Test Settings encoding is being performed properly")
+        @DisplayName("Valid Settings Encoding")
         @Test
         public void testSettingsEncoding(){
             assertArrayEquals(GOOD_SETTINGS_ONE, CORRECT_SETTINGS_ENCODED);
@@ -430,7 +457,7 @@ public class MessageTester {
         /**
          * window update encoding
          */
-        @DisplayName("Test Window_Update encoding is being performed properly")
+        @DisplayName("Valid Window_Update Encoding")
         @Test
         public void testWindowUpdateEncoding(){
             assertArrayEquals(GOOD_WINDOW_UPDATE_ONE,

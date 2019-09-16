@@ -1,10 +1,3 @@
-/*******************************************************
- * Author: Ian Laird, Andrew Walker
- * Assignment: Prog 1
- * Class: Data Comm
- *******************************************************/
-
-
 package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
@@ -14,17 +7,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import shiip.serialization.BadAttributeException;
 import shiip.serialization.Settings;
+import static shiip.serialization.test.TestingConstants.SETTINGS_TYPE;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
- * Performs testing for the {@link shiip.serialization.Settings}.
+ * Tests the Settings class
  *
- * @version 1.0
- * @author Ian Laird, Andrew Walker
+ * @author
  */
-public class SettingsTest {
+public class SettingsTester {
 
     /**
      * Tests the constructor of Settings
@@ -42,8 +34,20 @@ public class SettingsTest {
             assertDoesNotThrow(() -> {
                 Settings settings = new Settings();
                 assertAll(() -> assertEquals(0, settings.getStreamID()),
-                          () -> assertEquals((byte) 0x4, settings.getCode()));
+                          () -> assertEquals(SETTINGS_TYPE, settings.getCode()));
 
+            });
+        }
+
+        /**
+         * Tests code is the correct one for Settings
+         */
+        @Test
+        @DisplayName("code")
+        public void testConstructorCode() {
+            assertDoesNotThrow(() -> {
+                Settings settings = new Settings();
+                assertEquals((byte) 0x4, settings.getCode());
             });
         }
     }

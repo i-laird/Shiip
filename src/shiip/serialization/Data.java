@@ -31,7 +31,7 @@ public class Data extends Message {
      * @throws BadAttributeException if attribute invalid (set protocol spec)
      */
     public Data(int streamID, boolean isEnd, byte[] data) throws BadAttributeException{
-        this.setStreamId(streamID);
+        this.setStreamID(streamID);
         this.setEnd(isEnd);
         this.setData(data);
     }
@@ -79,7 +79,7 @@ public class Data extends Message {
         ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + this.getData().length);
         createByteArray.put(DATA_TYPE);
         createByteArray.put(this.isEnd ? DATA_END_STREAM : NO_FLAGS);
-        createByteArray.putInt(this.getStreamId());
+        createByteArray.putInt(this.getStreamID());
         byte [] header = createByteArray.array();
 
         /* now need to add the payload to the header */
@@ -110,7 +110,7 @@ public class Data extends Message {
     protected void ensureValidStreamId(int streamId) throws BadAttributeException {
         if(streamId == Message.REQUIRED_SETTINGS_STREAM_ID)
             throw new BadAttributeException("0x0 not allowed as " +
-                    "stream identifier for data frame", "streamId");
+                    "stream identifier for data frame", "streamID");
     }
 
     @Override
