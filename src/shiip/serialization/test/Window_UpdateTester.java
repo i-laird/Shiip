@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 1.0
  * @author Ian Laird, Andrew Walker
  */
-public class Window_UpdateTesterA{
+public class Window_UpdateTester{
 
     @Nested
     @DisplayName("constructor")
