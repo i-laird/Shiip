@@ -22,7 +22,10 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests the Data class
+ * Performs testing for the {@link shiip.serialization.Data}.
+ *
+ * @version 1.0
+ * @author Ian Laird, Andrew Walker
  */
 public class DataTest {
 

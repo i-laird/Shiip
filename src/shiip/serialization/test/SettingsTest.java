@@ -19,9 +19,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
- * Tests the Settings class
+ * Performs testing for the {@link shiip.serialization.Settings}.
  *
- * @author
+ * @version 1.0
+ * @author Ian Laird, Andrew Walker
  */
 public class SettingsTest {
 
