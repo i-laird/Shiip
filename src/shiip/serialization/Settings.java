@@ -39,6 +39,11 @@ public class Settings extends Message{
         return "Settings: StreamID=" + Integer.toString(this.streamId);
     }
 
+    /**
+     * tests if the stream id is valid for Settings Frame
+     * @param streamId the stream id to be verified
+     * @throws BadAttributeException if the stream id is not 0x0
+     */
     @Override
     protected void ensureValidStreamId(int streamId) throws BadAttributeException {
         if(streamId != Message.REQUIRED_SETTINGS_STREAM_ID)
@@ -46,6 +51,11 @@ public class Settings extends Message{
                     "stream identifier for settings frame", "streamID");
     }
 
+    /**
+     * converts a settings message into a stream of bytes
+     * @param encoder can be null for this message type
+     * @return the byte array representation of a settings messagell
+     */
     @Override
     public byte [] encode(com.twitter.hpack.Encoder encoder){
         ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE);
@@ -55,6 +65,10 @@ public class Settings extends Message{
         return createByteArray.array();
     }
 
+    /**
+     * returns the code for a settings message
+     * @return 0x4
+     */
     @Override
     public byte getCode() {
         return Message.SETTINGS_TYPE;

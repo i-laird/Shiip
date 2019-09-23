@@ -7,7 +7,6 @@
 package shiip.serialization;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Thrown if problem with attribute
@@ -17,6 +16,9 @@ import java.util.Objects;
  */
 public class BadAttributeException extends Exception implements Serializable {
 
+    private static final long serialVersionUID = 1235342656L;
+
+    /* the attribute that caused the exception to be thrown */
     private String attribute = null;
 
     /**

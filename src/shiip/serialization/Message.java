@@ -96,6 +96,11 @@ public class Message {
         return toReturn;
     }
 
+    /**
+     * converts a message into a stream of bytes
+     * @param encoder can optionally be null for the message types
+     * @return the byte array
+     */
     public byte [] encode(com.twitter.hpack.Encoder encoder){
         return null;
     }
@@ -130,10 +135,21 @@ public class Message {
         this.streamId = streamId;
     }
 
+    /**
+     * tests if the stream id is valid for the message type
+     * @param streamId the stream id to be verified
+     * @throws BadAttributeException if the stream id is invalid
+     */
     protected void ensureValidStreamId( int streamId) throws BadAttributeException{
         //for just a message by itself there are no requirments for the stream id
     }
 
+    /**
+     * Tests for equality between two messages
+     * @param o the object to be compared with this
+     * @return true iff o and this are equal
+     *  tests streamId values
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -142,6 +158,10 @@ public class Message {
         return streamId == message.streamId;
     }
 
+    /**
+     * returns a hashcode for a {@link Message}
+     * @return hashcode of message
+     */
     @Override
     public int hashCode() {
 

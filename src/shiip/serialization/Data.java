@@ -106,6 +106,11 @@ public class Data extends Message {
                 + " data=" + Integer.toString(data.length);
     }
 
+    /**
+     * tests if the stream id is valid for the Data type
+     * @param streamId the stream id to be verified
+     * @throws BadAttributeException if the stream id is 0x0
+     */
     @Override
     protected void ensureValidStreamId(int streamId) throws BadAttributeException {
         if(streamId == Message.REQUIRED_SETTINGS_STREAM_ID)
@@ -113,11 +118,21 @@ public class Data extends Message {
                     "stream identifier for data frame", "streamID");
     }
 
+    /**
+     * returns the code for a settings message
+     * @return 0x0
+     */
     @Override
     public byte getCode() {
         return Message.DATA_TYPE;
     }
 
+    /**
+     * Tests for equality between two data messages
+     * @param o the object to be compared with this
+     * @return true iff o and this are equal
+     *  tests streamId values, isEnd values, and data arrays
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -128,6 +143,10 @@ public class Data extends Message {
                 streamId == data1.streamId;
     }
 
+    /**
+     * returns a hashcode for a {@link Data}
+     * @return hashcode of {@link Data}
+     */
     @Override
     public int hashCode() {
 

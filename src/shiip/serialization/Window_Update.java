@@ -68,6 +68,11 @@ public class Window_Update extends Message {
                 " increment=" + Integer.toString(increment);
     }
 
+    /**
+     * converts a Window_Update into a stream of bytes
+     * @param encoder can be null (is unused)
+     * @return the byte array for a Window_Update message
+     */
     @Override
     public byte [] encode(com.twitter.hpack.Encoder encoder){
         ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE);
@@ -78,11 +83,21 @@ public class Window_Update extends Message {
         return createByteArray.array();
     }
 
+    /**
+     * returns the code for a window_update message
+     * @return 0x8
+     */
     @Override
     public byte getCode() {
         return Message.WINDOW_UPDATE_TYPE;
     }
 
+    /**
+     * Tests for equality between two Window_Update
+     * @param o the object to be compared with this
+     * @return true iff o and this are equal
+     *    tests increment and streamId values
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -91,6 +106,10 @@ public class Window_Update extends Message {
         return increment == that.increment && this.streamId == that.streamId;
     }
 
+    /**
+     * returns a hashcode for a {@link Window_Update}
+     * @return hashcode of {@link Window_Update}
+     */
     @Override
     public int hashCode() {
 
