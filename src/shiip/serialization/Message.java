@@ -89,7 +89,7 @@ public class Message {
      * is null + needed.
      * @throws BadAttributeException if validation failure
      */
-    public static Message decode​(byte[] msgBytes,
+    public static Message decode(byte[] msgBytes,
             com.twitter.hpack.Decoder decoder)
             throws BadAttributeException{
         msgBytes = Objects.requireNonNull(msgBytes, "The message cannot be null");
