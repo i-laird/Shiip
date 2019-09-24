@@ -7,7 +7,7 @@
 
 package shiip.serialization;
 
-import java.nio.ByteBuffer;
+import com.twitter.hpack.Encoder;
 
 /**
  * Settings message
@@ -52,26 +52,31 @@ public class Settings extends Message{
     }
 
     /**
-     * converts a settings message into a stream of bytes
-     * @param encoder can be null for this message type
-     * @return the byte array representation of a settings messagell
-     */
-    @Override
-    public byte [] encode(com.twitter.hpack.Encoder encoder){
-        ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE);
-        createByteArray.put(SETTINGS_TYPE);
-        createByteArray.put(REQUIRED_SETTINGS_FLAGS);
-        createByteArray.putInt(this.getStreamID());
-        return createByteArray.array();
-    }
-
-    /**
      * returns the code for a settings message
      * @return 0x4
      */
     @Override
     public byte getCode() {
         return Message.SETTINGS_TYPE;
+    }
+
+    /**
+     * no flags are defined for a settings frame
+     * @return 0x0
+     */
+    @Override
+    protected byte getEncodeFlags(){
+        return REQUIRED_SETTINGS_FLAGS;
+    }
+
+    /**
+     * settings frame has no payload
+     * @param encoder can be null
+     * @return null
+     */
+    @Override
+    protected byte []  getEncodedPayload(Encoder encoder){
+        return null;
     }
 
 }

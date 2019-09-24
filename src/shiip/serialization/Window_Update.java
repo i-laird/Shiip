@@ -7,6 +7,8 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Encoder;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -69,21 +71,6 @@ public class Window_Update extends Message {
     }
 
     /**
-     * converts a Window_Update into a stream of bytes
-     * @param encoder can be null (is unused)
-     * @return the byte array for a Window_Update message
-     */
-    @Override
-    public byte [] encode(com.twitter.hpack.Encoder encoder){
-        ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE);
-        createByteArray.put(WINDOW_UPDATE_TYPE);
-        createByteArray.put(NO_FLAGS);
-        createByteArray.putInt(this.getStreamID());
-        createByteArray.putInt(this.getIncrement());
-        return createByteArray.array();
-    }
-
-    /**
      * returns the code for a window_update message
      * @return 0x8
      */
@@ -114,5 +101,15 @@ public class Window_Update extends Message {
     public int hashCode() {
 
         return Objects.hash(increment, streamId);
+    }
+
+    @Override
+    protected byte getEncodeFlags(){
+        return NO_FLAGS;
+    }
+
+    @Override
+    protected byte []  getEncodedPayload(Encoder encoder){
+        return ByteBuffer.allocate(WINDOW_UPDATE_INCREMENT_SIZE).putInt(this.getIncrement()).array();
     }
 }

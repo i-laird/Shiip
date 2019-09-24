@@ -7,6 +7,8 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Encoder;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -21,20 +23,59 @@ public class Message {
     protected int streamId;
     protected byte [] ALLOWED_TYPE_CODES = new byte [] {(byte)0x0, (byte)0x4, (byte)0x8};
 
+    // for when a message does not have a type set
     protected static final byte TYPE_NOT_SET = (byte)0xFF;
+
+    //type for a data message
     protected static final byte DATA_TYPE = (byte)0x0;
+
+    // type for a settings message
     protected static final byte SETTINGS_TYPE = (byte)0x4;
+
+    // type for a windows update message
     protected static final byte WINDOW_UPDATE_TYPE = (byte)0x8;
 
+    //type for a headers message
+    protected static final byte HEADER_TYPE = (byte)0x1;
+
+    //the stream id of a settings frame
     protected static final int REQUIRED_SETTINGS_STREAM_ID = 0X0;
+
+    //an unallowed flag for a settings frame
     protected static final int DATA_BAD_FLAG = 0x8;
+
+    // bit to see if the end of stream is set for a data message
     protected static final int DATA_END_STREAM = 0x1;
+
+    // the size of the header of a SHiip message
     protected static final int HEADER_SIZE = 6;
+
+    // the increment size of a window update frame
     protected static final int WINDOW_UPDATE_INCREMENT_SIZE = 4;
+
+    //indicates that no flags are set
     protected static final byte NO_FLAGS = 0x0;
+
+    // test stream id for a window update frame
     protected static final int WINDOW_UPDATE_STREAM_IDENTIFIER = 4;
+
+    // all bits but the r bit
     protected static final int CLEAR_ALL_BUT_R_BIT = 0x7F;
+
+    // the required flags for a settings frame
     protected static final byte REQUIRED_SETTINGS_FLAGS = 0x1;
+
+    // end of stream flag for a headers frame
+    protected static final byte HEADERS_END_STREAM_FLAG = 0x1;
+
+    // end hdr flag for a headers frame
+    protected static final byte HEADERS_END_HDR_FLAG = 0x4;
+
+    // bad flag one for a headers frame
+    protected static final byte HEADERS_BAD_FLAG_ONE = 0X8;
+
+    // bad flag two for a headers frame
+    protected static final byte HEADERS_BAD_FLAG_TWO = 0x20;
 
     /**
      * Deserializes message from given bytes
@@ -102,7 +143,7 @@ public class Message {
      * @return the byte array
      */
     public byte [] encode(com.twitter.hpack.Encoder encoder){
-        return null;
+        return this.getEncoded(this.getCode(), this.getEncodeFlags(), this.getStreamID(), this.getEncodedPayload(encoder));
     }
 
     /**
@@ -166,5 +207,36 @@ public class Message {
     public int hashCode() {
 
         return Objects.hash(streamId);
+    }
+
+    protected byte [] getEncoded(byte type, byte flags, int streamId, byte [] payload){
+        if(Objects.isNull(payload)){
+            payload = new byte [0];
+        }
+        ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + payload.length);
+        createByteArray.put(type);
+        createByteArray.put(flags);
+        createByteArray.putInt(streamId);
+        if(payload.length > 0){
+            createByteArray.put(payload);
+        }
+        return createByteArray.array();
+    }
+
+    /**
+     * a message has no flags by default
+     * @return 0x0
+     */
+    protected byte getEncodeFlags(){
+        return (byte)0x0;
+    }
+
+    /**
+     * a message has no payload by default
+     * @param encoder can be null by default
+     * @return null
+     */
+    protected byte []  getEncodedPayload(Encoder encoder){
+        return null;
     }
 }

@@ -7,6 +7,8 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Encoder;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -72,24 +74,6 @@ public class Data extends Message {
         this.isEnd = end;
     }
 
-    @Override
-    public byte [] encode(com.twitter.hpack.Encoder encoder){
-
-        /* first need to encode the header */
-        ByteBuffer createByteArray = ByteBuffer.allocate(HEADER_SIZE + this.getData().length);
-        createByteArray.put(DATA_TYPE);
-        createByteArray.put(this.isEnd ? DATA_END_STREAM : NO_FLAGS);
-        createByteArray.putInt(this.getStreamID());
-        byte [] header = createByteArray.array();
-
-        /* now need to add the payload to the header */
-        byte [] toReturn = Arrays.copyOf(header, HEADER_SIZE + this.getData().length);
-        for(int i = HEADER_SIZE; i < HEADER_SIZE + this.getData().length; i++){
-            toReturn[i] = this.getData()[i - HEADER_SIZE];
-        }
-        return toReturn;
-    }
-
     /**
      * Returns string of the form
      * Data: StreamID=<streamid> isEnd=<end> data=<length>
@@ -153,5 +137,24 @@ public class Data extends Message {
         int result = Objects.hash(isEnd, streamId);
         result = 31 * result + Arrays.hashCode(data);
         return result;
+    }
+
+    /**
+     *
+     * @return if isEnd is set the end of stream flag is set when returned
+     */
+    @Override
+    protected byte getEncodeFlags(){
+        return this.isEnd ? DATA_END_STREAM : NO_FLAGS;
+    }
+
+    /**
+     * the data array
+     * @param encoder can be null by default
+     * @return the data array
+     */
+    @Override
+    protected byte []  getEncodedPayload(Encoder encoder){
+        return this.data;
     }
 }
