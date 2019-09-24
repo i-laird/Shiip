@@ -9,7 +9,6 @@ package shiip.serialization;
 
 import com.twitter.hpack.Encoder;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -39,8 +38,8 @@ public class Data extends Message {
     }
 
     /**
-     *
-     * @return
+     * get data
+     * @return the data of a data frame
      */
     public byte [] getData(){
         return this.data;

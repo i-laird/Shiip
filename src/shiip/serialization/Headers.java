@@ -135,11 +135,24 @@ public class Headers extends Message {
         return Objects.hash(isEnd, streamId);
     }
 
+    /**
+     * 0x1 is set if it is the end header, and 0x4 is always set.
+     * @return the encoding flags for a header message
+     */
     @Override
     protected byte getEncodeFlags(){
-        return NO_FLAGS;
+        byte toReturn = (this.isEnd ? HEADERS_END_STREAM_FLAG : 0x0);
+        toReturn |= HEADERS_END_HDR_FLAG; //error if this bit is not set
+        return toReturn;
     }
 
+    /**
+     * encodes the payload of a headers message
+     *
+     * @param encoder cannot be null and is used to encode the headers payload
+     * @return the encoded payload
+     * @throws NullPointerException if encoder is null
+     */
     @Override
     protected byte []  getEncodedPayload(Encoder encoder){
         Objects.requireNonNull(encoder, "The encoder cannot be null for a Headers message");

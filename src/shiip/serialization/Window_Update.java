@@ -103,11 +103,23 @@ public class Window_Update extends Message {
         return Objects.hash(increment, streamId);
     }
 
+    /**
+     * no flags are to be set when encoding a {@link Window_Update}
+     * @return 0x0
+     */
     @Override
     protected byte getEncodeFlags(){
         return NO_FLAGS;
     }
 
+
+    /**
+     * the payload is 32 bits.
+     * The first bit is the R bit and the next 31 are the increment
+     *
+     * @param encoder can be null
+     * @return the payload of a {@link Window_Update} frame
+     */
     @Override
     protected byte []  getEncodedPayload(Encoder encoder){
         return ByteBuffer.allocate(WINDOW_UPDATE_INCREMENT_SIZE).putInt(this.getIncrement()).array();

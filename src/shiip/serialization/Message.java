@@ -142,7 +142,7 @@ public class Message {
      * @param encoder can optionally be null for the message types
      * @return the byte array
      */
-    public byte [] encode(com.twitter.hpack.Encoder encoder){
+    public byte [] encode(Encoder encoder){
         return this.getEncoded(this.getCode(), this.getEncodeFlags(), this.getStreamID(), this.getEncodedPayload(encoder));
     }
 
@@ -209,6 +209,14 @@ public class Message {
         return Objects.hash(streamId);
     }
 
+    /**
+     * Creates the encoding of the header and payload.
+     * @param type the type of the message
+     * @param flags the flags for the message
+     * @param streamId the stream id of the message
+     * @param payload the payload of the message
+     * @return the frame
+     */
     protected byte [] getEncoded(byte type, byte flags, int streamId, byte [] payload){
         if(Objects.isNull(payload)){
             payload = new byte [0];
