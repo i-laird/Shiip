@@ -10,6 +10,8 @@ package shiip.serialization;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -157,7 +159,14 @@ public class Message {
         return toReturn;
     }
 
-    public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder){
+    public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder) throws BadAttributeException {
+        try {
+            ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);
+            decoder.decode(payloadStream,
+                    (byte[] name, byte[] value, boolean sensitive) -> headers.addValue(name, value, sensitive));
+        }catch(IOException e){
+            throw new BadAttributeException("Unable to decode the headers", "headers", e);
+        }
 
     }
 

@@ -22,6 +22,119 @@ public class Headers extends Message {
 
     private SortedMap<String, String> nameValuePairs = new TreeMap<>();
 
+    // for testing if name/value pairs are to be tested for encoding purposes
+    private static boolean ENCODE_MODE = true;
+
+    /**
+     * @author Ian Laird
+     *
+     * used to check if byte arrays are valid names or values respectively
+     */
+    private static class NameValueValidityChecker{
+        // the lowest visible ascii character
+        private static byte VISCHAR_LOWER_BOUND = 0x21;
+
+        // the highest visible ascii character
+        private static byte VISCHAR_UPPER_BOUND = 0x7E;
+
+        // the SP character
+        private static byte SP = 0x20;
+
+        // the HTAB character
+        private static byte HTAB = 0x9;
+
+        // the minimum length for a name in bytes
+        private static int MINIMUM_NAME_LENGTH = 1;
+
+        //the minimum length for a value in bytes
+        private static int MINIMUM_VALUE_LENGTH = 1;
+
+        // all of the delimeters
+        private static String DELIMS = "(),/;<=>?@[\\]{}";
+
+        /**
+         * Checks if a string and value pair are valid
+         * @param name the name to be checked
+         * @param value the value to be checked
+         * @param encodeMode the way that name/value are checked
+         *                  depends on decoding or encoding
+         * @throws BadAttributeException thrown if invalid name or value
+         */
+        public static void checkValid(byte [] name, byte [] value, boolean encodeMode) throws BadAttributeException{
+            //if in encode mode make sure that the string are valid for sending
+            isValidName(name);
+            isValidValue(value);
+        }
+
+        /**
+         * checks if a name is valid
+         * @param name the name to be checked
+         * @throws BadAttributeException if the name is invalid
+         */
+        private static void isValidName(byte [] name) throws BadAttributeException{
+            if(name.length < MINIMUM_NAME_LENGTH){
+                throw new BadAttributeException("Invalid name: too short", "name");
+            }
+            for (byte b : name){
+                if(!isNCHAR(b)){
+                    throw new BadAttributeException("Invalid name: not an nchar", "name");
+                }
+            }
+        }
+
+        /**
+         * checks if a value is valid
+         * @param value the value to be checked
+         * @throws BadAttributeException if the value is invalid
+         */
+        private static void isValidValue(byte [] value) throws BadAttributeException{
+            if(value.length < MINIMUM_VALUE_LENGTH){
+                throw new BadAttributeException("Invalid value: too short", "name");
+            }
+            for (byte b : value){
+                if(!isVCHAR(b)){
+                    throw new BadAttributeException("Invalid name: not all vchar", "value");
+                }
+            }
+        }
+
+        /**
+         * sees if is a Visible character
+         * @param c the ascii character to check
+         * @return true indicates is a visible character
+         */
+        private static  boolean isVISCHAR( byte c){
+            return (c >= VISCHAR_LOWER_BOUND) && (c <= VISCHAR_UPPER_BOUND);
+        }
+
+        /**
+         * sees if is a delimiter
+         * @param c the ascii char to test
+         * @return true indicates is a delim
+         */
+        private static boolean isDelim(byte c){
+            return DELIMS.contains(String.valueOf(c));
+        }
+
+        /**
+         * sees if is a visible char or SP or HTAB
+         * @param c the ascii char to test
+         * @return true is a VCHAR
+         */
+        private static boolean isVCHAR(byte c){
+            return isVISCHAR(c) || (c == SP) || (c == HTAB);
+        }
+
+        /**
+         * sees if is a visible character that is not a delimiter
+         * @param c the ascii character to test
+         * @return true if is a NCHAR
+         */
+        private static boolean isNCHAR(byte c){
+            return isVISCHAR(c) && !isDelim(c);
+        }
+    }
+
     /**
      * Creates Headers message from given values
      *
@@ -90,6 +203,7 @@ public class Headers extends Message {
 
     }
 
+
     /**
      * tests if the stream id is valid for the Headers type
      * @param streamId the stream id to be verified
@@ -154,8 +268,18 @@ public class Headers extends Message {
      * @throws NullPointerException if encoder is null
      */
     @Override
-    protected byte []  getEncodedPayload(Encoder encoder){
+    protected byte [] getEncodedPayload(Encoder encoder){
         Objects.requireNonNull(encoder, "The encoder cannot be null for a Headers message");
         return null;
+    }
+
+    protected void addValue(byte [] name, byte [] value, boolean sensitive) throws BadAttributeException{
+        NameValueValidityChecker.checkValid(name, value, ENCODE_MODE);
+        String n = byteArrayToString(name);
+        String v = byteArrayToString(value);
+        this.addValue(n,v);
+    }
+    protected static String byteArrayToString(byte [] b){
+        return Base64.getEncoder().encodeToString(b);
     }
 }
