@@ -9,9 +9,7 @@ package shiip.serialization;
 import com.twitter.hpack.Encoder;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.SortedSet;
+import java.util.*;
 
 /**
  * Headers message
@@ -21,6 +19,8 @@ import java.util.SortedSet;
 public class Headers extends Message {
 
     private boolean isEnd;
+
+    private SortedMap<String, String> nameValuePairs = new TreeMap<>();
 
     /**
      * Creates Headers message from given values

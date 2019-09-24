@@ -7,6 +7,7 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
 import java.nio.ByteBuffer;
@@ -20,6 +21,7 @@ import java.util.Objects;
  * @author Ian laird
  */
 public class Message {
+
     protected int streamId;
     protected byte [] ALLOWED_TYPE_CODES = new byte [] {(byte)0x0, (byte)0x4, (byte)0x8};
 
@@ -42,10 +44,10 @@ public class Message {
     protected static final int REQUIRED_SETTINGS_STREAM_ID = 0X0;
 
     //an unallowed flag for a settings frame
-    protected static final int DATA_BAD_FLAG = 0x8;
+    protected static final byte DATA_BAD_FLAG = 0x8;
 
     // bit to see if the end of stream is set for a data message
-    protected static final int DATA_END_STREAM = 0x1;
+    protected static final byte DATA_END_STREAM = 0x1;
 
     // the size of the header of a SHiip message
     protected static final int HEADER_SIZE = 6;
@@ -77,6 +79,10 @@ public class Message {
     // bad flag two for a headers frame
     protected static final byte HEADERS_BAD_FLAG_TWO = 0x20;
 
+    private static boolean checkBitSet(byte flag, byte bit){
+        return ((flag & bit) != (byte)0);
+    }
+
     /**
      * Deserializes message from given bytes
      * @param msgBytes message bytes
@@ -99,15 +105,14 @@ public class Message {
         byte flags = bb.get();
         int streamId = bb.getInt();
         Message toReturn = null;
+        byte [] payload = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length);
+
         switch(type){
             case DATA_TYPE:
-                byte [] data = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length);
-                boolean end_stream = ((flags & DATA_END_STREAM) != (byte)0);
-                boolean bad_bit = ((flags & DATA_BAD_FLAG) != (byte)0);
-                if(bad_bit){
+                if(checkBitSet(flags, DATA_BAD_FLAG)){
                     throw new BadAttributeException("The Bad flag was set (0x8)", "flags");
                 }
-                toReturn = new Data(streamId, end_stream,  data);
+                toReturn = new Data(streamId, checkBitSet(flags, DATA_END_STREAM),  payload);
                 break;
             case SETTINGS_TYPE:
                 if(streamId != REQUIRED_SETTINGS_STREAM_ID){
@@ -124,10 +129,25 @@ public class Message {
                 }
                 /* clear out the R bit so that it is 0 (the R bit is the
                  most significant bit*/
-                msgBytes[HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE - 1] &= CLEAR_ALL_BUT_R_BIT;
-                ByteBuffer bb2 = ByteBuffer.wrap(msgBytes, HEADER_SIZE, WINDOW_UPDATE_INCREMENT_SIZE);
+                payload[0] &= CLEAR_ALL_BUT_R_BIT;
+                ByteBuffer bb2 = ByteBuffer.wrap(payload);
                 int increment = bb2.getInt();
                 toReturn = new Window_Update(streamId, increment);
+                break;
+
+            case HEADER_TYPE:
+                Objects.requireNonNull(decoder,
+                        "The decoder may not be null for a Headers Message");
+                if(checkBitSet(flags, HEADERS_BAD_FLAG_ONE)){
+                    throw new BadAttributeException("Bad flag 0x8 set", "flags");
+                }
+                if(checkBitSet(flags, HEADERS_BAD_FLAG_TWO)){
+                    throw new BadAttributeException("Bad flag 0x20 set", "flags");
+                }
+                if(!checkBitSet(flags, HEADERS_END_HDR_FLAG)){
+                    throw new BadAttributeException("END HDR flag not set", "flags");
+                }
+                toReturn = new Headers(streamId, checkBitSet(flags, HEADERS_END_STREAM_FLAG));
                 break;
 
              /* This is if the type of the packet is not recognized */
@@ -135,6 +155,10 @@ public class Message {
                 throw new BadAttributeException("Unrecognized packet type: " + Byte.toString(type), "type");
         }
         return toReturn;
+    }
+
+    public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder){
+
     }
 
     /**
