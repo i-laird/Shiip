@@ -26,33 +26,33 @@ public class Headers extends Message {
     private SortedMap<String, String> nameValuePairs = new TreeMap<>();
 
     // for testing if name/value pairs are to be tested for encoding purposes
-    private static boolean ENCODE_MODE = true;
+    private static final boolean ENCODE_MODE = true;
 
-    private static boolean DECODE_MODE = false;
+    private static final boolean DECODE_MODE = false;
 
-    private static byte FORWARD_SLASH_ASCII = 0x5c;
+    private static final byte FORWARD_SLASH_ASCII = 0x5c;
 
-    private static boolean ENCODING_SENSITIVE = false;
+    private static final boolean ENCODING_SENSITIVE = false;
 
     private Map<byte [], byte []> toProcess = new HashMap<>();
 
-    public static String NAME_METHOD = ":method";
+    private static final String NAME_METHOD = ":method";
 
-    public static String NAME_PATH = ":path";
+    private static final String NAME_PATH = ":path";
 
-    public static String NAME_VERSION = ":version";
+    private static final String NAME_VERSION = ":version";
 
-    public static String NAME_HOST = ":host";
+    private static final String NAME_HOST = ":host";
 
-    public static String NAME_SCHEME = ":scheme";
+    private static final String NAME_SCHEME = ":scheme";
 
-    public  static String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
+    private  static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
 
-    public  static List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
+    private  static final List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
 
-    public static String HTTP_VERSION = "HTTP/2.0";
+    private static final String HTTP_VERSION = "HTTP/2.0";
 
-    public static String HTTP_SCHEME = "https";
+    private static final String HTTP_SCHEME = "https";
 
     /**
      * @author Ian Laird
