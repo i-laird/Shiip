@@ -150,6 +150,9 @@ public class Message {
                     throw new BadAttributeException("END HDR flag not set", "flags");
                 }
                 toReturn = new Headers(streamId, checkBitSet(flags, HEADERS_END_STREAM_FLAG));
+
+                // uses the twitter library to decode the header block and adds all attributes
+                addHeaderFieldsToHeader((Headers)toReturn, payload, decoder);
                 break;
 
              /* This is if the type of the packet is not recognized */
@@ -164,6 +167,7 @@ public class Message {
             ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);
             decoder.decode(payloadStream,
                     (byte[] name, byte[] value, boolean sensitive) -> headers.addValue(name, value, sensitive));
+            headers.processAllNameValues();
         }catch(IOException e){
             throw new BadAttributeException("Unable to decode the headers", "headers", e);
         }
@@ -277,7 +281,7 @@ public class Message {
      * @param encoder can be null by default
      * @return null
      */
-    protected byte []  getEncodedPayload(Encoder encoder){
+    protected byte [] getEncodedPayload(Encoder encoder){
         return null;
     }
 }

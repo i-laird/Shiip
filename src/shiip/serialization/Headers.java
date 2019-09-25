@@ -8,7 +8,10 @@ package shiip.serialization;
 
 import com.twitter.hpack.Encoder;
 
-import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -25,12 +28,38 @@ public class Headers extends Message {
     // for testing if name/value pairs are to be tested for encoding purposes
     private static boolean ENCODE_MODE = true;
 
+    private static boolean DECODE_MODE = false;
+
+    private static byte FORWARD_SLASH_ASCII = 0x5c;
+
+    private static boolean ENCODING_SENSITIVE = false;
+
+    private Map<byte [], byte []> toProcess = new HashMap<>();
+
+    public static String NAME_METHOD = ":method";
+
+    public static String NAME_PATH = ":path";
+
+    public static String NAME_VERSION = ":version";
+
+    public static String NAME_HOST = ":host";
+
+    public static String NAME_SCHEME = ":scheme";
+
+    public  static String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
+
+    public  static List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
+
+    public static String HTTP_VERSION = "HTTP/2.0";
+
+    public static String HTTP_SCHEME = "https";
+
     /**
      * @author Ian Laird
      *
      * used to check if byte arrays are valid names or values respectively
      */
-    private static class NameValueValidityChecker{
+    private static class NameValueValidityCheckerAscii {
         // the lowest visible ascii character
         private static byte VISCHAR_LOWER_BOUND = 0x21;
 
@@ -135,6 +164,32 @@ public class Headers extends Message {
         }
     }
 
+    public static void checkValidNameValueString(String name, String value) throws BadAttributeException{
+        if(NAME_METHOD.equals(name)){
+            if(!HTTP_METHODS.contains(value)){
+                throw new BadAttributeException("unknown http method", "value");
+            }
+        }
+        else if(name.equals(NAME_PATH)){
+            if(value.getBytes(Charset.forName("ascii"))[0] != FORWARD_SLASH_ASCII){
+                throw new BadAttributeException("Must prefix a forward slash on path value", "value");
+            }
+        }
+        else if(name.equals(NAME_VERSION)){
+            if(!value.equals(HTTP_VERSION)){
+                throw new BadAttributeException("The version must be HTTP/2.0", "value");
+            }
+        }
+        else if(name.equals(NAME_HOST)){
+            //TODO
+        }
+        else if(name.equals(NAME_SCHEME)){
+            if(!value.equals(HTTP_SCHEME)){
+                throw new BadAttributeException("The scheme must be https", "value");
+            }
+        }
+    }
+
     /**
      * Creates Headers message from given values
      *
@@ -174,7 +229,7 @@ public class Headers extends Message {
      * @return
      */
     public String toString(String name){
-        return null;
+        return this.nameValuePairs.get(name);
     }
 
     /**
@@ -182,7 +237,7 @@ public class Headers extends Message {
      * @return the value
      */
     public String getValue(String name){
-        return null;
+        return this.nameValuePairs.get(name);
     }
 
     /**
@@ -190,7 +245,7 @@ public class Headers extends Message {
      * @return set of names
      */
     public SortedSet<String> getNames(){
-        return null;
+        return new TreeSet<>(this.nameValuePairs.keySet());
     }
 
     /**
@@ -200,7 +255,8 @@ public class Headers extends Message {
      * @throws BadAttributeException if invalid name or value
      */
     public void addValue(String name, String value) throws BadAttributeException{
-
+        checkValidNameValueString(name, value);
+        this.nameValuePairs.put(name, value);
     }
 
 
@@ -270,14 +326,34 @@ public class Headers extends Message {
     @Override
     protected byte [] getEncodedPayload(Encoder encoder){
         Objects.requireNonNull(encoder, "The encoder cannot be null for a Headers message");
-        return null;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            for (Map.Entry<String, String> entry : this.nameValuePairs.entrySet()) {
+                byte[] name = entry.getKey().getBytes(StandardCharsets.US_ASCII);
+                byte[] value = entry.getValue().getBytes(StandardCharsets.US_ASCII);
+                encoder.encodeHeader(out, name, value, ENCODING_SENSITIVE);
+            }
+        }catch(IOException e){
+
+        }
+        return out.toByteArray();
     }
 
-    protected void addValue(byte [] name, byte [] value, boolean sensitive) throws BadAttributeException{
-        NameValueValidityChecker.checkValid(name, value, ENCODE_MODE);
-        String n = byteArrayToString(name);
-        String v = byteArrayToString(value);
-        this.addValue(n,v);
+    protected void processAllNameValues() throws BadAttributeException{
+        for(Map.Entry<byte [], byte []> entry: toProcess.entrySet()) {
+            byte [] name = entry.getKey();
+            byte [] value = entry.getValue();
+
+            //TODO do I need this line?
+            NameValueValidityCheckerAscii.checkValid(name, value, DECODE_MODE);
+
+            String n = byteArrayToString(name);
+            String v = byteArrayToString(value);
+            this.addValue(n, v);
+        }
+    }
+    protected void addValue(byte [] name, byte [] value, boolean sensitive){
+        this.toProcess.put(name, value);
     }
     protected static String byteArrayToString(byte [] b){
         return Base64.getEncoder().encodeToString(b);
