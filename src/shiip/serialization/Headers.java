@@ -22,6 +22,26 @@ import java.util.*;
  */
 public class Headers extends Message {
 
+    public static final String NAME_METHOD = ":method";
+
+    public static final String GET_REQUEST = "GET";
+
+    public static final String NAME_PATH = ":path";
+
+    public static final String NAME_VERSION = ":version";
+
+    public static final String NAME_HOST = ":host";
+
+    public static final String NAME_SCHEME = ":scheme";
+
+    public  static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
+
+    public  static final List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
+
+    public static final String HTTP_VERSION = "HTTP/2.0";
+
+    public static final String HTTP_SCHEME = "https";
+
     private boolean isEnd;
 
     private SortedMap<String, String> nameValuePairs = new TreeMap<>();
@@ -36,24 +56,6 @@ public class Headers extends Message {
     private static final boolean ENCODING_SENSITIVE = false;
 
     private Map<byte [], byte []> toProcess = new HashMap<>();
-
-    private static final String NAME_METHOD = ":method";
-
-    private static final String NAME_PATH = ":path";
-
-    private static final String NAME_VERSION = ":version";
-
-    private static final String NAME_HOST = ":host";
-
-    private static final String NAME_SCHEME = ":scheme";
-
-    private  static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
-
-    private  static final List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
-
-    private static final String HTTP_VERSION = "HTTP/2.0";
-
-    private static final String HTTP_SCHEME = "https";
 
     /**
      * @author Ian Laird

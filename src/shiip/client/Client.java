@@ -1,7 +1,16 @@
 package shiip.client;
 
+import com.twitter.hpack.Decoder;
+import com.twitter.hpack.Encoder;
+import shiip.serialization.*;
+import static shiip.serialization.Headers.*;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.*;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.security.cert.X509Certificate;
@@ -39,12 +48,22 @@ public class Client {
 
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
+    // send by the client to initialize the connection
     private static final byte [] CLIENT_CONNECTION_PREFACE =
             {0x50, 0x52, 0x49, 0x20, 0x2a, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f,
              0x32, 0x2e, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x53, 0x4d, 0x0d, 0x0a,
              0x0d, 0x0a};
 
-    private Socket socket;
+    private static final int SERVER_CONNECTION_PREFACE_SIZE = 24;
+
+    private Socket socket = null;
+    private int currentStreamId = 1;
+    private Framer framer = null;
+    private Deframer deframer = null;
+    private Encoder encoder = null;
+    private Decoder decoder = null;
+    private List<String> paths = null;
+    private List<Stream> streams = new LinkedList<>();
 
     public static void main(String [] args){
         if(args.length < MINIMUM_COMMAND_LINE_PARAMS_CLIENt){
@@ -139,13 +158,67 @@ public class Client {
         return s;
     }
 
-    public Client(Socket socket) {
+    public Client(Socket socket, Encoder encoder, List<String> paths) throws IOException{
         this.socket = socket;
+        this.framer = new Framer(socket.getOutputStream());
+        this.deframer = new Deframer(socket.getInputStream());
+        this.encoder = encoder;
+        this.paths = paths;
     }
 
-    public void go(){
+    public void go() throws Exception {
+        // first send the connection preface
+        OutputStream out = this.socket.getOutputStream();
+        InputStream in = this.socket.getInputStream();
+        out.write(CLIENT_CONNECTION_PREFACE);
 
-        // first send the connection preface which is a data frame
+        //now send a settings frame
+        Settings connectionStartSettingsFrame = new Settings();
+        this.sendFrame(connectionStartSettingsFrame);
 
+        //read in the server connection preface
+        byte [] serverConnectionPreface = new byte[SERVER_CONNECTION_PREFACE_SIZE];
+        in.readNBytes(serverConnectionPreface, 0, SERVER_CONNECTION_PREFACE_SIZE);
+
+        //read in the settings frame that the server will send
+        Message throwAway = this.receiveMessage();
+
+        //now make all of the file requests
+        int currStreamid;
+        for(String path : this.paths){
+            currStreamid = getNextStreamId();
+            Headers header = new Headers(currentStreamId, false);
+            addHeaders(header, path);
+
+            //create a stream for this path
+            this.streams.add(new Stream(currentStreamId, path));
+        }
+
+        //now keep reading data frames from the TLS connection until it is closed
+        for(;;){
+            Message m = this.receiveMessage();
+        }
+    }
+
+    private void sendFrame(Message m) throws IOException{
+        framer.putFrame(m.encode(this.encoder));
+    }
+
+    private Message receiveMessage() throws IOException, BadAttributeException{
+        return Message.decode(deframer.getFrame(), decoder);
+    }
+
+    private int getNextStreamId(){
+        int toReturn = this.currentStreamId;
+        currentStreamId += 2;
+        return toReturn;
+    }
+
+    private static void addHeaders(Headers header, String path) throws BadAttributeException{
+        header.addValue(NAME_METHOD, GET_REQUEST);
+        header.addValue(NAME_PATH, path);
+        header.addValue(NAME_VERSION, HTTP_VERSION);
+        header.addValue(NAME_HOST, ""); //TODO fix this
+        header.addValue(NAME_SCHEME, HTTP_SCHEME);
     }
 }
