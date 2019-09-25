@@ -22,13 +22,45 @@ import java.util.Objects;
  * @version 1.0
  * @author Ian laird
  */
-public class Message {
+public abstract class Message {
 
+    protected static class HeaderParts{
+        byte flags;
+        int streamId;
+        byte code;
+
+        public HeaderParts(byte flags, int streamId, byte code) {
+            this.flags = flags;
+            this.streamId = streamId;
+            this.code = code;
+        }
+
+        public byte getFlags() {
+            return flags;
+        }
+
+        public void setFlags(byte flags) {
+            this.flags = flags;
+        }
+
+        public int getStreamId() {
+            return streamId;
+        }
+
+        public void setStreamId(int streamId) {
+            this.streamId = streamId;
+        }
+
+        public byte getCode() {
+            return code;
+        }
+
+        public void setCode(byte code) {
+            this.code = code;
+        }
+    }
     protected int streamId;
     protected byte [] ALLOWED_TYPE_CODES = new byte [] {(byte)0x0, (byte)0x4, (byte)0x8};
-
-    // for when a message does not have a type set
-    protected static final byte TYPE_NOT_SET = (byte)0xFF;
 
     //type for a data message
     protected static final byte DATA_TYPE = (byte)0x0;
@@ -81,7 +113,7 @@ public class Message {
     // bad flag two for a headers frame
     protected static final byte HEADERS_BAD_FLAG_TWO = 0x20;
 
-    private static boolean checkBitSet(byte flag, byte bit){
+    protected static boolean checkBitSet(byte flag, byte bit){
         return ((flag & bit) != (byte)0);
     }
 
@@ -100,66 +132,41 @@ public class Message {
     public static Message decode(byte[] msgBytes,
             com.twitter.hpack.Decoder decoder)
             throws BadAttributeException{
-        msgBytes = Objects.requireNonNull(msgBytes, "The message cannot be null");
         int length = msgBytes.length;
+        msgBytes = Objects.requireNonNull(msgBytes, "The message cannot be null");
+        HeaderParts parsed = parseHeader(msgBytes);
+        byte [] payload = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length);
+
+        Message newMessage = null;
+
+        switch(parsed.getCode()){
+            case DATA_TYPE:
+                newMessage = new Data(0x1,false, new byte [0]);
+                break;
+            case SETTINGS_TYPE:
+                newMessage = new Settings();
+                break;
+            case WINDOW_UPDATE_TYPE:
+                newMessage = new Window_Update(0x1, 1);
+                break;
+            case HEADER_TYPE:
+                newMessage = new Headers(0x1, false);
+                break;
+            /* This is if the type of the packet is not recognized */
+            default:
+                throw new BadAttributeException("Unrecognized packet type: " + Byte.toString(parsed.getCode()), "type");
+        }
+        return newMessage.performDecode(parsed, payload, decoder);
+    }
+
+    protected abstract Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException;
+
+    static HeaderParts parseHeader(byte [] msgBytes){
         ByteBuffer bb = ByteBuffer.wrap(msgBytes, 0, HEADER_SIZE);
         byte type = bb.get();
         byte flags = bb.get();
         int streamId = bb.getInt();
-        Message toReturn = null;
-        byte [] payload = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length);
-
-        switch(type){
-            case DATA_TYPE:
-                if(checkBitSet(flags, DATA_BAD_FLAG)){
-                    throw new BadAttributeException("The Bad flag was set (0x8)", "flags");
-                }
-                toReturn = new Data(streamId, checkBitSet(flags, DATA_END_STREAM),  payload);
-                break;
-            case SETTINGS_TYPE:
-                if(streamId != REQUIRED_SETTINGS_STREAM_ID){
-                    throw new BadAttributeException("Settings stream id must be 0x0", "stream id");
-                }
-                toReturn = new Settings();
-                break;
-            case WINDOW_UPDATE_TYPE:
-
-                /* make sure that the necessary paylaod bytes are present */
-                if(msgBytes.length != (HEADER_SIZE + WINDOW_UPDATE_INCREMENT_SIZE)){
-                    throw new BadAttributeException("Payload of Window_Update" +
-                            " frame must be 32 bits long", "payload");
-                }
-                /* clear out the R bit so that it is 0 (the R bit is the
-                 most significant bit*/
-                payload[0] &= CLEAR_ALL_BUT_R_BIT;
-                ByteBuffer bb2 = ByteBuffer.wrap(payload);
-                int increment = bb2.getInt();
-                toReturn = new Window_Update(streamId, increment);
-                break;
-
-            case HEADER_TYPE:
-                Objects.requireNonNull(decoder,
-                        "The decoder may not be null for a Headers Message");
-                if(checkBitSet(flags, HEADERS_BAD_FLAG_ONE)){
-                    throw new BadAttributeException("Bad flag 0x8 set", "flags");
-                }
-                if(checkBitSet(flags, HEADERS_BAD_FLAG_TWO)){
-                    throw new BadAttributeException("Bad flag 0x20 set", "flags");
-                }
-                if(!checkBitSet(flags, HEADERS_END_HDR_FLAG)){
-                    throw new BadAttributeException("END HDR flag not set", "flags");
-                }
-                toReturn = new Headers(streamId, checkBitSet(flags, HEADERS_END_STREAM_FLAG));
-
-                // uses the twitter library to decode the header block and adds all attributes
-                addHeaderFieldsToHeader((Headers)toReturn, payload, decoder);
-                break;
-
-             /* This is if the type of the packet is not recognized */
-            default:
-                throw new BadAttributeException("Unrecognized packet type: " + Byte.toString(type), "type");
-        }
-        return toReturn;
+        return new HeaderParts(flags, streamId, type);
     }
 
     public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder) throws BadAttributeException {
@@ -188,9 +195,7 @@ public class Message {
      *
      * @return type code
      */
-    public byte getCode(){
-        return Message.TYPE_NOT_SET;
-    }
+    public abstract byte getCode();
 
     /**
      * Returns the stream ID

@@ -7,6 +7,7 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
 import java.util.Arrays;
@@ -155,5 +156,16 @@ public class Data extends Message {
     @Override
     protected byte []  getEncodedPayload(Encoder encoder){
         return this.data;
+    }
+
+    @Override
+    protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
+        if(checkBitSet(parsed.getFlags(), DATA_BAD_FLAG)){
+            throw new BadAttributeException("The Bad flag was set (0x8)", "flags");
+        }
+        this.setData(payload);
+        this.setStreamID(parsed.streamId);
+        this.setEnd(checkBitSet(parsed.flags, DATA_END_STREAM));
+        return this;
     }
 }

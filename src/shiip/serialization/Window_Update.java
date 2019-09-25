@@ -7,6 +7,7 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
 import java.nio.ByteBuffer;
@@ -123,5 +124,22 @@ public class Window_Update extends Message {
     @Override
     protected byte []  getEncodedPayload(Encoder encoder){
         return ByteBuffer.allocate(WINDOW_UPDATE_INCREMENT_SIZE).putInt(this.getIncrement()).array();
+    }
+
+    @Override
+    protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
+        /* make sure that the necessary paylaod bytes are present */
+        if(payload.length != WINDOW_UPDATE_INCREMENT_SIZE){
+            throw new BadAttributeException("Payload of Window_Update" +
+                    " frame must be 32 bits long", "payload");
+        }
+        /* clear out the R bit so that it is 0 (the R bit is the
+                 most significant bit*/
+        payload[0] &= CLEAR_ALL_BUT_R_BIT;
+        ByteBuffer bb2 = ByteBuffer.wrap(payload);
+        int increment = bb2.getInt();
+        this.setStreamID(parsed.getStreamId());
+        this.setIncrement(increment);
+        return this;
     }
 }

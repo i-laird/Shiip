@@ -6,6 +6,7 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
 import java.io.ByteArrayOutputStream;
@@ -357,5 +358,26 @@ public class Headers extends Message {
     }
     protected static String byteArrayToString(byte [] b){
         return Base64.getEncoder().encodeToString(b);
+    }
+
+    @Override
+    protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
+        Objects.requireNonNull(decoder,
+                "The decoder may not be null for a Headers Message");
+        if(checkBitSet(parsed.flags, HEADERS_BAD_FLAG_ONE)){
+            throw new BadAttributeException("Bad flag 0x8 set", "flags");
+        }
+        if(checkBitSet(parsed.flags, HEADERS_BAD_FLAG_TWO)){
+            throw new BadAttributeException("Bad flag 0x20 set", "flags");
+        }
+        if(!checkBitSet(parsed.flags, HEADERS_END_HDR_FLAG)){
+            throw new BadAttributeException("END HDR flag not set", "flags");
+        }
+        this.setEnd(checkBitSet(parsed.flags, HEADERS_END_STREAM_FLAG));
+        this.setStreamID(parsed.getStreamId());
+
+        // uses the twitter library to decode the header block and adds all attributes
+        addHeaderFieldsToHeader((Headers)this, payload, decoder);
+        return this;
     }
 }

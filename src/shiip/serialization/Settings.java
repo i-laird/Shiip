@@ -7,6 +7,7 @@
 
 package shiip.serialization;
 
+import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
 /**
@@ -78,5 +79,15 @@ public class Settings extends Message{
     protected byte []  getEncodedPayload(Encoder encoder){
         return null;
     }
+
+    @Override
+    protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
+        if(parsed.streamId != REQUIRED_SETTINGS_STREAM_ID){
+            throw new BadAttributeException("Settings stream id must be 0x0", "stream id");
+        }
+        this.setStreamID(parsed.getStreamId());
+        return this;
+    }
+
 
 }
