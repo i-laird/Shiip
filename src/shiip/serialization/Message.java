@@ -24,43 +24,84 @@ import java.util.Objects;
  */
 public abstract class Message {
 
+    /**
+     * @author Ian laird
+     *
+     * holds the fields of a parsed header
+     */
     protected static class HeaderParts{
+
+        //the flags of the header
         byte flags;
+
+        // the stream id in the header
         int streamId;
+
+        // the type of the message
         byte code;
 
+        /**
+         * @param flags flags
+         * @param streamId stream id
+         * @param code code
+         */
         public HeaderParts(byte flags, int streamId, byte code) {
             this.flags = flags;
             this.streamId = streamId;
             this.code = code;
         }
 
+        /**
+         *
+         * @return flags of the header
+         */
         public byte getFlags() {
             return flags;
         }
 
+        /**
+         * set the flags
+         * @param flags flags
+         */
         public void setFlags(byte flags) {
             this.flags = flags;
         }
 
+        /**
+         *
+         * @return stream id
+         */
         public int getStreamId() {
             return streamId;
         }
 
+        /**
+         * set the stream id
+         * @param streamId the stream id to set
+         */
         public void setStreamId(int streamId) {
             this.streamId = streamId;
         }
 
+        /**
+         *
+         * @return message type
+         */
         public byte getCode() {
             return code;
         }
 
+        /**
+         * the code to set
+         * @param code code
+         */
         public void setCode(byte code) {
             this.code = code;
         }
     }
+
+    // the stream id that is associated with the message
     protected int streamId;
-    protected byte [] ALLOWED_TYPE_CODES = new byte [] {(byte)0x0, (byte)0x4, (byte)0x8};
 
     //type for a data message
     protected static final byte DATA_TYPE = (byte)0x0;
@@ -113,6 +154,12 @@ public abstract class Message {
     // bad flag two for a headers frame
     protected static final byte HEADERS_BAD_FLAG_TWO = 0x20;
 
+    /**
+     * sees if a specific boolean is set in a byte
+     * @param flag the position to check
+     * @param bit the byte to check against
+     * @return true indicates that the flag is set
+     */
     protected static boolean checkBitSet(byte flag, byte bit){
         return ((flag & bit) != (byte)0);
     }
@@ -159,8 +206,22 @@ public abstract class Message {
         return newMessage.performDecode(parsed, payload, decoder);
     }
 
+    /**
+     * Performs the actual decode of the message
+     * @param parsed the contents of the header of the message
+     * @param payload the payload of the message
+     * @param decoder the decoder
+     * @return the decoded Message
+     * @throws BadAttributeException if validation failure
+     */
     protected abstract Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException;
 
+    /**
+     * creates a {@link HeaderParts} from the header bytes
+     * @param msgBytes the header bytes
+     * @return a newly created HeaderParts
+     * @see HeaderParts
+     */
     static HeaderParts parseHeader(byte [] msgBytes){
         ByteBuffer bb = ByteBuffer.wrap(msgBytes, 0, HEADER_SIZE);
         byte type = bb.get();
@@ -169,6 +230,12 @@ public abstract class Message {
         return new HeaderParts(flags, streamId, type);
     }
 
+    /**
+     * @param headers the Headers Message to add header fields to
+     * @param payload the headers block
+     * @param decoder the dccoder
+     * @throws BadAttributeException if unable to parse the headers
+     */
     public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder) throws BadAttributeException {
         try {
             ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);

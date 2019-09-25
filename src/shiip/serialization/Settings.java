@@ -80,6 +80,14 @@ public class Settings extends Message{
         return null;
     }
 
+    /**
+     *
+     * @param parsed the contents of the header of the message
+     * @param payload the payload of the message
+     * @param decoder the decoder (can be null)
+     * @return this message after being modified
+     * @throws BadAttributeException if validation exception
+     */
     @Override
     protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
         if(parsed.streamId != REQUIRED_SETTINGS_STREAM_ID){

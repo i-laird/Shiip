@@ -158,6 +158,14 @@ public class Data extends Message {
         return this.data;
     }
 
+    /**
+     *
+     * @param parsed the contents of the header of the message
+     * @param payload the payload of the message
+     * @param decoder the decoder (can be null)
+     * @return this message after being modified
+     * @throws BadAttributeException if validation exception
+     */
     @Override
     protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
         if(checkBitSet(parsed.getFlags(), DATA_BAD_FLAG)){

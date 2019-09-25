@@ -340,6 +340,10 @@ public class Headers extends Message {
         return out.toByteArray();
     }
 
+    /**
+     * processes all of the names and values
+     * @throws BadAttributeException if something bad happens
+     */
     protected void processAllNameValues() throws BadAttributeException{
         for(Map.Entry<byte [], byte []> entry: toProcess.entrySet()) {
             byte [] name = entry.getKey();
@@ -353,13 +357,34 @@ public class Headers extends Message {
             this.addValue(n, v);
         }
     }
+
+    /**
+     *
+     * @param name
+     * @param value
+     * @param sensitive
+     */
     protected void addValue(byte [] name, byte [] value, boolean sensitive){
         this.toProcess.put(name, value);
     }
+
+    /**
+     * converts array of ascii chars to a String
+     * @param b the byte array
+     * @return a newly created String
+     */
     protected static String byteArrayToString(byte [] b){
         return Base64.getEncoder().encodeToString(b);
     }
 
+    /**
+     *
+     * @param parsed the contents of the header of the message
+     * @param payload the payload of the message
+     * @param decoder the decoder (cannot be null)
+     * @return this message after being modified
+     * @throws BadAttributeException if validation exception
+     */
     @Override
     protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
         Objects.requireNonNull(decoder,

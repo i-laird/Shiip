@@ -126,6 +126,14 @@ public class Window_Update extends Message {
         return ByteBuffer.allocate(WINDOW_UPDATE_INCREMENT_SIZE).putInt(this.getIncrement()).array();
     }
 
+    /**
+     *
+     * @param parsed the contents of the header of the message
+     * @param payload the payload of the message
+     * @param decoder the decoder (can be null)
+     * @return this message after being modified
+     * @throws BadAttributeException if validation exception
+     */
     @Override
     protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
         /* make sure that the necessary paylaod bytes are present */
