@@ -13,7 +13,7 @@ import java.util.List;
  * @author Laird
  */
 public class Stream {
-    private int streamId;
+    private int streamId = 0;
     List<byte []> contents = new LinkedList<>();
     boolean isComplete = false;
     private String path;
@@ -69,5 +69,9 @@ public class Stream {
             }
         }
         return toReturn;
+    }
+
+    public int getStreamId() {
+        return streamId;
     }
 }

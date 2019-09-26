@@ -6,6 +6,7 @@ import shiip.serialization.*;
 import static shiip.serialization.Headers.*;
 import static shiip.serialization.Data.DATA_TYPE;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +23,10 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+/**
+ * @author Laird
+ * Shiip TCP client
+ */
 public class Client {
 
     // there must be a server a port, and at least one path
@@ -41,18 +46,46 @@ public class Client {
     //unable to create socket error
     private static final int SOCKET_CREATION_ERROR = 4;
 
+    // for when there is an error writing to a file
     private static final int ERROR_WRITING_TO_FILE = 5;
 
+    // for when there is an error in receiving the connection preface
+    private static final int ERROR_RECEIVING_CONNECTION_PREFACE = 6;
+
+    // for when there is an error sending the connection preface
+    private static final int ERROR_SENDING_CONNECTION_PREFACE = 7;
+
+    // for when there is a communication error with the network
+    private static final int NETWORK_ERROR = 8;
+
+    // error getting socket io streams
+    private static final int ERROR_SOCKET_GET_IO = 8;
+
+    // the arg pos of the server
     private static final int SERVER_URL_ARG_POS = 0;
+
+    // the arg pos of the port
     private static final int PORT_ARG_POS = 1;
+
+    // the arg pos that srarts the list of paths
     private static final int PATH_START_POS = 2;
-    private static final String RECEIVED_MESSAGE = "Received message ";
+
+    // the logger message for received message
+    private static final String RECEIVED_MESSAGE = "Received message: ";
+
+    //the logger message for an invalid message
     private static final String INVALID_MESSAGE = "Invalid message: ";
+
+    // the logger message for an unexpected stream id
     private static final String UNEXPECTED_STREAM_ID = "Unexpected stream ID: ";
+
+    // the logger message for being unable to parse
     private static final String UNABLE_TO_PARSE = "Unable to parse: ";
+
+    // the logger message for a bad status occuring
     private static final String BAD_STATUS = "Bad status: ";
 
-
+    // the logger for the Shiip TCP client
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
     // send by the client to initialize the connection
@@ -61,17 +94,40 @@ public class Client {
              0x32, 0x2e, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x53, 0x4d, 0x0d, 0x0a,
              0x0d, 0x0a};
 
+    // the length of the SERVER connection preface excluding settings frame
     private static final int SERVER_CONNECTION_PREFACE_SIZE = 24;
 
+    // the socket associated with the shiip connection
     private Socket socket = null;
+
+    //the next stream id that will be used
     private int currentStreamId = 1;
+
+    // the framer that is to be used in this connection
     private Framer framer = null;
+
+    //the deframer that is to be used in this connection
     private Deframer deframer = null;
+
+    //the encoder for this connection
     private Encoder encoder = null;
+
+    //the decoder that is to be used by this connection
     private Decoder decoder = null;
+
+    // all of the paths that the client is going to send to the server
     private List<String> paths = null;
+
+    // maps a streamId to its corresponding Stream object
     private Map<Integer, Stream> streams = new HashMap<>();
 
+    /**
+     * Runs the Client
+     * @param args
+     *    first param - server
+     *    second param - port
+     *    all other params are assumed to be paths
+     */
     public static void main(String [] args){
         if(args.length < MINIMUM_COMMAND_LINE_PARAMS_CLIENt){
             logger.severe("Usage: <server> <port> [<path> ...]");
@@ -81,14 +137,25 @@ public class Client {
         InetAddress ipAddr = getIpAddress(args[SERVER_URL_ARG_POS]);
         int port = getPort(args[PORT_ARG_POS]);
         List<String> paths = Arrays.asList(Arrays.copyOfRange(args, PATH_START_POS, args.length));
+        Socket socket = null;
         try {
-            Socket socket = createConnection(args[SERVER_URL_ARG_POS], port);
+            socket = createConnection(args[SERVER_URL_ARG_POS], port);
         }catch(Exception e){
             logger.severe("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);
         }
+        Encoder encoder = new Encoder(1024);
+        Decoder decoder = new Decoder(1024, 1024);
+        Client shiipConnection = new Client(socket, encoder, decoder, paths);
+        shiipConnection.go();
     }
 
+    /**
+     * Gets IpAddress from a server string
+     * @param server the server
+     * @return the ipAddress
+     * @see InetAddress
+     */
     private static InetAddress getIpAddress (String server){
         boolean isEncodedIp = true;
 
@@ -117,6 +184,11 @@ public class Client {
         return ipAddress;
     }
 
+    /**
+     * Gets a port number from its String representation
+     * @param port the port
+     * @return port as an int
+     */
     private static int getPort(String port){
         try {
             int toReturn = Integer.parseInt(port);
@@ -165,37 +237,62 @@ public class Client {
         return s;
     }
 
-    public Client(Socket socket, Encoder encoder, List<String> paths) throws IOException{
+    /**
+     * creates a Client
+     * @param socket the client that is connected to the Server
+     * @param encoder used for hpack compression
+     * @param paths all paths that are to be retrieved from the server
+     */
+    public Client(Socket socket, Encoder encoder, Decoder decoder, List<String> paths){
         this.socket = socket;
-        this.framer = new Framer(socket.getOutputStream());
-        this.deframer = new Deframer(socket.getInputStream());
+        this.framer= new Framer(getSocketOutputStream(socket));
+        this.deframer = new Deframer(getSocketInputStream(socket));
         this.encoder = encoder;
+        this.decoder = decoder;
         this.paths = paths;
     }
 
-    public void go() throws Exception {
-        // first send the connection preface
-        OutputStream out = this.socket.getOutputStream();
-        InputStream in = this.socket.getInputStream();
-        out.write(CLIENT_CONNECTION_PREFACE);
+    /**
+     * runs the client until all files have been retrieved
+     * @throws IOException
+     */
+    public void go() {
 
-        //now send a settings frame
-        Settings connectionStartSettingsFrame = new Settings();
-        this.sendFrame(connectionStartSettingsFrame);
+        OutputStream out = getSocketOutputStream(this.socket);
+        InputStream in = getSocketInputStream(this.socket);
+
+        // send the connection preface
+        try {
+            out.write(CLIENT_CONNECTION_PREFACE);
+            Settings connectionStartSettingsFrame = new Settings();
+            this.sendFrame(connectionStartSettingsFrame);
+        }catch(BadAttributeException | IOException e){
+            logger.severe("Error sending connection preface: " + e.getMessage());
+            System.exit(ERROR_SENDING_CONNECTION_PREFACE);
+        }
 
         //read in the server connection preface
         byte [] serverConnectionPreface = new byte[SERVER_CONNECTION_PREFACE_SIZE];
-        in.readNBytes(serverConnectionPreface, 0, SERVER_CONNECTION_PREFACE_SIZE);
+        try {
+            in.readNBytes(serverConnectionPreface, 0, SERVER_CONNECTION_PREFACE_SIZE);
 
-        //read in the settings frame that the server will send
-        Message throwAway = this.receiveMessage();
+            //read in the settings frame that the server will send
+            Message throwAway = this.receiveMessage();
+        }catch(BadAttributeException | IOException e){
+            logger.severe("Received bad server connection preface" + e.getMessage());
+            System.exit(ERROR_RECEIVING_CONNECTION_PREFACE);
+        }
 
         //now make all of the file requests
         int currStreamid;
         for(String path : this.paths){
             currStreamid = getNextStreamId();
-            Headers header = new Headers(currentStreamId, false);
-            addHeaders(header, path);
+            try {
+                Headers header = new Headers(currentStreamId, false);
+                addHeaders(header, path);
+            }catch(BadAttributeException e){
+                logger.severe("Error making GET request");
+            }
 
             //create a stream for this path
             this.streams.put(currStreamid, new Stream(currentStreamId, path));
@@ -203,54 +300,94 @@ public class Client {
 
         //now keep reading frames from the TLS connection until it is closed
         for(;;){
-            Message m = this.receiveMessage();
-
-            switch(m.getCode()){
-                case DATA_TYPE:
-                    this.handleDataFrame((Data)m);
-                    break;
-                case SETTINGS_TYPE:
-                    this.handleSettingsFrame((Settings)m);
-                    break;
-                case HEADER_TYPE:
-                    this.handleHeadersFrame((Headers)m);
-                    break;
-                case WINDOW_UPDATE_TYPE:
-                    this.handleWindowUpdateFrame((Window_Update)m);
-                    break;
+            Message m = null;
+            try {
+                m = this.receiveMessage();
+                switch(m.getCode()){
+                    case DATA_TYPE:
+                        this.handleDataFrame((Data)m);
+                        break;
+                    case SETTINGS_TYPE:
+                        this.handleSettingsFrame((Settings)m);
+                        break;
+                    case HEADER_TYPE:
+                        this.handleHeadersFrame((Headers)m);
+                        break;
+                    case WINDOW_UPDATE_TYPE:
+                        this.handleWindowUpdateFrame((Window_Update)m);
+                        break;
+                }
+            }catch(EOFException e){
+                logger.severe(UNABLE_TO_PARSE + e.getMessage());
+            }catch(BadAttributeException e2){
+                logger.severe(INVALID_MESSAGE + e2.getMessage());
+            }catch(IOException e3){
+                logger.severe("Error in communication with server: " + e3.getMessage());
+                System.exit(NETWORK_ERROR);
             }
-
             //TODO remove this
             break;
         }
         for(Stream s : this.streams.values()){
+
+            /*
+             * make sure that a data frame with END_STREAM set was
+             * received for this stream
+             */
             if(!s.isComplete){
-                //TODO this is an error
+                //TODO check with Donahoo about this one
+                logger.severe("Error never received DATA frame with" +
+                        " END_STREAM set for streamID: " + s.getStreamId());
             }
-            try {
-                s.writeToFile();
-            }catch(IOException e){
-                logger.severe("Error: Unable to write to file");
-                logger.severe(e.getMessage());
-                System.exit(ERROR_WRITING_TO_FILE);
+            else {
+                try {
+                    s.writeToFile();
+                } catch (IOException e) {
+                    logger.severe("Error: Unable to write to file");
+                    logger.severe(e.getMessage());
+                    System.exit(ERROR_WRITING_TO_FILE);
+                }
             }
         }
     }
 
+    /**
+     * Encodes, frames, and then sends a message over the saved output stream
+     * @param m message to send
+     * @throws IOException if unable to send the message
+     */
     private void sendFrame(Message m) throws IOException{
         framer.putFrame(m.encode(this.encoder));
     }
 
+    /**
+     * decodes, and then deframes a message from the saved input stream
+     * @return the retrieved Message
+     * @throws IOException if unable to read the message
+     * @throws BadAttributeException if the message has bad attributes
+     */
     private Message receiveMessage() throws IOException, BadAttributeException{
         return Message.decode(deframer.getFrame(), decoder);
     }
 
+    /**
+     * retrives the next stream id
+     * @return next stream id(only odd are allowed starting
+     * at 1 and strictly increasing)
+     */
     private int getNextStreamId(){
         int toReturn = this.currentStreamId;
         currentStreamId += 2;
         return toReturn;
     }
 
+    /**
+     * adds all headers to the {@link Headers} to perform the
+     * necessary GET request
+     * @param header the header that is to have headers added
+     * @param path the path of the desired resource on the server
+     * @throws BadAttributeException if a name value pair is unable to be added
+     */
     private static void addHeaders(Headers header, String path) throws BadAttributeException{
         header.addValue(NAME_METHOD, GET_REQUEST);
         header.addValue(NAME_PATH, path);
@@ -259,14 +396,22 @@ public class Client {
         header.addValue(NAME_SCHEME, HTTP_SCHEME);
     }
 
+    /**
+     * Handler for a Data Frame during normal operation
+     * @param d the data frame to handle
+     * @throws BadAttributeException should not actually be thrown
+     * @throws IOException if unable to send the necessary {@link Window_Update}
+     */
     private void handleDataFrame(Data d) throws BadAttributeException, IOException{
         /*
         if a data frame has an unrequested stream ID
-        then print error message and CONTINUE
+        then print error message and be done with this packet
          */
         if(!this.streams.containsKey(d.getStreamID())){
             logger.severe(UNEXPECTED_STREAM_ID + d.toString());
+            return;
         }
+
         // add the bytes from the data message to the stream
         Stream s = this.streams.get(d.getStreamID());
 
@@ -284,14 +429,26 @@ public class Client {
         }
     }
 
+    /**
+     * Handler for a Settings Frame during normal operation
+     * @param s the Settings Frame to handle
+     */
     private void handleSettingsFrame(Settings s){
         logger.info(RECEIVED_MESSAGE + s.toString());
     }
 
+    /**
+     * Handler for a Window_Update Frame
+     * @param w the window update frame
+     */
     private void handleWindowUpdateFrame(Window_Update w){
         logger.info(RECEIVED_MESSAGE + w.toString());
     }
 
+    /**
+     * handler for a Headers frame
+     * @param h the headers frame to handle
+     */
     private void handleHeadersFrame(Headers h){
         logger.info(RECEIVED_MESSAGE + h.toString());
         if(!h.getValue(STATUS).startsWith("200")){
@@ -300,5 +457,29 @@ public class Client {
             //terminate the stream
             this.streams.remove(h.getStreamID());
         }
+    }
+
+    private static InputStream getSocketInputStream(Socket s){
+        try {
+            return s.getInputStream();
+        }catch(IOException e){
+            logger.severe("Unable to get input stream for socket");
+            System.exit(ERROR_SOCKET_GET_IO);
+        }
+
+        //unreachable statement
+        return null;
+    }
+
+    private static OutputStream getSocketOutputStream(Socket s){
+        try {
+            return s.getOutputStream();
+        }catch(IOException e){
+            logger.severe("Unable to get input stream for socket");
+            System.exit(ERROR_SOCKET_GET_IO);
+        }
+
+        //unreachable statement
+        return null;
     }
 }
