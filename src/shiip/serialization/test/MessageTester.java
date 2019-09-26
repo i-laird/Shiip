@@ -132,6 +132,16 @@ public class MessageTester {
      * an example window update frame
      * the type is 8
      * the flags are 0
+     * the stream identifier is max value
+     * the payload is 4 octets and the R bit is set and increment is max value
+     */
+    private static byte [] GOOD_WINDOW_UPDATE_THREE =
+            {0x08, 0x00, (byte)0xff, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF };
+
+    /*
+     * an example window update frame
+     * the type is 8
+     * the flags are 0
      * the stream identifier is one
      * the payload is 3 octets BAD!!! and contains 1
      */
@@ -324,6 +334,19 @@ public class MessageTester {
             void testWindowsUpdateRPaylaod() {
                 assertDoesNotThrow(() -> {
                     Message.decode(GOOD_WINDOW_UPDATE_TWO, decoder);
+                });
+            }
+
+            /**
+             * R bit and max increment size
+             */
+            @DisplayName("Big Increment")
+            @Test
+            void testWindowsUpdateMaxIncrement() {
+                assertDoesNotThrow(() -> {
+                    Window_Update wu = (Window_Update)Message.decode(GOOD_WINDOW_UPDATE_THREE, decoder);
+                    assertEquals(wu.getIncrement(), LARGEST_INT);
+                    assertEquals(wu.getStreamID(), LARGEST_INT);
                 });
             }
 

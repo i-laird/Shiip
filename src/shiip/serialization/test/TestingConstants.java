@@ -52,4 +52,7 @@ class TestingConstants {
 
     // Position of the second R bit in the header of a Window_Update
     static final int BYTE_CONTAINING_SECOND_R_BIT_WINDOW_UPDATE = 7;
+
+     public static final int LARGEST_INT = 2147483647;
+
 }

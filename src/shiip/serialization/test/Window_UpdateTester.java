@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import shiip.serialization.BadAttributeException;
 import shiip.serialization.Window_Update;
 import static shiip.serialization.test.TestingConstants.WINDOW_UPDATE_TYPE;
+import static shiip.serialization.test.TestingConstants.LARGEST_INT;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -197,5 +198,15 @@ public class Window_UpdateTester{
                 assertEquals(wu1.hashCode(), wu2.hashCode());
             });
         }
+    }
+
+    @DisplayName("Big Numbers Constructor")
+    @Test
+    public void testBigNums(){
+        assertDoesNotThrow(() -> {
+            Window_Update wu = new Window_Update(LARGEST_INT, LARGEST_INT);
+            assertEquals(wu.getIncrement(), LARGEST_INT);
+            assertEquals(wu.getStreamID(), LARGEST_INT);
+        });
     }
 }

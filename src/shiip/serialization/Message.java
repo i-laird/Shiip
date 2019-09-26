@@ -137,7 +137,7 @@ public abstract class Message {
     protected static final int WINDOW_UPDATE_STREAM_IDENTIFIER = 4;
 
     // all bits but the r bit
-    protected static final int CLEAR_ALL_BUT_R_BIT = 0x7F;
+    protected static final byte CLEAR_ALL_BUT_R_BIT = 0x7F;
 
     // the required flags for a settings frame
     protected static final byte REQUIRED_SETTINGS_FLAGS = 0x1;
