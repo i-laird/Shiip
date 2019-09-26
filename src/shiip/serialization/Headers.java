@@ -42,6 +42,8 @@ public class Headers extends Message {
 
     public static final String HTTP_SCHEME = "https";
 
+    public static final String STATUS = ":status";
+
     private boolean isEnd;
 
     private SortedMap<String, String> nameValuePairs = new TreeMap<>();

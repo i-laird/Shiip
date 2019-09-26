@@ -46,6 +46,12 @@ public class Client {
     private static final int SERVER_URL_ARG_POS = 0;
     private static final int PORT_ARG_POS = 1;
     private static final int PATH_START_POS = 2;
+    private static final String RECEIVED_MESSAGE = "Received message ";
+    private static final String INVALID_MESSAGE = "Invalid message: ";
+    private static final String UNEXPECTED_STREAM_ID = "Unexpected stream ID: ";
+    private static final String UNABLE_TO_PARSE = "Unable to parse: ";
+    private static final String BAD_STATUS = "Bad status: ";
+
 
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
@@ -195,25 +201,25 @@ public class Client {
             this.streams.put(currStreamid, new Stream(currentStreamId, path));
         }
 
-        //now keep reading data frames from the TLS connection until it is closed
+        //now keep reading frames from the TLS connection until it is closed
         for(;;){
             Message m = this.receiveMessage();
-            if(m.getCode() != DATA_TYPE){
-                //TODO this is an error
+
+            switch(m.getCode()){
+                case DATA_TYPE:
+                    this.handleDataFrame((Data)m);
+                    break;
+                case SETTINGS_TYPE:
+                    this.handleSettingsFrame((Settings)m);
+                    break;
+                case HEADER_TYPE:
+                    this.handleHeadersFrame((Headers)m);
+                    break;
+                case WINDOW_UPDATE_TYPE:
+                    this.handleWindowUpdateFrame((Window_Update)m);
+                    break;
             }
-            Data d = (Data)m;
-            if(!this.streams.containsKey(d.getStreamID())){
-                //TODO this is an error
-            }
-            // add the bytes from the data message to the stream
-            Stream s = this.streams.get(d.getStreamID());
-            if(s.isComplete){
-                //TODO this is an error
-            }
-            s.addBytes(d.getData());
-            if(d.isEnd()){
-                s.setComplete(true);
-            }
+
             //TODO remove this
             break;
         }
@@ -251,5 +257,48 @@ public class Client {
         header.addValue(NAME_VERSION, HTTP_VERSION);
         header.addValue(NAME_HOST, ""); //TODO fix this
         header.addValue(NAME_SCHEME, HTTP_SCHEME);
+    }
+
+    private void handleDataFrame(Data d) throws BadAttributeException, IOException{
+        /*
+        if a data frame has an unrequested stream ID
+        then print error message and CONTINUE
+         */
+        if(!this.streams.containsKey(d.getStreamID())){
+            logger.severe(UNEXPECTED_STREAM_ID + d.toString());
+        }
+        // add the bytes from the data message to the stream
+        Stream s = this.streams.get(d.getStreamID());
+
+        /*
+        No more data frames should be sent if we have already received the last one
+         */
+        if(s.isComplete){
+            logger.severe(UNEXPECTED_STREAM_ID+ d.toString());
+        }
+        logger.info(RECEIVED_MESSAGE + d.toString());
+        this.sendFrame(new Window_Update(d.getStreamID(), d.getData().length));
+        s.addBytes(d.getData());
+        if(d.isEnd()){
+            s.setComplete(true);
+        }
+    }
+
+    private void handleSettingsFrame(Settings s){
+        logger.info(RECEIVED_MESSAGE + s.toString());
+    }
+
+    private void handleWindowUpdateFrame(Window_Update w){
+        logger.info(RECEIVED_MESSAGE + w.toString());
+    }
+
+    private void handleHeadersFrame(Headers h){
+        logger.info(RECEIVED_MESSAGE + h.toString());
+        if(!h.getValue(STATUS).startsWith("200")){
+            logger.severe(BAD_STATUS + h.getValue(STATUS));
+
+            //terminate the stream
+            this.streams.remove(h.getStreamID());
+        }
     }
 }
