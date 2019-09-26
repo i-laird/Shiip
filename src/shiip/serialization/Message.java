@@ -154,6 +154,8 @@ public abstract class Message {
     // bad flag two for a headers frame
     protected static final byte HEADERS_BAD_FLAG_TWO = 0x20;
 
+    protected static final byte STREAM_ID_START_BYTE = 0X2;
+
     /**
      * sees if a specific boolean is set in a byte
      * @param flag the position to check
@@ -181,6 +183,9 @@ public abstract class Message {
             throws BadAttributeException{
         int length = msgBytes.length;
         msgBytes = Objects.requireNonNull(msgBytes, "The message cannot be null");
+        if(msgBytes.length < HEADER_SIZE){
+            throw new BadAttributeException("msgBytes too short...must be at least 6 bytes", "msgBytes");
+        }
         HeaderParts parsed = parseHeader(msgBytes);
         byte [] payload = Arrays.copyOfRange(msgBytes, HEADER_SIZE, length);
 
@@ -223,6 +228,11 @@ public abstract class Message {
      * @see HeaderParts
      */
     static HeaderParts parseHeader(byte [] msgBytes){
+
+        /* clear out the R bit so that it is 0 (the R bit is the
+                 most significant bit*/
+        msgBytes[STREAM_ID_START_BYTE] &= CLEAR_ALL_BUT_R_BIT;
+
         ByteBuffer bb = ByteBuffer.wrap(msgBytes, 0, HEADER_SIZE);
         byte type = bb.get();
         byte flags = bb.get();
@@ -281,6 +291,9 @@ public abstract class Message {
      * @throws BadAttributeException
      */
     public void setStreamID(int streamId) throws BadAttributeException{
+        if(streamId < 0){
+            throw new BadAttributeException("Stream id cannot be negative", "streamID");
+        }
         this.ensureValidStreamId(streamId);
         this.streamId = streamId;
     }

@@ -10,6 +10,8 @@ package shiip.serialization;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
+import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -63,6 +65,9 @@ public class Data extends Message {
         if(Objects.isNull(data)){
             throw new BadAttributeException("data cannot be null", "data", new NullPointerException());
         }
+        if(data.length > MAXIMUM_PAYLOAD_SIZE){
+            throw new BadAttributeException("data length too great", "data");
+        }
         this.data = data.clone();
     }
 
@@ -97,9 +102,10 @@ public class Data extends Message {
      */
     @Override
     protected void ensureValidStreamId(int streamId) throws BadAttributeException {
-        if(streamId == Message.REQUIRED_SETTINGS_STREAM_ID)
+        if(streamId == Message.REQUIRED_SETTINGS_STREAM_ID) {
             throw new BadAttributeException("0x0 not allowed as " +
                     "stream identifier for data frame", "streamID");
+        }
     }
 
     /**
