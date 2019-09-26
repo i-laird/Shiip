@@ -181,8 +181,8 @@ public abstract class Message {
     public static Message decode(byte[] msgBytes,
             com.twitter.hpack.Decoder decoder)
             throws BadAttributeException{
-        int length = msgBytes.length;
         msgBytes = Objects.requireNonNull(msgBytes, "The message cannot be null");
+        int length = msgBytes.length;
         if(msgBytes.length < HEADER_SIZE){
             throw new BadAttributeException("msgBytes too short...must be at least 6 bytes", "msgBytes");
         }
