@@ -104,16 +104,16 @@ public abstract class Message {
     protected int streamId;
 
     //type for a data message
-    protected static final byte DATA_TYPE = (byte)0x0;
+    public static final byte DATA_TYPE = (byte)0x0;
 
     // type for a settings message
-    protected static final byte SETTINGS_TYPE = (byte)0x4;
+    public static final byte SETTINGS_TYPE = (byte)0x4;
 
     // type for a windows update message
-    protected static final byte WINDOW_UPDATE_TYPE = (byte)0x8;
+    public static final byte WINDOW_UPDATE_TYPE = (byte)0x8;
 
     //type for a headers message
-    protected static final byte HEADER_TYPE = (byte)0x1;
+    public static final byte HEADER_TYPE = (byte)0x1;
 
     //the stream id of a settings frame
     protected static final int REQUIRED_SETTINGS_STREAM_ID = 0X0;

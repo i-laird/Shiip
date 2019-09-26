@@ -4,14 +4,13 @@ import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 import shiip.serialization.*;
 import static shiip.serialization.Headers.*;
+import static shiip.serialization.Data.DATA_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.*;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 import java.security.cert.X509Certificate;
 
@@ -42,6 +41,8 @@ public class Client {
     //unable to create socket error
     private static final int SOCKET_CREATION_ERROR = 4;
 
+    private static final int ERROR_WRITING_TO_FILE = 5;
+
     private static final int SERVER_URL_ARG_POS = 0;
     private static final int PORT_ARG_POS = 1;
     private static final int PATH_START_POS = 2;
@@ -63,7 +64,7 @@ public class Client {
     private Encoder encoder = null;
     private Decoder decoder = null;
     private List<String> paths = null;
-    private List<Stream> streams = new LinkedList<>();
+    private Map<Integer, Stream> streams = new HashMap<>();
 
     public static void main(String [] args){
         if(args.length < MINIMUM_COMMAND_LINE_PARAMS_CLIENt){
@@ -191,12 +192,42 @@ public class Client {
             addHeaders(header, path);
 
             //create a stream for this path
-            this.streams.add(new Stream(currentStreamId, path));
+            this.streams.put(currStreamid, new Stream(currentStreamId, path));
         }
 
         //now keep reading data frames from the TLS connection until it is closed
         for(;;){
             Message m = this.receiveMessage();
+            if(m.getCode() != DATA_TYPE){
+                //TODO this is an error
+            }
+            Data d = (Data)m;
+            if(!this.streams.containsKey(d.getStreamID())){
+                //TODO this is an error
+            }
+            // add the bytes from the data message to the stream
+            Stream s = this.streams.get(d.getStreamID());
+            if(s.isComplete){
+                //TODO this is an error
+            }
+            s.addBytes(d.getData());
+            if(d.isEnd()){
+                s.setComplete(true);
+            }
+            //TODO remove this
+            break;
+        }
+        for(Stream s : this.streams.values()){
+            if(!s.isComplete){
+                //TODO this is an error
+            }
+            try {
+                s.writeToFile();
+            }catch(IOException e){
+                logger.severe("Error: Unable to write to file");
+                logger.severe(e.getMessage());
+                System.exit(ERROR_WRITING_TO_FILE);
+            }
         }
     }
 
