@@ -8,11 +8,28 @@ package shiip.serialization.test;
 
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
+import com.twitter.hpack.HeaderListener;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import shiip.serialization.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Stream;
+
 import static shiip.serialization.test.TestingConstants.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class MessageTester {
 
-    private static Encoder encoder = null;
+    private static Encoder encoder = null, encoder2 = null;
     private static Decoder decoder = null;
 
     private static byte [] TEST_HEADER_1 =
@@ -148,6 +165,22 @@ public class MessageTester {
     private static byte [] BAD_WINDOW_UPDATE_ONE =
             {0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01};
 
+    /*
+     * an example data header
+     * the type is headers (1)
+     * HDR is set
+     * the stream identifier is one
+     */
+    private static byte [] GOOD_HEADERS_HEADER_ONE = {0x01, 0x04, 0x00, 0x00, 0x00, 0x01};
+
+    /*
+     * an example data header
+     * the type is headers (1)
+     * HDR is set and end stream
+     * the stream identifier is three
+     */
+    private static byte [] GOOD_HEADERS_HEADER_TWO = {0x01, 0x05, 0x00, 0x00, 0x00, 0x03};
+
     /**
      * init the static objects
      */
@@ -165,6 +198,11 @@ public class MessageTester {
                     CORRECT_SETTINGS_ONE.encode(null);
             CORRECT_WINDOw_UPDATE_ENCODED =
                     CORRECT_WINDOW_UPDATE_ONE.encode(null);
+
+            // encode header list into header block
+            encoder = new Encoder(1024);
+            encoder2 = new Encoder(1024);
+
         });
     }
 
@@ -485,6 +523,78 @@ public class MessageTester {
         public void testWindowUpdateEncoding(){
             assertArrayEquals(GOOD_WINDOW_UPDATE_ONE,
                     CORRECT_WINDOw_UPDATE_ENCODED);
+        }
+
+        @Nested
+        @DisplayName("Headers tester")
+        public class HeaderTester{
+
+            @ParameterizedTest(name = "streamID = {0}, encoded = {2}")
+            @DisplayName("Encoding Tests")
+            @ArgumentsSource(MessageArgs.class)
+            public void
+            testHeadersEncoding(int streamId, Map<String, String> stuff, byte [] headerPlusPayload){
+                try{
+                    Headers h = new Headers(streamId, false);
+                    for (Map.Entry<String, String> entry : stuff.entrySet()) {
+                        h.addValue(entry.getKey(), entry.getValue());
+                    }
+                    assertArrayEquals(h.encode(encoder2), headerPlusPayload);
+                }catch(Exception e){
+                    fail(e.getMessage());
+                }
+            }
+        }
+    }
+    static class MessageArgs implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+            List<Integer> validStreamIDs = Arrays.asList( 1, 2876);
+            List<Map<String, String>> validPayloads = Arrays.asList(
+                    new TreeMap<>(),
+                    Map.of(":method", "GET"),
+                    Map.of(":method", "POST", ":version", "HTTP/2.0"),
+                    Map.of(":host", "duckduckgo.com", ":method", "PUT", ":scheme", "https")
+            );
+
+            return validStreamIDs
+                .stream()
+                .flatMap(streamID ->
+
+                    validPayloads
+                    .stream()
+                    .map(( payload) -> {
+                        return Arguments.of(streamID, payload, mergeTwoArrays(expectedHeader(streamID), compress(payload)));
+                    })
+
+                );
+        }
+
+        private byte [] expectedHeader(int streamid){
+            return ByteBuffer.allocate(HEADER_SIZE).put(HEADERS_TYPE).put((byte)0x04).putInt(streamid).array();
+        }
+        private byte [] compress(Map<String, String> map){
+            try {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    encoder.encodeHeader(out, entry.getKey().getBytes(StandardCharsets.US_ASCII), entry.getValue().getBytes(StandardCharsets.US_ASCII), false);
+                }
+                return out.toByteArray();
+            }catch(Exception e){}
+            return null;
+        }
+
+        private byte [] mergeTwoArrays(byte [] first, byte [] second){
+            byte [] toReturn = new byte [first.length + second.length];
+            int count = 0;
+            for(int  i = 0; i < first.length; i++){
+                toReturn[count++] = first[i];
+            }
+            for(int  i = 0; i < second.length; i++){
+                toReturn[count++] = second[i];
+            }
+            return toReturn;
         }
     }
 }
