@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a Stream to a Shiip Server
@@ -103,5 +104,31 @@ public class Stream {
      */
     public int getStreamId() {
         return streamId;
+    }
+
+    /**
+     * sees if two Streams are equal
+     * @param o the other stream
+     * @return true means they are equal
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Stream stream = (Stream) o;
+        return streamId == stream.streamId &&
+                isComplete == stream.isComplete &&
+                Objects.equals(contents, stream.contents) &&
+                Objects.equals(path, stream.path);
+    }
+
+    /**
+     * hashes a stream
+     * @return the hashcode for a stream
+     */
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(streamId, contents, isComplete, path);
     }
 }

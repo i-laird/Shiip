@@ -144,6 +144,11 @@ public class Client {
     // maps a streamId to its corresponding Stream object
     private Map<Integer, Stream> streams = new HashMap<>();
 
+    private Set<Integer> activeStreams = new HashSet<>();
+
+    // the server
+    private String server;
+
     // functions *********************************************************
 
     /**
@@ -171,7 +176,7 @@ public class Client {
         }
         Encoder encoder = new Encoder(1024);
         Decoder decoder = new Decoder(1024, 1024);
-        Client shiipConnection = new Client(socket, encoder, decoder, paths);
+        Client shiipConnection = new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
         shiipConnection.go();
     }
 
@@ -215,8 +220,9 @@ public class Client {
      * @return port as an int
      */
     private static int getPort(String port){
+        int toReturn = 0;
         try {
-            int toReturn = Integer.parseInt(port);
+            toReturn = Integer.parseInt(port);
             if(toReturn < 0){
                 logger.severe("Error: port cannot be negative");
                 System.exit(BAD_PORT_ERROR);
@@ -227,8 +233,7 @@ public class Client {
             System.exit(BAD_PORT_ERROR);
         }
 
-        // will not ever be reached
-        return -1;
+        return toReturn;
     }
 
     /**
@@ -268,13 +273,14 @@ public class Client {
      * @param encoder used for hpack compression
      * @param paths all paths that are to be retrieved from the server
      */
-    public Client(Socket socket, Encoder encoder, Decoder decoder, List<String> paths){
+    public Client(Socket socket, Encoder encoder, Decoder decoder, List<String> paths, String server){
         this.socket = socket;
         this.framer= new Framer(getSocketOutputStream(socket));
         this.deframer = new Deframer(getSocketInputStream(socket));
         this.encoder = encoder;
         this.decoder = decoder;
         this.paths = paths;
+        this.server = server;
     }
 
     /**
@@ -300,14 +306,15 @@ public class Client {
         for(String path : this.paths){
             currStreamid = getNextStreamId();
             try {
-                Headers header = new Headers(currentStreamId, false);
-                addHeaders(header, path);
+                Headers header = new Headers(currStreamid, true);
+                addHeaders(header, path, this.server );
 
                 // now send the request to the server
                 this.sendFrame(header);
 
                 //create a stream for this path
-                this.streams.put(currStreamid, new Stream(currentStreamId, path));
+                this.streams.put(currStreamid, new Stream(currStreamid, path));
+                this.activeStreams.add(currStreamid);
             }catch(BadAttributeException e){
                 logger.severe("Error creating the GET request");
             }catch(IOException e2){
@@ -316,8 +323,8 @@ public class Client {
             }
         }
 
-        //now keep reading frames from the TLS connection until it is closed
-        for(;;){
+        //now keep reading frames from the TLS connection until all streams are done
+        while(!this.activeStreams.isEmpty()){
             Message m = null;
             try {
                 m = this.receiveMessage();
@@ -343,8 +350,6 @@ public class Client {
                 logger.severe("Error in communication with server: " + e3.getMessage());
                 System.exit(NETWORK_ERROR);
             }
-            //TODO remove this
-            break;
         }
         for(Stream s : this.streams.values()){
 
@@ -406,12 +411,13 @@ public class Client {
      * @param path the path of the desired resource on the server
      * @throws BadAttributeException if a name value pair is unable to be added
      */
-    private static void addHeaders(Headers header, String path) throws BadAttributeException{
+    private static void addHeaders(Headers header, String path, String host) throws BadAttributeException{
         header.addValue(NAME_METHOD, GET_REQUEST);
         header.addValue(NAME_PATH, path);
-        header.addValue(NAME_VERSION, HTTP_VERSION);
-        header.addValue(NAME_HOST, ""); //TODO fix this
+ //       header.addValue(NAME_VERSION, HTTP_VERSION);
+        header.addValue(NAME_AUTHORITY, host); //TODO fix this
         header.addValue(NAME_SCHEME, HTTP_SCHEME);
+        header.addValue(ACCEPT_ENCODING, "deflate");
     }
 
     /**
@@ -444,6 +450,7 @@ public class Client {
         s.addBytes(d.getData());
         if(d.isEnd()){
             s.setComplete(true);
+            this.activeStreams.remove(d.getStreamID());
         }
     }
 
@@ -474,9 +481,16 @@ public class Client {
 
             //terminate the stream
             this.streams.remove(h.getStreamID());
+            this.activeStreams.remove(h.getStreamID());
         }
     }
 
+    /**
+     * gete the {@link InputStream} for a {@link Socket} and
+     * does exception handling
+     * @param s the socket
+     * @return the input stream of the Socket
+     */
     private static InputStream getSocketInputStream(Socket s){
         try {
             return s.getInputStream();
@@ -489,6 +503,12 @@ public class Client {
         return null;
     }
 
+    /**
+     * gets the {@link OutputStream} for a {@link Socket} and
+     * does exception handling
+     * @param s the socket
+     * @return the output stream
+     */
     private static OutputStream getSocketOutputStream(Socket s){
         try {
             return s.getOutputStream();

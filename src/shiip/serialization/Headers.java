@@ -38,6 +38,9 @@ public class Headers extends Message {
     // header value for the version
     public static final String NAME_VERSION = ":version";
 
+    //header value to specify the authority
+    public static final String NAME_AUTHORITY = ":authority";
+
     // header value to specify the host
     public static final String NAME_HOST = ":host";
 
@@ -45,7 +48,7 @@ public class Headers extends Message {
     public static final String NAME_SCHEME = ":scheme";
 
     // all valid http methods
-    private static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
+    private static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE", "OPTIONS"};
 
     // all valid http methods
     private static final List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
@@ -75,7 +78,7 @@ public class Headers extends Message {
     private static final boolean DECODE_MODE = false;
 
     // the ascii encoding of a forward slash
-    private static final byte FORWARD_SLASH_ASCII = 0x5c;
+    private static final byte FORWARD_SLASH_ASCII = 47;
 
     // specifying if we are using sensitive encoding
     private static final boolean ENCODING_SENSITIVE = false;
@@ -434,7 +437,7 @@ public class Headers extends Message {
      * @return a newly created String
      */
     private static String byteArrayToString(byte [] b){
-        return Base64.getEncoder().encodeToString(b);
+        return new String(b);
     }
 
     /**
