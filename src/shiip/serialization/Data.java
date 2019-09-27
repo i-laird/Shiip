@@ -81,12 +81,12 @@ public class Data extends Message {
 
     /**
      * Returns string of the form
-     * Data: StreamID=<streamid> isEnd=<end> data=<length>
+     * Data: StreamID=&lt;streamid&gt; isEnd=&lt;end&gt; data=&lt;length&gt;
      *
      * For example:
      *
      * Data: StreamID=5 isEnd=true data: 5
-     * @return
+     * @return the string of the correct form
      */
     @Override
     public java.lang.String toString(){
@@ -134,8 +134,8 @@ public class Data extends Message {
     }
 
     /**
-     * returns a hashcode for a {@link Data}
-     * @return hashcode of {@link Data}
+     * returns a hashcode for a Data Message
+     * @return hashcode of a Data Message
      */
     @Override
     public int hashCode() {

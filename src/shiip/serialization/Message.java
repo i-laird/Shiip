@@ -10,8 +10,6 @@ package shiip.serialization;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -270,7 +268,8 @@ public abstract class Message {
      *     Stream ID validation depends on specific message type
      *
      * @param streamId new stream id value
-     * @throws BadAttributeException
+     * @throws BadAttributeException if stream id is negative or
+     * otherwise invalid
      */
     public void setStreamID(int streamId) throws BadAttributeException{
         if(streamId < 0){
@@ -304,7 +303,7 @@ public abstract class Message {
     }
 
     /**
-     * returns a hashcode for a {@link Message}
+     * returns a hashcode for a Message
      * @return hashcode of message
      */
     @Override

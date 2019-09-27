@@ -8,16 +8,27 @@ package shiip.client;
 
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
+
+// import socket, url, and exceptions
+import java.net.*;
+
+// used for data structures
+import java.util.*;
+
+// use Framer, Deframer, and all message types
 import shiip.serialization.*;
+
+//use many constants from here
 import static shiip.serialization.Headers.*;
+
 import static shiip.serialization.Data.DATA_TYPE;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.*;
-import java.util.*;
+
+
 import java.util.logging.Logger;
 import java.security.cert.X509Certificate;
 
@@ -55,7 +66,7 @@ public class Client {
     private static final int ERROR_WRITING_TO_FILE = 5;
 
     // for when there is an error in receiving the connection preface
-    private static final int ERROR_RECEIVING_CONNECTION_PREFACE = 6;
+    private static final int ERROR_SENDING_REQUEST_TO_SERVER = 6;
 
     // for when there is an error sending the connection preface
     private static final int ERROR_SENDING_CONNECTION_PREFACE = 7;
@@ -259,7 +270,6 @@ public class Client {
 
     /**
      * runs the client until all files have been retrieved
-     * @throws IOException
      */
     public void go() {
 
@@ -276,18 +286,6 @@ public class Client {
             System.exit(ERROR_SENDING_CONNECTION_PREFACE);
         }
 
-        //read in the server connection preface
-        byte [] serverConnectionPreface = new byte[SERVER_CONNECTION_PREFACE_SIZE];
-        try {
-            in.readNBytes(serverConnectionPreface, 0, SERVER_CONNECTION_PREFACE_SIZE);
-
-            //read in the settings frame that the server will send
-            Message throwAway = this.receiveMessage();
-        }catch(BadAttributeException | IOException e){
-            logger.severe("Received bad server connection preface" + e.getMessage());
-            System.exit(ERROR_RECEIVING_CONNECTION_PREFACE);
-        }
-
         //now make all of the file requests
         int currStreamid;
         for(String path : this.paths){
@@ -295,12 +293,18 @@ public class Client {
             try {
                 Headers header = new Headers(currentStreamId, false);
                 addHeaders(header, path);
-            }catch(BadAttributeException e){
-                logger.severe("Error making GET request");
-            }
 
-            //create a stream for this path
-            this.streams.put(currStreamid, new Stream(currentStreamId, path));
+                // now send the request to the server
+                this.sendFrame(header);
+
+                //create a stream for this path
+                this.streams.put(currStreamid, new Stream(currentStreamId, path));
+            }catch(BadAttributeException e){
+                logger.severe("Error creating the GET request");
+            }catch(IOException e2){
+                logger.severe("Error sending request to server");
+                System.exit(ERROR_SENDING_REQUEST_TO_SERVER);
+            }
         }
 
         //now keep reading frames from the TLS connection until it is closed

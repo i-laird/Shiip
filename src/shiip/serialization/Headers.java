@@ -23,41 +23,61 @@ import java.util.*;
  */
 public class Headers extends Message {
 
+    // header value for the name of the method
     public static final String NAME_METHOD = ":method";
 
+    // header value for making a GET request
     public static final String GET_REQUEST = "GET";
 
+    // header value for specifying the path
     public static final String NAME_PATH = ":path";
 
+    // header value for the version
     public static final String NAME_VERSION = ":version";
 
+    // header value to specify the host
     public static final String NAME_HOST = ":host";
 
+    // header value to specify the scheme
     public static final String NAME_SCHEME = ":scheme";
 
-    public  static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
+    // all valid http methods
+    private static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE"};
 
-    public  static final List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
+    // all valid http methods
+    private static final List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
 
+    // the current version of http
     public static final String HTTP_VERSION = "HTTP/2.0";
 
+    // the scheme of http being used
     public static final String HTTP_SCHEME = "https";
 
+    // header value for status
     public static final String STATUS = ":status";
 
+    // header value for accpepting encoding
+    public static final String ACCEPT_ENCODING = "accept-encoding";
+
+    // local variable storing if it is the end
     private boolean isEnd;
 
+    // all header name/value pairs of the Headers message
     private SortedMap<String, String> nameValuePairs = new TreeMap<>();
 
     // for testing if name/value pairs are to be tested for encoding purposes
     private static final boolean ENCODE_MODE = true;
 
+    // for when it is in decode mode
     private static final boolean DECODE_MODE = false;
 
+    // the ascii encoding of a forward slash
     private static final byte FORWARD_SLASH_ASCII = 0x5c;
 
+    // specifying if we are using sensitive encoding
     private static final boolean ENCODING_SENSITIVE = false;
 
+    // the headers waiting to be processed
     private Map<byte [], byte []> toProcess = new HashMap<>();
 
     /**
@@ -170,6 +190,13 @@ public class Headers extends Message {
         }
     }
 
+    /**
+     * Checks if a name and value pair are valid
+     * @param name the name to check
+     * @param value the value to check
+     * @throws BadAttributeException if they are invalid
+     *    no exception being thrown does not indicate they are valid
+     */
     public static void checkValidNameValueString(String name, String value) throws BadAttributeException{
         if(NAME_METHOD.equals(name)){
             if(!HTTP_METHODS.contains(value)){
@@ -228,7 +255,8 @@ public class Headers extends Message {
 
     /**
      * Returns string of the form
-     * Headers: StreamID=<streamid> isEnd=<end> ([<name> = <value>]...[lt;name> = <value>])
+     * Headers: StreamID=&lt;streamid&gt; isEnd=&lt;end&gt; ([&lt;name&gt;
+     * = &lt;value&gt;]...[lt;name> = &lt;value&gt;])
      * For example
      *
      * Headers: StreamID=5 isEnd=false ([method=GET][color=blue])
@@ -361,7 +389,7 @@ public class Headers extends Message {
                 encoder.encodeHeader(out, name, value, ENCODING_SENSITIVE);
             }
         }catch(IOException e){
-
+            return new byte [0];
         }
         return out.toByteArray();
     }
@@ -372,7 +400,7 @@ public class Headers extends Message {
      * processes all of the names and values
      * @throws BadAttributeException if something bad happens
      */
-    protected void processAllNameValues() throws BadAttributeException{
+    private void processAllNameValues() throws BadAttributeException{
         for(Map.Entry<byte [], byte []> entry: toProcess.entrySet()) {
             byte [] name = entry.getKey();
             byte [] value = entry.getValue();
@@ -393,7 +421,7 @@ public class Headers extends Message {
      * @param value the value
      * @param sensitive false means not sensitive
      */
-    protected void addValue(byte [] name, byte [] value, boolean sensitive){
+    private void addValue(byte [] name, byte [] value, boolean sensitive){
         this.toProcess.put(name, value);
     }
 
@@ -402,7 +430,7 @@ public class Headers extends Message {
      * @param b the byte array
      * @return a newly created String
      */
-    protected static String byteArrayToString(byte [] b){
+    private static String byteArrayToString(byte [] b){
         return Base64.getEncoder().encodeToString(b);
     }
 
@@ -431,7 +459,7 @@ public class Headers extends Message {
         this.setStreamID(parsed.getStreamId());
 
         // uses the twitter library to decode the header block and adds all attributes
-        addHeaderFieldsToHeader((Headers)this, payload, decoder);
+        addHeaderFieldsToHeader(this, payload, decoder);
         return this;
     }
 

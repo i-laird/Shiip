@@ -58,7 +58,7 @@ public class Window_Update extends Message {
 
     /**
      * Returns string of the form
-     * Window_Update: StreamID=<streamid> increment=<inc>
+     * Window_Update: StreamID=&lt;streamid&gt; increment=&lt;inc&gt;
      *
      *     For example :
      * Window_Update: StreamID=5 increment=1024
@@ -95,8 +95,8 @@ public class Window_Update extends Message {
     }
 
     /**
-     * returns a hashcode for a {@link Window_Update}
-     * @return hashcode of {@link Window_Update}
+     * returns a hashcode for a Window_Update
+     * @return hashcode of Window_Update
      */
     @Override
     public int hashCode() {
@@ -105,7 +105,7 @@ public class Window_Update extends Message {
     }
 
     /**
-     * no flags are to be set when encoding a {@link Window_Update}
+     * no flags are to be set when encoding a Window_Update
      * @return 0x0
      */
     @Override
@@ -119,7 +119,7 @@ public class Window_Update extends Message {
      * The first bit is the R bit and the next 31 are the increment
      *
      * @param encoder can be null
-     * @return the payload of a {@link Window_Update} frame
+     * @return the payload of a Window_Update frame
      */
     @Override
     protected byte []  getEncodedPayload(Encoder encoder){
