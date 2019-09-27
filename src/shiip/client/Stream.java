@@ -19,14 +19,22 @@ import java.util.List;
  * @author Laird
  */
 public class Stream {
+
+    // the stream id of this stream
     private int streamId = 0;
+
+    // all of the data payloads associates with this stream
     List<byte []> contents = new LinkedList<>();
+
+    // if a data frame with end of stream has been received
     boolean isComplete = false;
+
+    // the path that this was retrieved from
     private String path;
 
     /**
      * adds the Data payload to this stream
-     * @param b
+     * @param b the bytes to add to the stream
      */
     public void addBytes(byte [] b){
         this.contents.add(b);

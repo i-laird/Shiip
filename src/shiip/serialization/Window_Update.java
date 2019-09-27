@@ -16,7 +16,7 @@ import java.util.Objects;
 /**
  * Window_Update frame
  *
- * @version 1.0
+ * @version 2.0
  * @author Ian laird
  */
 public class Window_Update extends Message {

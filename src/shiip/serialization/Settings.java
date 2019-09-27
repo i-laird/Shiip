@@ -13,7 +13,7 @@ import com.twitter.hpack.Encoder;
 /**
  * Settings message
  *
- * @version 1.0
+ * @version 2.0
  * @author Ian laird
  */
 public class Settings extends Message{

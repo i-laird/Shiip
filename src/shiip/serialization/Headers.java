@@ -20,6 +20,9 @@ import java.util.*;
  * Headers message
  *
  * the decode() and encode() methods need a Decoder/Encoder respectively
+ *
+ * @version 1.0
+ * @author Ian Laird
  */
 public class Headers extends Message {
 

@@ -1,6 +1,6 @@
 /*******************************************************
  * Author: Ian Laird
- * Assignment: Prog 1
+ * Assignment: Prog 2
  * Class: Data Comm
  *******************************************************/
 
@@ -17,7 +17,7 @@ import java.util.Objects;
 /**
  * Represents a SHiiP message
  *
- * @version 1.0
+ * @version 2.0
  * @author Ian laird
  */
 public abstract class Message {

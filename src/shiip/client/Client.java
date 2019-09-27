@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-
 import java.util.logging.Logger;
 import java.security.cert.X509Certificate;
 
@@ -45,10 +44,7 @@ import javax.net.ssl.X509TrustManager;
  */
 public class Client {
 
-    // there must be a server a port, and at least one path
-    private static final int MINIMUM_COMMAND_LINE_PARAMS_CLIENt = 3;
-
-    // ERROR CODES
+    // ERROR CODES ***********************************************
 
     // invalid number of params error
     private static final int INVALID_PARAM_NUMBER_ERROR = 1;
@@ -77,6 +73,11 @@ public class Client {
     // error getting socket io streams
     private static final int ERROR_SOCKET_GET_IO = 8;
 
+    // command line args *************************************************
+
+    // there must be a server a port, and at least one path
+    private static final int MINIMUM_COMMAND_LINE_PARAMS_CLIENt = 3;
+
     // the arg pos of the server
     private static final int SERVER_URL_ARG_POS = 0;
 
@@ -85,6 +86,8 @@ public class Client {
 
     // the arg pos that srarts the list of paths
     private static final int PATH_START_POS = 2;
+
+    // Strings ***********************************************************
 
     // the logger message for received message
     private static final String RECEIVED_MESSAGE = "Received message: ";
@@ -101,6 +104,8 @@ public class Client {
     // the logger message for a bad status occuring
     private static final String BAD_STATUS = "Bad status: ";
 
+    // MISC **************************************************************
+
     // the logger for the Shiip TCP client
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
@@ -112,6 +117,8 @@ public class Client {
 
     // the length of the SERVER connection preface excluding settings frame
     private static final int SERVER_CONNECTION_PREFACE_SIZE = 24;
+
+    // local variables ***************************************************
 
     // the socket associated with the shiip connection
     private Socket socket = null;
@@ -136,6 +143,8 @@ public class Client {
 
     // maps a streamId to its corresponding Stream object
     private Map<Integer, Stream> streams = new HashMap<>();
+
+    // functions *********************************************************
 
     /**
      * Runs the Client

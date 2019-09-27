@@ -18,12 +18,15 @@ import java.util.Objects;
 /**
  * Data message
  *
- * @version 1.0
+ * @version 2.0
  * @author Ian laird
  */
 public class Data extends Message {
 
+    // the payload of the Data Message
     private byte [] data;
+
+    // marks if the end of stream flag should be set
     private boolean isEnd = false;
 
     /**
