@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 2
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.client;
 
 import java.io.IOException;
@@ -49,14 +55,26 @@ public class Stream {
         this.path = path;
     }
 
+    /**
+     * Sets the path of this stream
+     * @param path the path
+     */
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * Sets that this stream is done
+     * @param complete true for if complete
+     */
     public void setComplete(boolean complete) {
         isComplete = complete;
     }
 
+    /**
+     * Gets all of the contents of this stream
+     * @return contents
+     */
     private byte [] getContents(){
         //merge all of the little arrays into one big one
         int size = contents.stream().mapToInt(x -> x.length).sum();
@@ -71,6 +89,10 @@ public class Stream {
         return toReturn;
     }
 
+    /**
+     * returns the stream id
+     * @return stream id
+     */
     public int getStreamId() {
         return streamId;
     }

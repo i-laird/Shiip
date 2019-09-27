@@ -9,6 +9,7 @@ package shiip.serialization;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -193,6 +194,8 @@ public class Headers extends Message {
                 throw new BadAttributeException("The scheme must be https", "value");
             }
         }
+
+        //if it is not one of these do not throw anything
     }
 
     /**
@@ -230,11 +233,22 @@ public class Headers extends Message {
      *
      * Headers: StreamID=5 isEnd=false ([method=GET][color=blue])
      *
-     * @param name
-     * @return
+     * @return the generated string
      */
-    public String toString(String name){
-        return this.nameValuePairs.get(name);
+    public String toString(){
+        StringBuilder buildString = new StringBuilder();
+        buildString.append("Headers: StreamID=")
+                .append(this.getStreamID())
+                .append(" isEnd=")
+                .append(this.isEnd() ? "true" : "false")
+                .append(" (");
+        for (Map.Entry<String, String> entry : this.nameValuePairs.entrySet()) {
+            buildString.append(entry.getKey())
+                    .append("=")
+                    .append(entry.getValue());
+        }
+        buildString.append(")");
+        return buildString.toString();
     }
 
     /**
@@ -261,6 +275,11 @@ public class Headers extends Message {
      */
     public void addValue(String name, String value) throws BadAttributeException{
         checkValidNameValueString(name, value);
+
+        //make sure that the ascii is allowable as well
+        NameValueValidityCheckerAscii.checkValid(name.getBytes(StandardCharsets.US_ASCII),
+                value.getBytes(StandardCharsets.US_ASCII), DECODE_MODE);
+
         this.nameValuePairs.put(name, value);
     }
 
@@ -272,9 +291,10 @@ public class Headers extends Message {
      */
     @Override
     protected void ensureValidStreamId(int streamId) throws BadAttributeException {
-        if(streamId == Message.REQUIRED_SETTINGS_STREAM_ID)
+        if(streamId == Message.REQUIRED_SETTINGS_STREAM_ID) {
             throw new BadAttributeException("0x0 not allowed as " +
                     "stream identifier for headers frame", "streamID");
+        }
     }
 
     /**
@@ -344,6 +364,8 @@ public class Headers extends Message {
         return out.toByteArray();
     }
 
+
+
     /**
      * processes all of the names and values
      * @throws BadAttributeException if something bad happens
@@ -360,13 +382,14 @@ public class Headers extends Message {
             String v = byteArrayToString(value);
             this.addValue(n, v);
         }
+        toProcess.clear();
     }
 
     /**
      *
-     * @param name
-     * @param value
-     * @param sensitive
+     * @param name the name
+     * @param value the value
+     * @param sensitive false means not sensitive
      */
     protected void addValue(byte [] name, byte [] value, boolean sensitive){
         this.toProcess.put(name, value);
@@ -408,5 +431,23 @@ public class Headers extends Message {
         // uses the twitter library to decode the header block and adds all attributes
         addHeaderFieldsToHeader((Headers)this, payload, decoder);
         return this;
+    }
+
+    /**
+     * @param headers the Headers Message to add header fields to
+     * @param payload the headers block
+     * @param decoder the dccoder
+     * @throws BadAttributeException if unable to parse the headers
+     */
+    public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder) throws BadAttributeException {
+        try {
+            ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);
+            decoder.decode(payloadStream,
+                    (byte[] name, byte[] value, boolean sensitive) -> headers.addValue(name, value, sensitive));
+            headers.processAllNameValues();
+        }catch(IOException e){
+            throw new BadAttributeException("Unable to decode the headers", "headers", e);
+        }
+
     }
 }

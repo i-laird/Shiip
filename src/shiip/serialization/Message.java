@@ -241,24 +241,6 @@ public abstract class Message {
     }
 
     /**
-     * @param headers the Headers Message to add header fields to
-     * @param payload the headers block
-     * @param decoder the dccoder
-     * @throws BadAttributeException if unable to parse the headers
-     */
-    public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder) throws BadAttributeException {
-        try {
-            ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);
-            decoder.decode(payloadStream,
-                    (byte[] name, byte[] value, boolean sensitive) -> headers.addValue(name, value, sensitive));
-            headers.processAllNameValues();
-        }catch(IOException e){
-            throw new BadAttributeException("Unable to decode the headers", "headers", e);
-        }
-
-    }
-
-    /**
      * converts a message into a stream of bytes
      * @param encoder can optionally be null for the message types
      * @return the byte array

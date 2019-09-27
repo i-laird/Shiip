@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 2
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.client;
 
 import com.twitter.hpack.Decoder;
@@ -14,7 +20,6 @@ import java.net.*;
 import java.util.*;
 import java.util.logging.Logger;
 import java.security.cert.X509Certificate;
-
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
