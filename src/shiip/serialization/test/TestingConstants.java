@@ -32,6 +32,9 @@ class TestingConstants {
     // Window_Update identifier type
     static final byte WINDOW_UPDATE_TYPE = (byte)0x8;
 
+    // Headers identifier type
+    static final byte HEADERS_TYPE = (byte)0x1;
+
     // Unset flags field
     static final byte NO_FLAGS = 0x0;
 

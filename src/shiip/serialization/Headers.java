@@ -223,7 +223,7 @@ public class Headers extends Message {
      * @param end end value
      */
     public void setEnd(boolean end){
-        this.setEnd(end);
+        this.isEnd = end;
     }
 
     /**
@@ -243,9 +243,11 @@ public class Headers extends Message {
                 .append(this.isEnd() ? "true" : "false")
                 .append(" (");
         for (Map.Entry<String, String> entry : this.nameValuePairs.entrySet()) {
-            buildString.append(entry.getKey())
+            buildString.append("[")
+                    .append(entry.getKey())
                     .append("=")
-                    .append(entry.getValue());
+                    .append(entry.getValue())
+                    .append("]");
         }
         buildString.append(")");
         return buildString.toString();
