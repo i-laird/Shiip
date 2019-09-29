@@ -43,11 +43,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class MessageTester {
 
+    // the encoder instances for the tests
     private static Encoder encoder = null, encoder2 = null;
+
+    // the decoder instance for the tests
     private static Decoder decoder = null;
 
-    private static byte [] TEST_HEADER_1 =
-            {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0};
+
     private static byte [] TEST_HEADER_BAD_TYPE  =
             {(byte)0xEE,0x0,0x0,0x0,0x0,0x1};
 
@@ -62,6 +64,12 @@ public class MessageTester {
             {0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
     private static Data CORRECT_DATA_ONE = null;
     private static byte [] CORRECT_DATA_ONE_ENCODED = null;
+
+    // max header size for encoder and decoder
+    private static int MAX_HEADER_SIZE = 1024;
+
+    // max header table size
+    private static int MAX_HEADER_TABLE_SIZE = 1024;
 
     /*
      * an example data frame that has a six byte payload
@@ -200,8 +208,9 @@ public class MessageTester {
                     CORRECT_WINDOW_UPDATE_ONE.encode(null);
 
             // encode header list into header block
-            encoder = new Encoder(1024);
-            encoder2 = new Encoder(1024);
+            encoder = new Encoder(MAX_HEADER_TABLE_SIZE);
+            encoder2 = new Encoder(MAX_HEADER_TABLE_SIZE);
+            decoder = new Decoder(MAX_HEADER_SIZE, MAX_HEADER_TABLE_SIZE);
 
         });
     }
@@ -525,10 +534,20 @@ public class MessageTester {
                     CORRECT_WINDOw_UPDATE_ENCODED);
         }
 
+        /**
+         * @author Ian laird, Andrew Walker
+         * tests headers
+         */
         @Nested
         @DisplayName("Headers tester")
         public class HeaderTester{
 
+            /**
+             * tests headers source
+             * @param streamId the stream id to test
+             * @param stuff the name and value pairs
+             * @param headerPlusPayload the encoded expectation
+             */
             @ParameterizedTest(name = "streamID = {0}, encoded = {2}")
             @DisplayName("Encoding Tests")
             @ArgumentsSource(MessageArgs.class)
@@ -539,15 +558,25 @@ public class MessageTester {
                     for (Map.Entry<String, String> entry : stuff.entrySet()) {
                         h.addValue(entry.getKey(), entry.getValue());
                     }
-                    assertArrayEquals(h.encode(encoder2), headerPlusPayload);
+                    byte [] generated = h.encode(encoder2);
+                    Headers reGenerated = (Headers)Message.decode(generated, decoder);
+                    assertEquals(h, reGenerated);
                 }catch(Exception e){
                     fail(e.getMessage());
                 }
             }
         }
     }
+
+    /**
+     * @author Ian Laird, Andrew Walker
+     * provides arguments for Message tests
+     */
     static class MessageArgs implements ArgumentsProvider {
 
+        /**
+         * provide arguments
+         */
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
             List<Integer> validStreamIDs = Arrays.asList( 1, 2876);
@@ -571,9 +600,20 @@ public class MessageTester {
                 );
         }
 
+        /**
+         * gives the expected header for the given stream id
+         * @param streamid stream id
+         * @return the expected header
+         */
         private byte [] expectedHeader(int streamid){
             return ByteBuffer.allocate(HEADER_SIZE).put(HEADERS_TYPE).put((byte)0x04).putInt(streamid).array();
         }
+
+        /**
+         * compresses a map into a header block
+         * @param map the map of name and value pairs
+         * @return the header block
+         */
         private byte [] compress(Map<String, String> map){
             try {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -585,6 +625,12 @@ public class MessageTester {
             return null;
         }
 
+        /**
+         * concats two arrays
+         * @param first first array
+         * @param second second array
+         * @return first plus second
+         */
         private byte [] mergeTwoArrays(byte [] first, byte [] second){
             byte [] toReturn = new byte [first.length + second.length];
             int count = 0;
