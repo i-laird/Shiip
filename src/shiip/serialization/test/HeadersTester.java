@@ -39,11 +39,12 @@ public class HeadersTester {
         /**
          * Tests constructor with invalid streamID
          */
-        @Test
+        @ParameterizedTest(name = "streamID = {0}")
+        @ValueSource(ints = {-10, -1, 0})
         @DisplayName("Invalid streamID")
-        public void testConstructorInvalidStreamID() {
+        public void testConstructorInvalidStreamID(int streamID) {
             BadAttributeException ex = assertThrows(BadAttributeException.class, () -> {
-                new Headers(0, false);
+                new Headers(streamID, false);
             });
             assertEquals(ex.getAttribute(), "streamID");
         }
@@ -122,12 +123,13 @@ public class HeadersTester {
         /**
          * Tests that BadAttributeException is thrown on invalid streamID
          */
-        @Test
+        @ParameterizedTest(name = "streamID = {0}")
+        @ValueSource(ints = {-10, -1, 0})
         @DisplayName("Invalid")
-        public void testInvalidSetStreamID() {
+        public void testInvalidSetStreamID(int streamID) {
             BadAttributeException ex = assertThrows(BadAttributeException.class, () -> {
                 Headers headers = new Headers(1, false);
-                headers.setStreamID(0);
+                headers.setStreamID(streamID);
             });
             assertEquals(ex.getAttribute(), "streamID");
         }
@@ -309,13 +311,13 @@ public class HeadersTester {
             return validStreamIDs
                     .stream()
                     .flatMap(streamID ->
-                        validIsEnd
-                        .stream()
-                        .flatMap(isEnd ->
-                            validOptions
-                            .stream()
-                            .map(options -> Arguments.of(streamID, isEnd, options, encode(streamID, isEnd, new TreeMap<>(options))))
-                        )
+                            validIsEnd
+                                    .stream()
+                                    .flatMap(isEnd ->
+                                            validOptions
+                                                    .stream()
+                                                    .map(options -> Arguments.of(streamID, isEnd, options, encode(streamID, isEnd, new TreeMap<>(options))))
+                                    )
                     );
         }
 
@@ -342,10 +344,10 @@ public class HeadersTester {
                     .stream()
                     .flatMap(streamID ->
                             validIsEnd
-                            .stream()
-                            .map(isEnd ->
-                                Arguments.of(streamID, isEnd, encode(streamID, isEnd))
-                            )
+                                    .stream()
+                                    .map(isEnd ->
+                                            Arguments.of(streamID, isEnd, encode(streamID, isEnd))
+                                    )
                     );
         }
 

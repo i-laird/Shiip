@@ -14,10 +14,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import shiip.serialization.BadAttributeException;
 import shiip.serialization.Window_Update;
-import static shiip.serialization.test.TestingConstants.WINDOW_UPDATE_TYPE;
-import static shiip.serialization.test.TestingConstants.LARGEST_INT;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static shiip.serialization.test.TestingConstants.LARGEST_INT;
+import static shiip.serialization.test.TestingConstants.WINDOW_UPDATE_TYPE;
 
 
 /**
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 1.0
  * @author Ian Laird, Andrew Walker
  */
-public class Window_UpdateTester{
+public class Window_UpdateTester {
 
     @Nested
     @DisplayName("constructor")
@@ -36,12 +36,40 @@ public class Window_UpdateTester{
          *
          * @param increment increment
          */
-        @DisplayName("Valid")
+        @DisplayName("Valid increment")
         @ParameterizedTest(name = "increment = {0}")
-        @ValueSource(ints = {1, 1000, 128384, Integer.MAX_VALUE})
-        public void testSetIncrement(int increment){
+        @ValueSource(ints = {1, 1000, 128384, LARGEST_INT})
+        public void testConstructorIncrement(int increment){
             assertDoesNotThrow( () -> {
                 new Window_Update(1, increment);
+            });
+        }
+
+        /**
+         * good vals
+         *
+         * @param streamID streamID
+         */
+        @DisplayName("Valid streamID")
+        @ParameterizedTest(name = "streamID = {0}")
+        @ValueSource(ints = {0, 1, 1000, 128384, LARGEST_INT})
+        public void testConstructorStreamID(int streamID){
+            assertDoesNotThrow( () -> {
+                new Window_Update(streamID, 1);
+            });
+        }
+
+        /**
+         * bad vals
+         *
+         * @param streamID streamID
+         */
+        @DisplayName("Invalid streamID")
+        @ParameterizedTest(name = "streamID = {0}")
+        @ValueSource(ints = {-1, -10203, Integer.MIN_VALUE})
+        public void testConstructorStreamIDBadValues(int streamID){
+            assertThrows(BadAttributeException.class, () -> {
+                new Window_Update(streamID, 1);
             });
         }
 
@@ -50,7 +78,7 @@ public class Window_UpdateTester{
          *
          * @param increment increment
          */
-        @DisplayName("Invalid")
+        @DisplayName("Invalid increment")
         @ParameterizedTest(name = "increment = {0}")
         @ValueSource(ints = {0, -1, -10203, Integer.MIN_VALUE})
         public void testSetIncrementBadValues(int increment){
@@ -103,6 +131,43 @@ public class Window_UpdateTester{
             assertThrows(BadAttributeException.class, () -> {
                 Window_Update wu = new Window_Update(1, 1);
                 wu.setIncrement(increment);
+            });
+        }
+    }
+
+    /**
+     * Tests the setStreamID method of Data
+     */
+    @Nested
+    @DisplayName("setStreamID")
+    public class SetStreamID{
+
+        /**
+         * Tests that BadAttributeException is thrown on invalid streamID
+         */
+        @ParameterizedTest(name = "streamID = {0}")
+        @ValueSource(ints = {-10, -1})
+        @DisplayName("Invalid")
+        public void testInvalidSetStreamID(int streamID) {
+            BadAttributeException ex = assertThrows(BadAttributeException.class, () -> {
+                Window_Update wu = new Window_Update(1, 1);
+                wu.setStreamID(streamID);
+            });
+            assertEquals(ex.getAttribute(), "streamID");
+        }
+
+        /**
+         * Tests valid streamID's
+         * @param streamID valid streamID
+         */
+        @ParameterizedTest(name = "streamID = {0}")
+        @ValueSource(ints = { 1, 10, 20})
+        @DisplayName("Valid")
+        public void testValidSetStreamID(int streamID){
+            assertDoesNotThrow(() -> {
+                Window_Update wu = new Window_Update(1, 1);
+                wu.setStreamID(streamID);
+                assertEquals(streamID, wu.getStreamID());
             });
         }
     }
@@ -198,15 +263,5 @@ public class Window_UpdateTester{
                 assertEquals(wu1.hashCode(), wu2.hashCode());
             });
         }
-    }
-
-    @DisplayName("Big Numbers Constructor")
-    @Test
-    public void testBigNums(){
-        assertDoesNotThrow(() -> {
-            Window_Update wu = new Window_Update(LARGEST_INT, LARGEST_INT);
-            assertEquals(wu.getIncrement(), LARGEST_INT);
-            assertEquals(wu.getStreamID(), LARGEST_INT);
-        });
     }
 }
