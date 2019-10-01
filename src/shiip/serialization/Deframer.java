@@ -68,7 +68,7 @@ public class Deframer {
 
         if(length > MAXIMUM_PAYLOAD_SIZE){
             throw new IllegalArgumentException(
-                    "maximum greater than the allowed payload size of 2048");
+                    "maximum greater than the allowed payload size");
         }
 
         length += HEADER_SIZE;
