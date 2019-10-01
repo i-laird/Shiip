@@ -446,7 +446,8 @@ public class Client {
             logger.severe(UNEXPECTED_STREAM_ID+ d.toString());
         }
         logger.info(RECEIVED_MESSAGE + d.toString());
-        this.sendFrame(new Window_Update(d.getStreamID(), d.getData().length));
+        //TODO check this with Donahoo
+        this.sendFrame(new Window_Update(d.getStreamID(), d.getData().length != 0 ? d.getData().length : 1));
         s.addBytes(d.getData());
         if(d.isEnd()){
             s.setComplete(true);

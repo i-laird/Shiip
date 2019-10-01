@@ -191,7 +191,7 @@ public abstract class Message {
 
         switch(parsed.getCode()){
             case DATA_TYPE:
-                newMessage = new Data(0x1,false, new byte [0]);
+                newMessage = new Data(0x1,false, payload);
                 break;
             case SETTINGS_TYPE:
                 newMessage = new Settings();

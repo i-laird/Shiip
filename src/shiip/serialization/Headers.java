@@ -480,6 +480,7 @@ public class Headers extends Message {
             ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);
             decoder.decode(payloadStream,
                     (byte[] name, byte[] value, boolean sensitive) -> headers.addValue(name, value, sensitive));
+            decoder.endHeaderBlock();
             headers.processAllNameValues();
         }catch(IOException e){
             throw new BadAttributeException("Unable to decode the headers", "headers", e);

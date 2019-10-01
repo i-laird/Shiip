@@ -51,8 +51,9 @@ public class Window_Update extends Message {
      */
     public void setIncrement(int increment) throws BadAttributeException{
         //the allowed range for increment is 1 to the maximum value of an int
-        if (increment < 1)
+        if (increment < 1) {
             throw new BadAttributeException("invalid value for increment: " + Integer.toString(increment), "increment");
+        }
         this.increment = increment;
     }
 
