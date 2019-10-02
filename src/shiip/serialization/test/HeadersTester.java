@@ -244,21 +244,62 @@ public class HeadersTester {
         }
     }
 
+    /**
+     * get Value
+     */
     @Nested
     @DisplayName("getValue")
     class GetValue {
+        /**
+         * tests when a header is not present
+         */
+        @Test
+        @DisplayName("header not present")
+        public void testNoHeadersBlock(){
+            try{
+                Headers h = new Headers(1, false);
+                assertNull(h.getValue(":type"));
+            }catch(BadAttributeException e){
+                fail(e.getMessage());
+            }
+        }
 
+        /**
+         * tests when a header is present
+         */
+        @Test
+        @DisplayName("header is present")
+        public void testGetValueValid(){
+            try{
+                Headers h = new Headers(1, false);
+                String get = "GET";
+                String type = ":type";
+                h.addValue(type, get);
+                assertEquals(get, h.getValue(type));
+            }catch(BadAttributeException e){
+                fail(e.getMessage());
+            }
+        }
     }
 
+    /**
+     * get names
+     */
     @Nested
     @DisplayName("getNames")
     class GetNames {
 
-    }
-
-    @Nested
-    @DisplayName("addValue")
-    class AddValue {
+        @Test
+        @DisplayName("No headers block")
+        public void testNoHeadersBlock(){
+            try{
+                Headers h = new Headers(1, false);
+                assertNotNull(h.getNames());
+                assertEquals(h.getNames().size(), 0);
+            }catch(BadAttributeException e){
+                fail(e.getMessage());
+            }
+        }
 
     }
 
@@ -297,6 +338,9 @@ public class HeadersTester {
 
     static class ToStringOptionsProvider implements ArgumentsProvider {
 
+        /**
+         * provides arguments
+         */
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
             List<Integer> validStreamIDs = Arrays.asList( 1, 20, 50);
@@ -321,6 +365,9 @@ public class HeadersTester {
                     );
         }
 
+        /**
+         * encodes the string
+         */
         private String encode(int streamID, boolean isEnd, Map<String, String> options){
             StringBuilder builder = new StringBuilder();
             builder.append(String.format("Headers: StreamID=%d isEnd=%b",streamID, isEnd));
