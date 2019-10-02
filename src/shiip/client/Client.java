@@ -87,6 +87,9 @@ public class Client {
     // the arg pos that srarts the list of paths
     private static final int PATH_START_POS = 2;
 
+    //stream id increment
+    private static final int STREAM_ID_INCREMENT = 2;
+
     // Strings ***********************************************************
 
     // the logger message for received message
@@ -117,6 +120,12 @@ public class Client {
 
     // the length of the SERVER connection preface excluding settings frame
     private static final int SERVER_CONNECTION_PREFACE_SIZE = 24;
+
+    // max header size for encoder and decoder
+    private static int MAX_HEADER_SIZE = 1024;
+
+    // max header table size
+    private static int MAX_HEADER_TABLE_SIZE = 1024;
 
     // local variables ***************************************************
 
@@ -174,8 +183,8 @@ public class Client {
             logger.severe("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);
         }
-        Encoder encoder = new Encoder(1024);
-        Decoder decoder = new Decoder(1024, 1024);
+        Encoder encoder = new Encoder(MAX_HEADER_TABLE_SIZE);
+        Decoder decoder = new Decoder(MAX_HEADER_SIZE, MAX_HEADER_TABLE_SIZE);
         Client shiipConnection = new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
         shiipConnection.go();
     }
@@ -400,7 +409,7 @@ public class Client {
      */
     private int getNextStreamId(){
         int toReturn = this.currentStreamId;
-        currentStreamId += 2;
+        currentStreamId += STREAM_ID_INCREMENT;
         return toReturn;
     }
 
@@ -418,6 +427,7 @@ public class Client {
         header.addValue(NAME_AUTHORITY, host); //TODO fix this
         header.addValue(NAME_SCHEME, HTTP_SCHEME);
         header.addValue(ACCEPT_ENCODING, "deflate");
+        header.addValue("user-agent", "Mozilla/5.0");
     }
 
     /**

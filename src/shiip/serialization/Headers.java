@@ -26,6 +26,9 @@ import java.util.*;
  */
 public class Headers extends Message {
 
+    //ascii charset
+    private static final Charset ASCII_CHARSET = StandardCharsets.US_ASCII;
+
     // header value for the name of the method
     public static final String NAME_METHOD = ":method";
 
@@ -210,7 +213,7 @@ public class Headers extends Message {
             }
         }
         else if(name.equals(NAME_PATH)){
-            if(value.getBytes(Charset.forName("ascii"))[0] != FORWARD_SLASH_ASCII){
+            if(value.getBytes(ASCII_CHARSET)[0] != FORWARD_SLASH_ASCII){
                 throw new BadAttributeException("Must prefix a forward slash on path value", "value");
             }
         }
@@ -390,8 +393,8 @@ public class Headers extends Message {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             for (Map.Entry<String, String> entry : this.nameValuePairs.entrySet()) {
-                byte[] name = entry.getKey().getBytes(StandardCharsets.US_ASCII);
-                byte[] value = entry.getValue().getBytes(StandardCharsets.US_ASCII);
+                byte[] name = entry.getKey().getBytes(ASCII_CHARSET);
+                byte[] value = entry.getValue().getBytes(ASCII_CHARSET);
                 encoder.encodeHeader(out, name, value, ENCODING_SENSITIVE);
             }
         }catch(IOException e){
@@ -422,7 +425,7 @@ public class Headers extends Message {
     }
 
     /**
-     *
+     * adds value to the Headers
      * @param name the name
      * @param value the value
      * @param sensitive false means not sensitive
@@ -437,7 +440,7 @@ public class Headers extends Message {
      * @return a newly created String
      */
     private static String byteArrayToString(byte [] b){
-        return new String(b);
+        return new String(b, ASCII_CHARSET);
     }
 
     /**
