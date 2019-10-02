@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import java.util.logging.Logger;
 import java.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLContext;
@@ -109,8 +108,6 @@ public class Client {
 
     // MISC **************************************************************
 
-    // the logger for the Shiip TCP client
-    private static Logger logger = Logger.getLogger(Client.class.getName());
 
     // send by the client to initialize the connection
     private static final byte [] CLIENT_CONNECTION_PREFACE =
@@ -169,7 +166,7 @@ public class Client {
      */
     public static void main(String [] args){
         if(args.length < MINIMUM_COMMAND_LINE_PARAMS_CLIENt){
-            logger.severe("Usage: <server> <port> [<path> ...]");
+            System.err.println("Usage: <server> <port> [<path> ...]");
             System.exit(INVALID_PARAM_NUMBER_ERROR);
         }
 
@@ -180,7 +177,7 @@ public class Client {
         try {
             socket = createConnection(args[SERVER_URL_ARG_POS], port);
         }catch(Exception e){
-            logger.severe("Error: Unable to create the socket");
+            System.err.println("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);
         }
         Encoder encoder = new Encoder(MAX_HEADER_TABLE_SIZE);
@@ -215,7 +212,7 @@ public class Client {
                 serverUrl.toURI();
                 ipAddress = InetAddress.getByName(serverUrl.getHost());
             } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
-                logger.severe("Error: Unable to parse the server");
+                System.err.println("Error: Unable to parse the server");
                 System.exit(BAD_URL_ERROR);
             }
         }
@@ -233,12 +230,12 @@ public class Client {
         try {
             toReturn = Integer.parseInt(port);
             if(toReturn < 0){
-                logger.severe("Error: port cannot be negative");
+                System.err.println("Error: port cannot be negative");
                 System.exit(BAD_PORT_ERROR);
             }
         }catch(NumberFormatException e){
-            logger.severe("Invalid port");
-            logger.severe(e.getMessage());
+            System.err.println("Invalid port");
+            System.err.println(e.getMessage());
             System.exit(BAD_PORT_ERROR);
         }
 
@@ -306,7 +303,7 @@ public class Client {
             Settings connectionStartSettingsFrame = new Settings();
             this.sendFrame(connectionStartSettingsFrame);
         }catch(BadAttributeException | IOException e){
-            logger.severe("Error sending connection preface: " + e.getMessage());
+            System.err.println("Error sending connection preface: " + e.getMessage());
             System.exit(ERROR_SENDING_CONNECTION_PREFACE);
         }
 
@@ -325,9 +322,9 @@ public class Client {
                 this.streams.put(currStreamid, new Stream(currStreamid, path));
                 this.activeStreams.add(currStreamid);
             }catch(BadAttributeException e){
-                logger.severe("Error creating the GET request");
+                System.err.println("Error creating the GET request");
             }catch(IOException e2){
-                logger.severe("Error sending request to server");
+                System.err.println("Error sending request to server");
                 System.exit(ERROR_SENDING_REQUEST_TO_SERVER);
             }
         }
@@ -352,11 +349,11 @@ public class Client {
                         break;
                 }
             }catch(EOFException e){
-                logger.severe(UNABLE_TO_PARSE + e.getMessage());
+                System.err.println(UNABLE_TO_PARSE + e.getMessage());
             }catch(BadAttributeException e2){
-                logger.severe(INVALID_MESSAGE + e2.getMessage());
+                System.err.println(INVALID_MESSAGE + e2.getMessage());
             }catch(IOException e3){
-                logger.severe("Error in communication with server: " + e3.getMessage());
+                System.err.println("Error in communication with server: " + e3.getMessage());
                 System.exit(NETWORK_ERROR);
             }
         }
@@ -368,15 +365,15 @@ public class Client {
              */
             if(!s.isComplete){
                 //TODO check with Donahoo about this one
-                logger.severe("Error never received DATA frame with" +
+                System.err.println("Error never received DATA frame with" +
                         " END_STREAM set for streamID: " + s.getStreamId());
             }
             else {
                 try {
                     s.writeToFile();
                 } catch (IOException e) {
-                    logger.severe("Error: Unable to write to file");
-                    logger.severe(e.getMessage());
+                    System.err.println("Error: Unable to write to file");
+                    System.err.println(e.getMessage());
                     System.exit(ERROR_WRITING_TO_FILE);
                 }
             }
@@ -442,7 +439,7 @@ public class Client {
         then print error message and be done with this packet
          */
         if(!this.streams.containsKey(d.getStreamID())){
-            logger.severe(UNEXPECTED_STREAM_ID + d.toString());
+            System.err.println(UNEXPECTED_STREAM_ID + d.toString());
             return;
         }
 
@@ -453,9 +450,9 @@ public class Client {
         No more data frames should be sent if we have already received the last one
          */
         if(s.isComplete){
-            logger.severe(UNEXPECTED_STREAM_ID+ d.toString());
+            System.err.println(UNEXPECTED_STREAM_ID+ d.toString());
         }
-        logger.info(RECEIVED_MESSAGE + d.toString());
+        System.out.println(RECEIVED_MESSAGE + d.toString());
 
         // do not send a Window_update if the data was empty
         if(d.getData().length != 0) {
@@ -473,7 +470,7 @@ public class Client {
      * @param s the Settings Frame to handle
      */
     private void handleSettingsFrame(Settings s){
-        logger.info(RECEIVED_MESSAGE + s.toString());
+        System.out.println(RECEIVED_MESSAGE + s.toString());
     }
 
     /**
@@ -481,7 +478,7 @@ public class Client {
      * @param w the window update frame
      */
     private void handleWindowUpdateFrame(Window_Update w){
-        logger.info(RECEIVED_MESSAGE + w.toString());
+        System.out.println(RECEIVED_MESSAGE + w.toString());
     }
 
     /**
@@ -489,9 +486,9 @@ public class Client {
      * @param h the headers frame to handle
      */
     private void handleHeadersFrame(Headers h){
-        logger.info(RECEIVED_MESSAGE + h.toString());
+        System.out.println(RECEIVED_MESSAGE + h.toString());
         if(!h.getValue(STATUS).startsWith("200")){
-            logger.severe(BAD_STATUS + h.getValue(STATUS));
+            System.err.println(BAD_STATUS + h.getValue(STATUS));
 
             //terminate the stream
             this.streams.remove(h.getStreamID());
@@ -509,7 +506,7 @@ public class Client {
         try {
             return s.getInputStream();
         }catch(IOException e){
-            logger.severe("Unable to get input stream for socket");
+            System.err.println("Unable to get input stream for socket");
             System.exit(ERROR_SOCKET_GET_IO);
         }
 
@@ -527,7 +524,7 @@ public class Client {
         try {
             return s.getOutputStream();
         }catch(IOException e){
-            logger.severe("Unable to get input stream for socket");
+            System.err.println("Unable to get input stream for socket");
             System.exit(ERROR_SOCKET_GET_IO);
         }
 

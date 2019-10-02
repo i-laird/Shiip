@@ -200,41 +200,6 @@ public class Headers extends Message {
     }
 
     /**
-     * Checks if a name and value pair are valid
-     * @param name the name to check
-     * @param value the value to check
-     * @throws BadAttributeException if they are invalid
-     *    no exception being thrown does not indicate they are valid
-     */
-    public static void checkValidNameValueString(String name, String value) throws BadAttributeException{
-        if(NAME_METHOD.equals(name)){
-            if(!HTTP_METHODS.contains(value)){
-                throw new BadAttributeException("unknown http method", "value");
-            }
-        }
-        else if(name.equals(NAME_PATH)){
-            if(value.getBytes(ASCII_CHARSET)[0] != FORWARD_SLASH_ASCII){
-                throw new BadAttributeException("Must prefix a forward slash on path value", "value");
-            }
-        }
-        else if(name.equals(NAME_VERSION)){
-            if(!value.equals(HTTP_VERSION)){
-                throw new BadAttributeException("The version must be HTTP/2.0", "value");
-            }
-        }
-        else if(name.equals(NAME_HOST)){
-            //TODO
-        }
-        else if(name.equals(NAME_SCHEME)){
-            if(!value.equals(HTTP_SCHEME)){
-                throw new BadAttributeException("The scheme must be https", "value");
-            }
-        }
-
-        //if it is not one of these do not throw anything
-    }
-
-    /**
      * Creates Headers message from given values
      *
      * @param streamID stream ID
@@ -313,7 +278,6 @@ public class Headers extends Message {
      * @throws BadAttributeException if invalid name or value
      */
     public void addValue(String name, String value) throws BadAttributeException{
-        checkValidNameValueString(name, value);
 
         //make sure that the ascii is allowable as well
         NameValueValidityCheckerAscii.checkValid(name.getBytes(StandardCharsets.US_ASCII),
