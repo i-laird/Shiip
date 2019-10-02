@@ -181,9 +181,9 @@ public class Window_UpdateTester {
     @DisplayName("toString")
     @ParameterizedTest(name = "stream id: {0} and increment: {1}")
     @CsvSource(value = {"5;1;Window_Update: StreamID=5 increment=1",
-                        "3;2;Window_Update: StreamID=3 increment=2",
-                        "10000;10000;Window_Update: StreamID=10000" +
-                                " increment=10000"}, delimiter = ';')
+            "3;2;Window_Update: StreamID=3 increment=2",
+            "10000;10000;Window_Update: StreamID=10000" +
+                    " increment=10000"}, delimiter = ';')
     public void testToString (int streamID, int increment, String ex ){
         assertDoesNotThrow(() -> {
             Window_Update wu = new Window_Update(streamID, increment);

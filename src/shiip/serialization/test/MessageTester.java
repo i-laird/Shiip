@@ -196,7 +196,7 @@ public class MessageTester {
     public static void initialize(){
         assertDoesNotThrow(() -> {
             CORRECT_DATA_ONE = new Data(1,false,
-                                new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05});
+                    new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05});
             CORRECT_SETTINGS_ONE = new Settings();
             CORRECT_WINDOW_UPDATE_ONE = new Window_Update(1,1);
 
@@ -588,16 +588,16 @@ public class MessageTester {
             );
 
             return validStreamIDs
-                .stream()
-                .flatMap(streamID ->
-
-                    validPayloads
                     .stream()
-                    .map(( payload) -> {
-                        return Arguments.of(streamID, payload, mergeTwoArrays(expectedHeader(streamID), compress(payload)));
-                    })
+                    .flatMap(streamID ->
 
-                );
+                            validPayloads
+                                    .stream()
+                                    .map(( payload) -> {
+                                        return Arguments.of(streamID, payload, mergeTwoArrays(expectedHeader(streamID), compress(payload)));
+                                    })
+
+                    );
         }
 
         /**
