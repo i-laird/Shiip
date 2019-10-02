@@ -50,12 +50,6 @@ public class Headers extends Message {
     // header value to specify the scheme
     public static final String NAME_SCHEME = ":scheme";
 
-    // all valid http methods
-    private static final String [] HTTP_METHODS_ARRAYS = {"GET", "POST", "PUT", "HEAD", "INSERT", "DELETE", "OPTIONS"};
-
-    // all valid http methods
-    private static final List<String> HTTP_METHODS = Arrays.asList(HTTP_METHODS_ARRAYS);
-
     // the current version of http
     public static final String HTTP_VERSION = "HTTP/2.0";
 
