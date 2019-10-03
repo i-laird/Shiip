@@ -137,6 +137,9 @@ public class Headers extends Message {
                 if(!isNCHAR(b)){
                     throw new BadAttributeException("Invalid name: not an nchar", "name");
                 }
+                if(isDelim(b)){
+                    throw new BadAttributeException("Invalid name: delim present", "name");
+                }
             }
         }
 
@@ -171,7 +174,7 @@ public class Headers extends Message {
          * @return true indicates is a delim
          */
         private static boolean isDelim(byte c){
-            return DELIMS.contains(String.valueOf(c));
+            return DELIMS.contains(Character.toString((char)c));
         }
 
         /**
@@ -272,7 +275,12 @@ public class Headers extends Message {
      * @throws BadAttributeException if invalid name or value
      */
     public void addValue(String name, String value) throws BadAttributeException{
-
+        if(name == null){
+            throw new BadAttributeException("Name cannot be null", "name");
+        }
+        if(value == null){
+            throw new BadAttributeException("Value cannot be null", "value");
+        }
         //make sure that the ascii is allowable as well
         NameValueValidityCheckerAscii.checkValid(name.getBytes(StandardCharsets.US_ASCII),
                 value.getBytes(StandardCharsets.US_ASCII), DECODE_MODE);
@@ -441,10 +449,11 @@ public class Headers extends Message {
             ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);
             decoder.decode(payloadStream,
                     (byte[] name, byte[] value, boolean sensitive) -> headers.addValue(name, value, sensitive));
-            decoder.endHeaderBlock();
             headers.processAllNameValues();
         }catch(IOException e){
             throw new BadAttributeException("Unable to decode the headers", "headers", e);
+        }finally{
+            decoder.endHeaderBlock();
         }
 
     }

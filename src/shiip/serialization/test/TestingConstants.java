@@ -12,7 +12,7 @@ package shiip.serialization.test;
  * @version 1.0
  * @author Ian Laird, Andrew Walker
  */
-public class TestingConstants {
+public final class TestingConstants {
 
     // Maximum size of the payload
     public static final int MAXIMUM_PAYLOAD_SIZE = 16384;

@@ -70,7 +70,10 @@ public class Client {
     private static final int NETWORK_ERROR = 8;
 
     // error getting socket io streams
-    private static final int ERROR_SOCKET_GET_IO = 8;
+    private static final int ERROR_SOCKET_GET_IO = 9;
+
+    //error closing socket
+    private static final int ERROR_CLOSING_SOCKET = 10;
 
     // command line args *************************************************
 
@@ -378,6 +381,12 @@ public class Client {
                 }
             }
         }
+        try {
+            this.socket.close();
+        }catch(IOException e){
+            System.err.println("Error: Unable to close the socket");
+            System.exit(ERROR_CLOSING_SOCKET);
+        }
     }
 
     /**
@@ -420,10 +429,8 @@ public class Client {
     private static void addHeaders(Headers header, String path, String host) throws BadAttributeException{
         header.addValue(NAME_METHOD, GET_REQUEST);
         header.addValue(NAME_PATH, path);
- //       header.addValue(NAME_VERSION, HTTP_VERSION);
         header.addValue(NAME_AUTHORITY, host); //TODO fix this
         header.addValue(NAME_SCHEME, HTTP_SCHEME);
-        header.addValue(ACCEPT_ENCODING, "deflate");
         header.addValue("user-agent", "Mozilla/5.0");
     }
 

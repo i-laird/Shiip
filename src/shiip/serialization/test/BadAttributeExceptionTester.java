@@ -11,9 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import shiip.serialization.BadAttributeException;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
@@ -45,8 +43,8 @@ public class BadAttributeExceptionTester {
             BadAttributeException exception = new BadAttributeException(
                     message, attribute);
             assertAll(
-                () -> assertEquals(attribute, exception.getAttribute()),
-                () -> assertEquals(message, exception.getMessage())
+                    () -> assertEquals(attribute, exception.getAttribute()),
+                    () -> assertEquals(message, exception.getMessage())
             );
         }
 
@@ -57,12 +55,12 @@ public class BadAttributeExceptionTester {
         @Test
         public void testNullInTwoParamConstructor(){
             assertAll(
-                () -> assertDoesNotThrow(
-                    () -> new BadAttributeException(message, null)),
-                () -> assertDoesNotThrow(
-                    () -> new BadAttributeException(null, attribute)),
-                () -> assertDoesNotThrow(
-                    () -> new BadAttributeException(null, null))
+                    () -> assertDoesNotThrow(
+                            () -> new BadAttributeException(message, null)),
+                    () -> assertDoesNotThrow(
+                            () -> new BadAttributeException(null, attribute)),
+                    () -> assertDoesNotThrow(
+                            () -> new BadAttributeException(null, null))
             );
         }
     }
@@ -81,9 +79,9 @@ public class BadAttributeExceptionTester {
             BadAttributeException exception = new BadAttributeException(
                     message, attribute, cause);
             assertAll(
-                () -> assertEquals(attribute, exception.getAttribute()),
-                () -> assertEquals(message, exception.getMessage()),
-                () -> assertEquals(cause, exception.getCause())
+                    () -> assertEquals(attribute, exception.getAttribute()),
+                    () -> assertEquals(message, exception.getMessage()),
+                    () -> assertEquals(cause, exception.getCause())
             );
         }
 
@@ -95,14 +93,14 @@ public class BadAttributeExceptionTester {
         public void testNullInThreeParamConstructor(){
             Throwable cause = new Throwable();
             assertAll(
-                () -> assertDoesNotThrow(
-                    () -> (new BadAttributeException(message, attribute, null))),
-                () -> assertDoesNotThrow(
-                    () -> (new BadAttributeException(message, null, cause))),
-                () -> assertDoesNotThrow(
-                    () -> (new BadAttributeException(null, attribute, cause))),
-                () -> assertDoesNotThrow(
-                    () -> (new BadAttributeException(null, null, null)))
+                    () -> assertDoesNotThrow(
+                            () -> (new BadAttributeException(message, attribute, null))),
+                    () -> assertDoesNotThrow(
+                            () -> (new BadAttributeException(message, null, cause))),
+                    () -> assertDoesNotThrow(
+                            () -> (new BadAttributeException(null, attribute, cause))),
+                    () -> assertDoesNotThrow(
+                            () -> (new BadAttributeException(null, null, null)))
             );
         }
     }

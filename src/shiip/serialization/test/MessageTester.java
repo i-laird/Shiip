@@ -8,7 +8,6 @@ package shiip.serialization.test;
 
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
-import com.twitter.hpack.HeaderListener;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,9 +17,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import shiip.serialization.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -30,9 +29,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import static shiip.serialization.test.TestingConstants.*;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static shiip.serialization.test.TestingConstants.*;
 
 
 /**
@@ -391,7 +389,7 @@ public class MessageTester {
             @Test
             void testWindowsUpdateMaxIncrement() {
                 assertDoesNotThrow(() -> {
-                    Window_Update wu = (Window_Update)Message.decode(GOOD_WINDOW_UPDATE_THREE, decoder);
+                    Window_Update wu = (Window_Update) Message.decode(GOOD_WINDOW_UPDATE_THREE, decoder);
                     assertEquals(wu.getIncrement(), LARGEST_INT);
                     assertEquals(wu.getStreamID(), LARGEST_INT);
                 });
@@ -545,27 +543,37 @@ public class MessageTester {
             /**
              * tests headers source
              * @param streamId the stream id to test
-             * @param stuff the name and value pairs
+             * @param options the name and value pairs
              * @param headerPlusPayload the encoded expectation
              */
             @ParameterizedTest(name = "streamID = {0}, encoded = {2}")
             @DisplayName("Encoding Tests")
             @ArgumentsSource(MessageArgs.class)
-            public void
-            testHeadersEncoding(int streamId, Map<String, String> stuff, byte [] headerPlusPayload){
-                try{
+            public void testHeadersEncoding(int streamId, Map<String, String> options, byte [] headerPlusPayload){
+                assertDoesNotThrow(() -> {
                     Headers h = new Headers(streamId, false);
-                    for (Map.Entry<String, String> entry : stuff.entrySet()) {
+                    for (Map.Entry<String, String> entry : options.entrySet()) {
                         h.addValue(entry.getKey(), entry.getValue());
                     }
                     byte [] generated = h.encode(encoder2);
-                    Headers reGenerated = (Headers)Message.decode(generated, decoder);
+                    Headers reGenerated = (Headers) Message.decode(generated, decoder);
                     assertEquals(h, reGenerated);
-                }catch(Exception e){
-                    fail(e.getMessage());
-                }
+                });
             }
         }
+
+        /**
+         * window update encoding
+         */
+        @DisplayName("Valid Window_Update Encoding")
+        @ParameterizedTest
+        @ValueSource(ints = {0, 1, 2, 3, 4, 5})
+        public void testMalformedHeader(int headerSize){
+            assertThrows(BadAttributeException.class, () -> {
+                Message.decode(new byte[headerSize], null);
+            });
+        }
+
     }
 
     /**

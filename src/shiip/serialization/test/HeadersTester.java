@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static shiip.serialization.test.TestingConstants.HEADERS_TYPE;
 
 /**
@@ -43,10 +42,9 @@ public class HeadersTester {
         @ValueSource(ints = {-10, -1, 0})
         @DisplayName("Invalid streamID")
         public void testConstructorInvalidStreamID(int streamID) {
-            BadAttributeException ex = assertThrows(BadAttributeException.class, () -> {
+            assertThrows(BadAttributeException.class, () -> {
                 new Headers(streamID, false);
             });
-            assertEquals(ex.getAttribute(), "streamID");
         }
 
         /**
@@ -74,6 +72,15 @@ public class HeadersTester {
             assertDoesNotThrow(() -> {
                 Headers headers = new Headers(1, isEnd);
                 assertEquals(isEnd, headers.isEnd());
+            });
+        }
+
+        @DisplayName("No headers block")
+        public void testNoHeadersBlock(){
+            assertDoesNotThrow(() -> {
+                Headers h = new Headers(1, false);
+                assertNotNull(h.getNames());
+                assertEquals(h.getNames().size(), 0);
             });
         }
 
@@ -127,11 +134,10 @@ public class HeadersTester {
         @ValueSource(ints = {-10, -1, 0})
         @DisplayName("Invalid")
         public void testInvalidSetStreamID(int streamID) {
-            BadAttributeException ex = assertThrows(BadAttributeException.class, () -> {
+            assertThrows(BadAttributeException.class, () -> {
                 Headers headers = new Headers(1, false);
                 headers.setStreamID(streamID);
             });
-            assertEquals(ex.getAttribute(), "streamID");
         }
 
         /**
@@ -250,35 +256,24 @@ public class HeadersTester {
     @Nested
     @DisplayName("getValue")
     class GetValue {
-        /**
-         * tests when a header is not present
-         */
         @Test
-        @DisplayName("header not present")
-        public void testNoHeadersBlock(){
-            try{
+        @DisplayName("Unknown value")
+        public void testUnknownValue(){
+            assertDoesNotThrow(() -> {
                 Headers h = new Headers(1, false);
-                assertNull(h.getValue(":type"));
-            }catch(BadAttributeException e){
-                fail(e.getMessage());
-            }
+                assertNull(h.getValue("name1"));
+            });
         }
 
-        /**
-         * tests when a header is present
-         */
         @Test
-        @DisplayName("header is present")
-        public void testGetValueValid(){
-            try{
+        @DisplayName("Unknown value")
+        public void testKnownValue(){
+            assertDoesNotThrow(() -> {
                 Headers h = new Headers(1, false);
-                String get = "GET";
-                String type = ":type";
-                h.addValue(type, get);
-                assertEquals(get, h.getValue(type));
-            }catch(BadAttributeException e){
-                fail(e.getMessage());
-            }
+                h.addValue("name1", "value1");
+                assertNotNull(h.getValue("name1"));
+                assertEquals("value1", h.getValue("name1"));
+            });
         }
     }
 
@@ -288,19 +283,88 @@ public class HeadersTester {
     @Nested
     @DisplayName("getNames")
     class GetNames {
-
         @Test
-        @DisplayName("No headers block")
-        public void testNoHeadersBlock(){
-            try{
+        @DisplayName("Empty names")
+        public void testEmptyNames(){
+            assertDoesNotThrow(() -> {
                 Headers h = new Headers(1, false);
-                assertNotNull(h.getNames());
-                assertEquals(h.getNames().size(), 0);
-            }catch(BadAttributeException e){
-                fail(e.getMessage());
-            }
+                assertEquals(new TreeSet<>(), h.getNames());
+            });
         }
 
+        @Test
+        @DisplayName("Full names")
+        public void testFullNames(){
+            assertDoesNotThrow(() -> {
+                Headers h = new Headers(1, false);
+                h.addValue("name1", "value1");
+                h.addValue("name2", "value2");
+                h.addValue("name3", "value3");
+                SortedSet<String> expected = new TreeSet<>(Set.of(
+                        "name1", "name2", "name3"
+                ));
+                assertEquals(expected, h.getNames());
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("addValue")
+    class AddValue {
+
+        @ParameterizedTest(name = "Invalid characters name - name{0}")
+        @ValueSource(chars = {'(', ')', ',', '/', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '{', '}'})
+        public void testInvalidCharacters(char invalidChar){
+            assertThrows(BadAttributeException.class, () -> {
+                Headers h = new Headers(1, false);
+                h.addValue("name" + invalidChar, "value");
+            });
+        }
+
+        @ParameterizedTest(name = "Invalid values - {0}")
+        @ValueSource(strings = {"", "\nvalue", "va\nlue", "value\n"})
+        public void testInvalidValues(String invalidVales){
+            assertThrows(BadAttributeException.class, () -> {
+                Headers h = new Headers(1, false);
+                h.addValue("name", invalidVales);
+            });
+        }
+
+        @ParameterizedTest(name = "Invalid names - {0}")
+        @ValueSource(strings = {"", "\nname", "na\nme", "name\n"})
+        public void testInvalidNames(String invalidNames){
+            assertThrows(BadAttributeException.class, () -> {
+                Headers h = new Headers(1, false);
+                h.addValue(invalidNames, "value");
+            });
+        }
+
+        @Test
+        @DisplayName("Valid name and value")
+        public void testValidName(){
+            assertDoesNotThrow(() -> {
+                Headers h = new Headers(1, false);
+                h.addValue("name", "value");
+            });
+        }
+
+        @Test
+        @DisplayName("Null name")
+        public void testNullName(){
+            assertThrows(BadAttributeException.class, () -> {
+                Headers h = new Headers(1, false);
+                h.addValue(null, "value");
+            });
+        }
+
+        @Test
+        @DisplayName("Null value")
+        public void testNullValue(){
+            assertThrows(BadAttributeException.class, () -> {
+                Headers h = new Headers(1, false);
+                h.addValue("name", null);
+            });
+        }
     }
 
     @Nested
