@@ -463,6 +463,7 @@ public class Client {
 
         // do not send a Window_update if the data was empty
         if(d.getData().length != 0) {
+            this.sendFrame(new Window_Update(0, d.getData().length));
             this.sendFrame(new Window_Update(d.getStreamID(), d.getData().length));
             s.addBytes(d.getData());
         }
