@@ -29,6 +29,9 @@ public class Data extends Message {
     // marks if the end of stream flag should be set
     private boolean isEnd = false;
 
+    //used in hash code
+    private static int HASH_CODE_PRIME = 31;
+
     /**
      * Creates Data message from given values
      *
@@ -92,7 +95,7 @@ public class Data extends Message {
      * @return the string of the correct form
      */
     @Override
-    public java.lang.String toString(){
+    public String toString(){
         return "Data: StreamID=" + Integer.toString(this.streamId)
                 + " isEnd=" + (this.isEnd ? "true" : "false")
                 + " data=" + Integer.toString(data.length);
@@ -142,9 +145,8 @@ public class Data extends Message {
      */
     @Override
     public int hashCode() {
-
         int result = Objects.hash(isEnd, streamId);
-        result = 31 * result + Arrays.hashCode(data);
+        result = HASH_CODE_PRIME * result + Arrays.hashCode(data);
         return result;
     }
 
@@ -163,7 +165,7 @@ public class Data extends Message {
      * @return the data array
      */
     @Override
-    protected byte []  getEncodedPayload(Encoder encoder){
+    protected byte [] getEncodedPayload(Encoder encoder){
         return this.data;
     }
 
@@ -176,7 +178,8 @@ public class Data extends Message {
      * @throws BadAttributeException if validation exception
      */
     @Override
-    protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
+    protected Message performDecode(HeaderParts parsed,
+            byte [] payload, Decoder decoder) throws BadAttributeException{
         if(checkBitSet(parsed.getFlags(), DATA_BAD_FLAG)){
             throw new BadAttributeException("The Bad flag was set (0x8)", "flags");
         }

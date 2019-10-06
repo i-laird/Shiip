@@ -313,7 +313,6 @@ public abstract class Message {
      */
     @Override
     public int hashCode() {
-
         return Objects.hash(streamId);
     }
 

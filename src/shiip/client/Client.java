@@ -330,7 +330,7 @@ public class Client {
         InputStream in = getSocketInputStream(this.socket);
 
         // send the connection preface
-		this.sendConnectionPreface();
+		this.sendConnectionPreface(out);
 
         //now make all of the file requests to the server
 		this.sendRequests();
@@ -496,11 +496,12 @@ public class Client {
         //unreachable statement
         return null;
     }
-	
-	/**
-	* sends the connection preface for the client
-	*/
-	private void sendConnectionPreface(){
+
+    /**
+     * sends the connection preface for the client
+     * @param out the output stream to write to
+     */
+	private void sendConnectionPreface(OutputStream out){
 		try {
             out.write(CLIENT_CONNECTION_PREFACE);
             Settings connectionStartSettingsFrame = new Settings();
