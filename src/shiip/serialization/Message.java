@@ -204,7 +204,9 @@ public abstract class Message {
                 break;
             /* This is if the type of the packet is not recognized */
             default:
-                throw new BadAttributeException("Unrecognized packet type: " + Byte.toString(parsed.getCode()), "type");
+                throw new BadAttributeException
+					("Unrecognized packet type: " + Byte.toString(parsed.getCode()),
+					"type");
         }
         return newMessage.performDecode(parsed, payload, decoder);
     }
@@ -217,7 +219,8 @@ public abstract class Message {
      * @return the decoded Message
      * @throws BadAttributeException if validation failure
      */
-    protected abstract Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException;
+    protected abstract Message performDecode(HeaderParts parsed,
+		byte [] payload, Decoder decoder) throws BadAttributeException;
 
     /**
      * creates a {@link HeaderParts} from the header bytes
@@ -244,7 +247,8 @@ public abstract class Message {
      * @return the byte array
      */
     public byte [] encode(Encoder encoder){
-        return this.getEncoded(this.getCode(), this.getEncodeFlags(), this.getStreamID(), this.getEncodedPayload(encoder));
+        return this.getEncoded(this.getCode(), this.getEncodeFlags(),
+			this.getStreamID(), this.getEncodedPayload(encoder));
     }
 
     /**
@@ -273,7 +277,8 @@ public abstract class Message {
      */
     public void setStreamID(int streamId) throws BadAttributeException{
         if(streamId < 0){
-            throw new BadAttributeException("Stream id cannot be negative", "streamID");
+            throw new BadAttributeException(
+				"Stream id cannot be negative", "streamID");
         }
         this.ensureValidStreamId(streamId);
         this.streamId = streamId;

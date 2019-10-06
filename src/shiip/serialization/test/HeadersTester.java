@@ -313,7 +313,8 @@ public class HeadersTester {
     class AddValue {
 
         @ParameterizedTest(name = "Invalid characters name - name{0}")
-        @ValueSource(chars = {'(', ')', ',', '/', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '{', '}'})
+        @ValueSource(chars = {'(', ')', ',', '/', ';', '<', '=',
+			'>', '?', '@', '[', '\\', ']', '{', '}'})
         public void testInvalidCharacters(char invalidChar){
             assertThrows(BadAttributeException.class, () -> {
                 Headers h = new Headers(1, false);
@@ -389,7 +390,8 @@ public class HeadersTester {
         @ParameterizedTest(name = "streamID = {0}, isEnd = {1}")
         @ArgumentsSource(ToStringOptionsProvider.class)
         @DisplayName("Options")
-        void testToStringValidOptions(int streamID, boolean isEnd, Map<String, String> options, String expected) {
+        void testToStringValidOptions(int streamID, boolean isEnd,
+				Map<String, String> options, String expected) {
             assertDoesNotThrow(() -> {
                 Headers headers = new Headers(streamID, isEnd);
                 for(Map.Entry<String, String> entry : options.entrySet()){
@@ -406,7 +408,8 @@ public class HeadersTester {
          * provides arguments
          */
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+        public Stream<? extends Arguments> provideArguments
+				(ExtensionContext extensionContext) throws Exception {
             List<Integer> validStreamIDs = Arrays.asList( 1, 20, 50);
             List<Boolean> validIsEnd = Arrays.asList(true, false);
             List<Map<String, String>> validOptions = Arrays.asList(
@@ -424,7 +427,11 @@ public class HeadersTester {
                                     .flatMap(isEnd ->
                                             validOptions
                                                     .stream()
-                                                    .map(options -> Arguments.of(streamID, isEnd, options, encode(streamID, isEnd, new TreeMap<>(options))))
+                                                    .map(options ->
+														Arguments.of(streamID,
+														isEnd, options,
+														encode(streamID, isEnd,
+														new TreeMap<>(options))))
                                     )
                     );
         }
@@ -432,12 +439,15 @@ public class HeadersTester {
         /**
          * encodes the string
          */
-        private String encode(int streamID, boolean isEnd, Map<String, String> options){
+        private String encode(int streamID, boolean isEnd,
+				Map<String, String> options){
             StringBuilder builder = new StringBuilder();
-            builder.append(String.format("Headers: StreamID=%d isEnd=%b",streamID, isEnd));
+            builder.append
+				(String.format("Headers: StreamID=%d isEnd=%b",streamID, isEnd));
             builder.append(" (");
             for(Map.Entry<String, String> entry : options.entrySet()){
-                builder.append(String.format("[%s=%s]", entry.getKey(), entry.getValue()));
+                builder.append
+					(String.format("[%s=%s]", entry.getKey(), entry.getValue()));
             }
             builder.append(")");
             return builder.toString();
@@ -447,7 +457,8 @@ public class HeadersTester {
     static class ToStringNoOptionsProvider implements ArgumentsProvider {
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+        public Stream<? extends Arguments> provideArguments
+				(ExtensionContext extensionContext) throws Exception {
             List<Integer> validStreamIDs = Arrays.asList( 1, 20, 50);
             List<Boolean> validIsEnd = Arrays.asList(true, false);
 
@@ -457,7 +468,8 @@ public class HeadersTester {
                             validIsEnd
                                     .stream()
                                     .map(isEnd ->
-                                            Arguments.of(streamID, isEnd, encode(streamID, isEnd))
+                                            Arguments.of(streamID,
+												isEnd, encode(streamID, isEnd))
                                     )
                     );
         }

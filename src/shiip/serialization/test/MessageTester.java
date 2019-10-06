@@ -159,7 +159,8 @@ public class MessageTester {
      * the payload is 4 octets and the R bit is set and increment is max value
      */
     private static byte [] GOOD_WINDOW_UPDATE_THREE =
-            {0x08, 0x00, (byte)0xff, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF };
+            {0x08, 0x00, (byte)0xff, (byte)0xFF, (byte)0xFF,
+			(byte)0xFF, (byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF };
 
     /*
      * an example window update frame
@@ -389,7 +390,9 @@ public class MessageTester {
             @Test
             void testWindowsUpdateMaxIncrement() {
                 assertDoesNotThrow(() -> {
-                    Window_Update wu = (Window_Update) Message.decode(GOOD_WINDOW_UPDATE_THREE, decoder);
+                    Window_Update wu = 
+						(Window_Update) Message.decode(GOOD_WINDOW_UPDATE_THREE,
+						decoder);
                     assertEquals(wu.getIncrement(), LARGEST_INT);
                     assertEquals(wu.getStreamID(), LARGEST_INT);
                 });
@@ -549,7 +552,8 @@ public class MessageTester {
             @ParameterizedTest(name = "streamID = {0}, encoded = {2}")
             @DisplayName("Encoding Tests")
             @ArgumentsSource(MessageArgs.class)
-            public void testHeadersEncoding(int streamId, Map<String, String> options, byte [] headerPlusPayload){
+            public void testHeadersEncoding(int streamId,
+					Map<String, String> options, byte [] headerPlusPayload){
                 assertDoesNotThrow(() -> {
                     Headers h = new Headers(streamId, false);
                     for (Map.Entry<String, String> entry : options.entrySet()) {
@@ -586,13 +590,15 @@ public class MessageTester {
          * provide arguments
          */
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+        public Stream<? extends Arguments> provideArguments
+				(ExtensionContext extensionContext) throws Exception {
             List<Integer> validStreamIDs = Arrays.asList( 1, 2876);
             List<Map<String, String>> validPayloads = Arrays.asList(
                     new TreeMap<>(),
                     Map.of(":method", "GET"),
                     Map.of(":method", "POST", ":version", "HTTP/2.0"),
-                    Map.of(":host", "duckduckgo.com", ":method", "PUT", ":scheme", "https")
+                    Map.of(":host", "duckduckgo.com", ":method",
+						"PUT", ":scheme", "https")
             );
 
             return validStreamIDs
@@ -602,7 +608,9 @@ public class MessageTester {
                             validPayloads
                                     .stream()
                                     .map(( payload) -> {
-                                        return Arguments.of(streamID, payload, mergeTwoArrays(expectedHeader(streamID), compress(payload)));
+                                        return Arguments.of(streamID, payload,
+											mergeTwoArrays(expectedHeader(streamID),
+											compress(payload)));
                                     })
 
                     );
@@ -614,7 +622,12 @@ public class MessageTester {
          * @return the expected header
          */
         private byte [] expectedHeader(int streamid){
-            return ByteBuffer.allocate(HEADER_SIZE).put(HEADERS_TYPE).put((byte)0x04).putInt(streamid).array();
+            return ByteBuffer
+				.allocate(HEADER_SIZE)
+				.put(HEADERS_TYPE)
+				.put((byte)0x04)
+				.putInt(streamid)
+				.array();
         }
 
         /**
@@ -626,7 +639,10 @@ public class MessageTester {
             try {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 for (Map.Entry<String, String> entry : map.entrySet()) {
-                    encoder.encodeHeader(out, entry.getKey().getBytes(StandardCharsets.US_ASCII), entry.getValue().getBytes(StandardCharsets.US_ASCII), false);
+                    encoder.encodeHeader(out, 
+						entry.getKey().getBytes(StandardCharsets.US_ASCII),
+						entry.getValue().getBytes(StandardCharsets.US_ASCII),
+						false);
                 }
                 return out.toByteArray();
             }catch(Exception e){}
