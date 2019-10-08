@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.FileHandler;
@@ -168,6 +169,10 @@ public class Server extends Thread{
         }
     }
 
+    /**
+     * handles a message but calling the correct subroutine
+     * @param m the message to handle
+     */
     private void handleMessage(Message m){
         switch(m.getCode()){
             case DATA_TYPE:
@@ -184,21 +189,45 @@ public class Server extends Thread{
                 break;
         }
     }
+
+    /**
+     * handles a received {@link Data} frame
+     * @param d the data frame
+     */
     private void handleDataFrame(Data d){
-        logger.info("Unexpected message");
+        logger.info(UNEXPECTED_MESSAGE + d.toString());
     }
 
+    /**
+     * handles a received {@link Settings} frame
+     * @param s the settings frame
+     */
     private void handleSettingsFrame(Settings s){
-
+        logger.info(RECEIVED_MESSAGE + s.toString());
     }
 
-    private void handleHeadersFrame(Headers h){
-
-    }
-
+    /**
+     * handles a received {@link Window_Update} frame
+     * @param w the window update frame
+     */
     private void handleWindowUpdateFrame(Window_Update w){
-
+        logger.info(RECEIVED_MESSAGE + w.toString());
     }
+
+    /**
+     * handles a received {@link Headers} frame
+     * @param h the headers frame
+     */
+    private void handleHeadersFrame(Headers h){
+        String path = h.getValue(Headers.NAME_PATH);
+
+        // see if there is a path specified
+        if(Objects.isNull(path)){
+            logger.severe(NO_PATH_SPECIFIED);
+            // TODO 404
+        }
+    }
+
     /**
      * sets up the connection to the client
      */
