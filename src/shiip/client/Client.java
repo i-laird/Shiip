@@ -17,7 +17,7 @@ import java.util.*;
 
 // use Framer, Deframer, and all message types
 import shiip.serialization.*;
-import shiip.util.CommandLineParser;
+import shiip.util.*;
 
 //use many constants from here
 import static shiip.serialization.Headers.*;
@@ -29,17 +29,7 @@ import static shiip.util.ErrorCodes.*;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
  * @author Laird
@@ -108,18 +98,6 @@ public class Client {
     //the next stream id that will be used
     private int currentStreamId = 1;
 
-    // the framer that is to be used in this connection
-    private Framer framer = null;
-
-    //the deframer that is to be used in this connection
-    private Deframer deframer = null;
-
-    //the encoder for this connection
-    private Encoder encoder = null;
-
-    //the decoder that is to be used by this connection
-    private Decoder decoder = null;
-
     // all of the paths that the client is going to send to the server
     private List<String> paths = null;
 
@@ -131,6 +109,15 @@ public class Client {
 
     // the server
     private String server;
+
+    // used to receive messages
+    private MessageReceiver messageReceiver = null;
+
+    // used to send messages
+    private MessageSender messageSender = null;
+
+    // the output stream for the Session
+    private OutputStream out = null;
 
     // static methods *********************************************************
 
@@ -154,7 +141,7 @@ public class Client {
         List<String> paths = Arrays.asList(Arrays.copyOfRange(args, PATH_START_POS, args.length));
         Socket socket = null;
         try {
-            socket = createConnection(args[SERVER_URL_ARG_POS], port);
+            socket = TLS_Factory.create_TLS_Client(args[SERVER_URL_ARG_POS], port);
         }catch(Exception e){
             System.err.println("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);
@@ -173,43 +160,6 @@ public class Client {
 		shiipConnection.closeSession();
     }
 
-    /**
-     * code provided by Dr. Donahoo
-     * @param server the server
-     * @param portNum the port number
-     * @return a socket with TLS
-     * @throws Exception if unable to create the Socket
-     */
-    private static Socket createConnection(String server, int portNum)
-			throws Exception {
-        
-		// the following method was provided by Dr. Donahoo
-		final SSLContext ctx = SSLContext.getInstance("TLSv1.3");
-        ctx.init(null, new TrustManager[] { new X509TrustManager() {
-            public void checkClientTrusted(X509Certificate[] chain,
-				String authType) {
-            }
-
-            public void checkServerTrusted(X509Certificate[] chain,
-				String authType) {
-            }
-
-            public X509Certificate[] getAcceptedIssuers() {
-                return new X509Certificate[0];
-            }
-        } }, null);
-        final SSLSocketFactory ssf = ctx.getSocketFactory();
-        final SSLSocket s = (SSLSocket) ssf.createSocket(server, portNum);
-        s.setEnabledCipherSuites(new String[] 
-			{ "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" });
-        final SSLParameters p = s.getSSLParameters();
-        p.setApplicationProtocols(new String[] { "h2" });
-        s.setSSLParameters(p);
-        s.startHandshake();
-
-        return s;
-    }
-	
 	// methods *********************************************************
 
     /**
@@ -221,12 +171,15 @@ public class Client {
     public Client(Socket socket, Encoder encoder,
 			Decoder decoder, List<String> paths, String server){
         this.socket = socket;
-        this.framer= new Framer(getSocketOutputStream(socket));
-        this.deframer = new Deframer(getSocketInputStream(socket));
-        this.encoder = encoder;
-        this.decoder = decoder;
         this.paths = paths;
         this.server = server;
+        this.out = ClientIOStreamGetter.getSocketOutputStream(socket);
+        this.messageReceiver =
+                new MessageReceiver
+                        (ClientIOStreamGetter.getSocketInputStream
+                                (socket), decoder);
+        this.messageSender =
+                new MessageSender(this.out, encoder);
     }
 
     /**
@@ -234,12 +187,8 @@ public class Client {
      */
     public void go() {
 
-		// get the socket i/o streams
-        OutputStream out = getSocketOutputStream(this.socket);
-        InputStream in = getSocketInputStream(this.socket);
-
         // send the connection preface
-		this.sendConnectionPreface(out);
+		this.sendConnectionPreface(this.out);
 
         //now make all of the file requests to the server
 		this.sendRequests();
@@ -249,25 +198,6 @@ public class Client {
 		
 		//write all of the requests to files
 		this.writeFiles();
-    }
-
-    /**
-     * Encodes, frames, and then sends a message over the saved output stream
-     * @param m message to send
-     * @throws IOException if unable to send the message
-     */
-    private void sendFrame(Message m) throws IOException{
-        framer.putFrame(m.encode(this.encoder));
-    }
-
-    /**
-     * decodes, and then deframes a message from the saved input stream
-     * @return the retrieved Message
-     * @throws IOException if unable to read the message
-     * @throws BadAttributeException if the message has bad attributes
-     */
-    private Message receiveMessage() throws IOException, BadAttributeException{
-        return Message.decode(deframer.getFrame(), decoder);
     }
 
     /**
@@ -327,9 +257,9 @@ public class Client {
 
         // do not send a Window_update if the data was empty
         if(d.getData().length != 0) {
-            this.sendFrame(new Window_Update(STREAM_ID_FOR_SESSION,
+            this.messageSender.sendFrame(new Window_Update(STREAM_ID_FOR_SESSION,
 				d.getData().length));
-            this.sendFrame(new Window_Update(d.getStreamID(),
+            this.messageSender.sendFrame(new Window_Update(d.getStreamID(),
 				d.getData().length));
             s.addBytes(d.getData());
         }
@@ -371,42 +301,6 @@ public class Client {
     }
 
     /**
-     * gete the {@link InputStream} for a {@link Socket} and
-     * does exception handling
-     * @param s the socket
-     * @return the input stream of the Socket
-     */
-    private static InputStream getSocketInputStream(Socket s){
-        try {
-            return s.getInputStream();
-        }catch(IOException e){
-            System.err.println("Unable to get input stream for socket");
-            System.exit(ERROR_SOCKET_GET_IO);
-        }
-
-        //unreachable statement
-        return null;
-    }
-
-    /**
-     * gets the {@link OutputStream} for a {@link Socket} and
-     * does exception handling
-     * @param s the socket
-     * @return the output stream
-     */
-    private static OutputStream getSocketOutputStream(Socket s){
-        try {
-            return s.getOutputStream();
-        }catch(IOException e){
-            System.err.println("Unable to get input stream for socket");
-            System.exit(ERROR_SOCKET_GET_IO);
-        }
-
-        //unreachable statement
-        return null;
-    }
-
-    /**
      * sends the connection preface for the client
      * @param out the output stream to write to
      */
@@ -414,7 +308,7 @@ public class Client {
 		try {
             out.write(CLIENT_CONNECTION_PREFACE);
             Settings connectionStartSettingsFrame = new Settings();
-            this.sendFrame(connectionStartSettingsFrame);
+            this.messageSender.sendFrame(connectionStartSettingsFrame);
         }catch(BadAttributeException | IOException e){
             System.err.println(
 				"Error sending connection preface: " + e.getMessage());
@@ -434,7 +328,7 @@ public class Client {
                 addHeaders(header, path, this.server );
 
                 // now send the request to the server
-                this.sendFrame(header);
+                this.messageSender.sendFrame(header);
 
                 //create a stream for this path
                 this.streams.put(currStreamid, new Stream(currStreamid, path));
@@ -455,7 +349,7 @@ public class Client {
 		while(!this.activeStreams.isEmpty()){
             Message m = null;
             try {
-                m = this.receiveMessage();
+                m = this.messageReceiver.receiveMessage();
                 switch(m.getCode()){
                     case DATA_TYPE:
                         this.handleDataFrame((Data)m);
