@@ -118,7 +118,8 @@ public class Headers extends Message {
          *                  depends on decoding or encoding
          * @throws BadAttributeException thrown if invalid name or value
          */
-        public static void checkValid(byte [] name, byte [] value, boolean encodeMode) throws BadAttributeException{
+        public static void checkValid(byte [] name, byte [] value,
+				boolean encodeMode) throws BadAttributeException{
             //if in encode mode make sure that the string are valid for sending
             isValidName(name);
             isValidValue(value);
@@ -129,16 +130,20 @@ public class Headers extends Message {
          * @param name the name to be checked
          * @throws BadAttributeException if the name is invalid
          */
-        private static void isValidName(byte [] name) throws BadAttributeException{
+        private static void isValidName(byte [] name) 
+				throws BadAttributeException{
             if(name.length < MINIMUM_NAME_LENGTH){
-                throw new BadAttributeException("Invalid name: too short", "name");
+                throw new BadAttributeException
+					("Invalid name: too short", "name");
             }
             for (byte b : name){
                 if(!isNCHAR(b)){
-                    throw new BadAttributeException("Invalid name: not an nchar", "name");
+                    throw new BadAttributeException
+						("Invalid name: not an nchar", "name");
                 }
                 if(isDelim(b)){
-                    throw new BadAttributeException("Invalid name: delim present", "name");
+                    throw new BadAttributeException
+						("Invalid name: delim present", "name");
                 }
             }
         }
@@ -148,13 +153,16 @@ public class Headers extends Message {
          * @param value the value to be checked
          * @throws BadAttributeException if the value is invalid
          */
-        private static void isValidValue(byte [] value) throws BadAttributeException{
+        private static void isValidValue(byte [] value) 
+				throws BadAttributeException{
             if(value.length < MINIMUM_VALUE_LENGTH){
-                throw new BadAttributeException("Invalid value: too short", "name");
+                throw new BadAttributeException
+					("Invalid value: too short", "name");
             }
             for (byte b : value){
                 if(!isVCHAR(b)){
-                    throw new BadAttributeException("Invalid name: not all vchar", "value");
+                    throw new BadAttributeException
+						("Invalid name: not all vchar", "value");
                 }
             }
         }
@@ -269,7 +277,9 @@ public class Headers extends Message {
     }
 
     /**
-     * Add name/value pair to header. If the name is already contained in the header, the corresponding value is replaced by the new value.
+     * Add name/value pair to header. If the name is already
+	 *	   contained in the header, the corresponding value
+     *     is replaced by the new value.
      * @param name name to add
      * @param value value to add/replace
      * @throws BadAttributeException if invalid name or value
@@ -282,8 +292,9 @@ public class Headers extends Message {
             throw new BadAttributeException("Value cannot be null", "value");
         }
         //make sure that the ascii is allowable as well
-        NameValueValidityCheckerAscii.checkValid(name.getBytes(StandardCharsets.US_ASCII),
-                value.getBytes(StandardCharsets.US_ASCII), DECODE_MODE);
+        NameValueValidityCheckerAscii
+			.checkValid(name.getBytes(StandardCharsets.US_ASCII),
+            value.getBytes(StandardCharsets.US_ASCII), DECODE_MODE);
 
         this.nameValuePairs.put(name, value);
     }
@@ -355,7 +366,8 @@ public class Headers extends Message {
      */
     @Override
     protected byte [] getEncodedPayload(Encoder encoder){
-        Objects.requireNonNull(encoder, "The encoder cannot be null for a Headers message");
+        Objects.requireNonNull(encoder,
+			"The encoder cannot be null for a Headers message");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             for (Map.Entry<String, String> entry : this.nameValuePairs.entrySet()) {
@@ -418,7 +430,8 @@ public class Headers extends Message {
      * @throws BadAttributeException if validation exception
      */
     @Override
-    protected Message performDecode(HeaderParts parsed, byte [] payload, Decoder decoder) throws BadAttributeException{
+    protected Message performDecode(HeaderParts parsed,
+			byte [] payload, Decoder decoder) throws BadAttributeException{
         Objects.requireNonNull(decoder,
                 "The decoder may not be null for a Headers Message");
         if(checkBitSet(parsed.flags, HEADERS_BAD_FLAG_ONE)){
@@ -444,14 +457,17 @@ public class Headers extends Message {
      * @param decoder the dccoder
      * @throws BadAttributeException if unable to parse the headers
      */
-    public static void addHeaderFieldsToHeader(Headers headers, byte [] payload, Decoder decoder) throws BadAttributeException {
+    public static void addHeaderFieldsToHeader(Headers headers,
+			byte [] payload, Decoder decoder) throws BadAttributeException {
         try {
             ByteArrayInputStream payloadStream = new ByteArrayInputStream(payload);
             decoder.decode(payloadStream,
-                    (byte[] name, byte[] value, boolean sensitive) -> headers.addValue(name, value, sensitive));
+                    (byte[] name, byte[] value, boolean sensitive)
+						-> headers.addValue(name, value, sensitive));
             headers.processAllNameValues();
         }catch(IOException e){
-            throw new BadAttributeException("Unable to decode the headers", "headers", e);
+            throw new BadAttributeException(
+				"Unable to decode the headers", "headers", e);
         }finally{
             decoder.endHeaderBlock();
         }

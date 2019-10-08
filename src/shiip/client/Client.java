@@ -83,7 +83,6 @@ public class Client {
 
     // MISC **************************************************************
 
-
     // send by the client to initialize the connection
     private static final byte [] CLIENT_CONNECTION_PREFACE =
             {0x50, 0x52, 0x49, 0x20, 0x2a, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f,
@@ -94,10 +93,12 @@ public class Client {
     private static final int SERVER_CONNECTION_PREFACE_SIZE = 24;
 
     // max header size for encoder and decoder
-    private static int MAX_HEADER_SIZE = 1024;
+    private static final int MAX_HEADER_SIZE = 1024;
 
     // max header table size
-    private static int MAX_HEADER_TABLE_SIZE = 1024;
+    private static final int MAX_HEADER_TABLE_SIZE = 1024;
+	
+	private static final int STREAM_ID_FOR_SESSION = 0;
 
     // local variables ***************************************************
 
@@ -125,12 +126,13 @@ public class Client {
     // maps a streamId to its corresponding Stream object
     private Map<Integer, Stream> streams = new HashMap<>();
 
+	// the active streams in the session
     private Set<Integer> activeStreams = new HashSet<>();
 
     // the server
     private String server;
 
-    // functions *********************************************************
+    // static methods *********************************************************
 
     /**
      * Runs the Client
@@ -140,6 +142,8 @@ public class Client {
      *    all other params are assumed to be paths
      */
     public static void main(String [] args){
+		
+		// ensure not too few args
         if(args.length < MINIMUM_COMMAND_LINE_PARAMS_CLIENt){
             System.err.println("Usage: <server> <port> [<path> ...]");
             System.exit(INVALID_PARAM_NUMBER_ERROR);
@@ -155,10 +159,18 @@ public class Client {
             System.err.println("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);
         }
+		
+		// create encoder and decoder
         Encoder encoder = new Encoder(MAX_HEADER_TABLE_SIZE);
         Decoder decoder = new Decoder(MAX_HEADER_SIZE, MAX_HEADER_TABLE_SIZE);
-        Client shiipConnection = new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
-        shiipConnection.go();
+        
+		// create the connection
+		Client shiipConnection = 
+			new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
+        
+		// run the connection
+		shiipConnection.go();
+		shiipConnection.closeSession();
     }
 
     /**
@@ -168,13 +180,18 @@ public class Client {
      * @return a socket with TLS
      * @throws Exception if unable to create the Socket
      */
-    private static Socket createConnection(String server, int portNum) throws Exception {
-        final SSLContext ctx = SSLContext.getInstance("TLSv1.3");
+    private static Socket createConnection(String server, int portNum)
+			throws Exception {
+        
+		// the following method was provided by Dr. Donahoo
+		final SSLContext ctx = SSLContext.getInstance("TLSv1.3");
         ctx.init(null, new TrustManager[] { new X509TrustManager() {
-            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            public void checkClientTrusted(X509Certificate[] chain,
+				String authType) {
             }
 
-            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+            public void checkServerTrusted(X509Certificate[] chain,
+				String authType) {
             }
 
             public X509Certificate[] getAcceptedIssuers() {
@@ -183,7 +200,8 @@ public class Client {
         } }, null);
         final SSLSocketFactory ssf = ctx.getSocketFactory();
         final SSLSocket s = (SSLSocket) ssf.createSocket(server, portNum);
-        s.setEnabledCipherSuites(new String[] { "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" });
+        s.setEnabledCipherSuites(new String[] 
+			{ "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" });
         final SSLParameters p = s.getSSLParameters();
         p.setApplicationProtocols(new String[] { "h2" });
         s.setSSLParameters(p);
@@ -191,6 +209,8 @@ public class Client {
 
         return s;
     }
+	
+	// methods *********************************************************
 
     /**
      * creates a Client
@@ -198,7 +218,8 @@ public class Client {
      * @param encoder used for hpack compression
      * @param paths all paths that are to be retrieved from the server
      */
-    public Client(Socket socket, Encoder encoder, Decoder decoder, List<String> paths, String server){
+    public Client(Socket socket, Encoder encoder,
+			Decoder decoder, List<String> paths, String server){
         this.socket = socket;
         this.framer= new Framer(getSocketOutputStream(socket));
         this.deframer = new Deframer(getSocketInputStream(socket));
@@ -213,96 +234,21 @@ public class Client {
      */
     public void go() {
 
+		// get the socket i/o streams
         OutputStream out = getSocketOutputStream(this.socket);
         InputStream in = getSocketInputStream(this.socket);
 
         // send the connection preface
-        try {
-            out.write(CLIENT_CONNECTION_PREFACE);
-            Settings connectionStartSettingsFrame = new Settings();
-            this.sendFrame(connectionStartSettingsFrame);
-        }catch(BadAttributeException | IOException e){
-            System.err.println("Error sending connection preface: " + e.getMessage());
-            System.exit(ERROR_SENDING_CONNECTION_PREFACE);
-        }
+		this.sendConnectionPreface(out);
 
-        //now make all of the file requests
-        int currStreamid;
-        for(String path : this.paths){
-            currStreamid = getNextStreamId();
-            try {
-                Headers header = new Headers(currStreamid, true);
-                addHeaders(header, path, this.server );
-
-                // now send the request to the server
-                this.sendFrame(header);
-
-                //create a stream for this path
-                this.streams.put(currStreamid, new Stream(currStreamid, path));
-                this.activeStreams.add(currStreamid);
-            }catch(BadAttributeException e){
-                System.err.println("Error creating the GET request");
-            }catch(IOException e2){
-                System.err.println("Error sending request to server");
-                System.exit(ERROR_SENDING_REQUEST_TO_SERVER);
-            }
-        }
-
+        //now make all of the file requests to the server
+		this.sendRequests();
+		
         //now keep reading frames from the TLS connection until all streams are done
-        while(!this.activeStreams.isEmpty()){
-            Message m = null;
-            try {
-                m = this.receiveMessage();
-                switch(m.getCode()){
-                    case DATA_TYPE:
-                        this.handleDataFrame((Data)m);
-                        break;
-                    case SETTINGS_TYPE:
-                        this.handleSettingsFrame((Settings)m);
-                        break;
-                    case HEADER_TYPE:
-                        this.handleHeadersFrame((Headers)m);
-                        break;
-                    case WINDOW_UPDATE_TYPE:
-                        this.handleWindowUpdateFrame((Window_Update)m);
-                        break;
-                }
-            }catch(EOFException e){
-                System.err.println(UNABLE_TO_PARSE + e.getMessage());
-            }catch(BadAttributeException e2){
-                System.err.println(INVALID_MESSAGE + e2.getMessage());
-            }catch(IOException e3){
-                System.err.println("Error in communication with server: " + e3.getMessage());
-                System.exit(NETWORK_ERROR);
-            }
-        }
-        for(Stream s : this.streams.values()){
-
-            /*
-             * make sure that a data frame with END_STREAM set was
-             * received for this stream
-             */
-            if(!s.isComplete){
-                //TODO check with Donahoo about this one
-                System.err.println("Error never received DATA frame with" +
-                        " END_STREAM set for streamID: " + s.getStreamId());
-            }
-            else {
-                try {
-                    s.writeToFile();
-                } catch (IOException e) {
-                    System.err.println("Error: Unable to write to file");
-                    System.err.println(e.getMessage());
-                    System.exit(ERROR_WRITING_TO_FILE);
-                }
-            }
-        }
-        try {
-            this.socket.close();
-        }catch(IOException e){
-            System.err.println("Error: Unable to close the socket");
-            System.exit(ERROR_CLOSING_SOCKET);
-        }
+		this.receiveMessages();
+		
+		//write all of the requests to files
+		this.writeFiles();
     }
 
     /**
@@ -342,7 +288,8 @@ public class Client {
      * @param path the path of the desired resource on the server
      * @throws BadAttributeException if a name value pair is unable to be added
      */
-    private static void addHeaders(Headers header, String path, String host) throws BadAttributeException{
+    private static void addHeaders(Headers header, String path, String host)
+			throws BadAttributeException{
         header.addValue(NAME_METHOD, GET_REQUEST);
         header.addValue(NAME_PATH, path);
         header.addValue(NAME_AUTHORITY, host); //TODO fix this
@@ -356,7 +303,8 @@ public class Client {
      * @throws BadAttributeException should not actually be thrown
      * @throws IOException if unable to send the necessary {@link Window_Update}
      */
-    private void handleDataFrame(Data d) throws BadAttributeException, IOException{
+    private void handleDataFrame(Data d) 
+			throws BadAttributeException, IOException{
         /*
         if a data frame has an unrequested stream ID
         then print error message and be done with this packet
@@ -379,8 +327,10 @@ public class Client {
 
         // do not send a Window_update if the data was empty
         if(d.getData().length != 0) {
-            this.sendFrame(new Window_Update(0, d.getData().length));
-            this.sendFrame(new Window_Update(d.getStreamID(), d.getData().length));
+            this.sendFrame(new Window_Update(STREAM_ID_FOR_SESSION,
+				d.getData().length));
+            this.sendFrame(new Window_Update(d.getStreamID(),
+				d.getData().length));
             s.addBytes(d.getData());
         }
         if(d.isEnd()){
@@ -455,4 +405,119 @@ public class Client {
         //unreachable statement
         return null;
     }
+
+    /**
+     * sends the connection preface for the client
+     * @param out the output stream to write to
+     */
+	private void sendConnectionPreface(OutputStream out){
+		try {
+            out.write(CLIENT_CONNECTION_PREFACE);
+            Settings connectionStartSettingsFrame = new Settings();
+            this.sendFrame(connectionStartSettingsFrame);
+        }catch(BadAttributeException | IOException e){
+            System.err.println(
+				"Error sending connection preface: " + e.getMessage());
+            System.exit(ERROR_SENDING_CONNECTION_PREFACE);
+        }
+	}
+	
+	/**
+	* sends all requests to the web server
+	*/
+	private void sendRequests(){
+		int currStreamid;
+        for(String path : this.paths){
+            currStreamid = getNextStreamId();
+            try {
+                Headers header = new Headers(currStreamid, true);
+                addHeaders(header, path, this.server );
+
+                // now send the request to the server
+                this.sendFrame(header);
+
+                //create a stream for this path
+                this.streams.put(currStreamid, new Stream(currStreamid, path));
+                this.activeStreams.add(currStreamid);
+            }catch(BadAttributeException e){
+                System.err.println("Error creating the GET request");
+            }catch(IOException e2){
+                System.err.println("Error sending request to server");
+                System.exit(ERROR_SENDING_REQUEST_TO_SERVER);
+            }
+        }
+	}	
+	
+	/**
+	* receives all messages from the server and handles them
+	*/
+	private void receiveMessages(){
+		while(!this.activeStreams.isEmpty()){
+            Message m = null;
+            try {
+                m = this.receiveMessage();
+                switch(m.getCode()){
+                    case DATA_TYPE:
+                        this.handleDataFrame((Data)m);
+                        break;
+                    case SETTINGS_TYPE:
+                        this.handleSettingsFrame((Settings)m);
+                        break;
+                    case HEADER_TYPE:
+                        this.handleHeadersFrame((Headers)m);
+                        break;
+                    case WINDOW_UPDATE_TYPE:
+                        this.handleWindowUpdateFrame((Window_Update)m);
+                        break;
+                }
+            }catch(EOFException e){
+                System.err.println(UNABLE_TO_PARSE + e.getMessage());
+            }catch(BadAttributeException e2){
+                System.err.println(INVALID_MESSAGE + e2.getMessage());
+            }catch(IOException e3){
+                System.err.println(
+					"Error in communication with server: " + e3.getMessage());
+                System.exit(NETWORK_ERROR);
+            }
+        }
+	}
+	
+	/**
+	* writes all streams to files
+	*/
+	private void writeFiles(){
+		for(Stream s : this.streams.values()){
+
+            /*
+             * make sure that a data frame with END_STREAM set was
+             * received for this stream
+             */
+            if(!s.isComplete){
+                //TODO check with Donahoo about this one
+                System.err.println("Error never received DATA frame with" +
+                        " END_STREAM set for streamID: " + s.getStreamId());
+            }
+            else {
+                try {
+                    s.writeToFile();
+                } catch (IOException e) {
+                    System.err.println("Error: Unable to write to file");
+                    System.err.println(e.getMessage());
+                    System.exit(ERROR_WRITING_TO_FILE);
+                }
+            }
+        }
+	}
+	
+	/**
+	* closes the session by closing the socket
+	*/
+	private void closeSession(){
+		try {
+            this.socket.close();
+        }catch(IOException e){
+            System.err.println("Error: Unable to close the socket");
+            System.exit(ERROR_CLOSING_SOCKET);
+        }
+	}
 }

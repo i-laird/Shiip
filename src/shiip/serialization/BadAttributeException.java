@@ -30,9 +30,7 @@ public class BadAttributeException extends Exception implements Serializable {
      * @param cause underlying cause (null is permitted and indicates
      *             no or unknown cause)
      */
-    public BadAttributeException(java.lang.String message,
-                                 java.lang.String attribute,
-                                 java.lang.Throwable cause){
+    public BadAttributeException(String message, String attribute, Throwable cause){
         super(message, cause);
         this.attribute = attribute;
     }
@@ -44,8 +42,7 @@ public class BadAttributeException extends Exception implements Serializable {
      * @param message detail message
      * @param attribute attribute related to problem
      */
-    public BadAttributeException(java.lang.String message,
-                                 java.lang.String attribute){
+    public BadAttributeException(String message, String attribute){
         super(message);
         this.attribute = attribute;
     }
