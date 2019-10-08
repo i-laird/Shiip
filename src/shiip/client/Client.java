@@ -74,7 +74,7 @@ public class Client {
     // MISC **************************************************************
 
     // send by the client to initialize the connection
-    private static final byte [] CLIENT_CONNECTION_PREFACE =
+    public static final byte [] CLIENT_CONNECTION_PREFACE =
             {0x50, 0x52, 0x49, 0x20, 0x2a, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f,
              0x32, 0x2e, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x53, 0x4d, 0x0d, 0x0a,
              0x0d, 0x0a};

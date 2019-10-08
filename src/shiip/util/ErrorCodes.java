@@ -46,4 +46,7 @@ public final class ErrorCodes {
 
     // bad port number
     public static final int BAD_PORT_NUM_ERROR = 11;
+
+    // unable to create the logger
+    public static final int LOGGER_PROBLEM = 12;
 }
