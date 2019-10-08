@@ -17,11 +17,15 @@ import java.util.*;
 
 // use Framer, Deframer, and all message types
 import shiip.serialization.*;
+import shiip.util.CommandLineParser;
 
 //use many constants from here
 import static shiip.serialization.Headers.*;
 
 import static shiip.serialization.Data.DATA_TYPE;
+
+// all error return nums
+import static shiip.util.ErrorCodes.*;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -42,38 +46,6 @@ import javax.net.ssl.X509TrustManager;
  * Shiip TCP client
  */
 public class Client {
-
-    // ERROR CODES ***********************************************
-
-    // invalid number of params error
-    private static final int INVALID_PARAM_NUMBER_ERROR = 1;
-
-    // invalid url error
-    private static final int BAD_URL_ERROR = 2;
-
-    //invalid port error
-    private static final int BAD_PORT_ERROR = 3;
-
-    //unable to create socket error
-    private static final int SOCKET_CREATION_ERROR = 4;
-
-    // for when there is an error writing to a file
-    private static final int ERROR_WRITING_TO_FILE = 5;
-
-    // for when there is an error in receiving the connection preface
-    private static final int ERROR_SENDING_REQUEST_TO_SERVER = 6;
-
-    // for when there is an error sending the connection preface
-    private static final int ERROR_SENDING_CONNECTION_PREFACE = 7;
-
-    // for when there is a communication error with the network
-    private static final int NETWORK_ERROR = 8;
-
-    // error getting socket io streams
-    private static final int ERROR_SOCKET_GET_IO = 9;
-
-    //error closing socket
-    private static final int ERROR_CLOSING_SOCKET = 10;
 
     // command line args *************************************************
 
@@ -173,8 +145,8 @@ public class Client {
             System.exit(INVALID_PARAM_NUMBER_ERROR);
         }
 
-        InetAddress ipAddr = getIpAddress(args[SERVER_URL_ARG_POS]);
-        int port = getPort(args[PORT_ARG_POS]);
+        InetAddress ipAddr = CommandLineParser.getIpAddress(args[SERVER_URL_ARG_POS]);
+        int port = CommandLineParser.getPort(args[PORT_ARG_POS]);
         List<String> paths = Arrays.asList(Arrays.copyOfRange(args, PATH_START_POS, args.length));
         Socket socket = null;
         try {
@@ -187,62 +159,6 @@ public class Client {
         Decoder decoder = new Decoder(MAX_HEADER_SIZE, MAX_HEADER_TABLE_SIZE);
         Client shiipConnection = new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
         shiipConnection.go();
-    }
-
-    /**
-     * Gets IpAddress from a server string
-     * @param server the server
-     * @return the ipAddress
-     * @see InetAddress
-     */
-    private static InetAddress getIpAddress (String server){
-        boolean isEncodedIp = true;
-
-        // need to parse the server
-        // first see if it is an ip address directly
-        URL serverUrl = null;
-        InetAddress ipAddress = null;
-
-        try {
-            ipAddress = InetAddress.getByName(server);
-        }catch(UnknownHostException e){
-            isEncodedIp = false;
-        }
-
-        if(!isEncodedIp) {
-            try {
-                serverUrl = new URL(server);
-                serverUrl.toURI();
-                ipAddress = InetAddress.getByName(serverUrl.getHost());
-            } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
-                System.err.println("Error: Unable to parse the server");
-                System.exit(BAD_URL_ERROR);
-            }
-        }
-
-        return ipAddress;
-    }
-
-    /**
-     * Gets a port number from its String representation
-     * @param port the port
-     * @return port as an int
-     */
-    private static int getPort(String port){
-        int toReturn = 0;
-        try {
-            toReturn = Integer.parseInt(port);
-            if(toReturn < 0){
-                System.err.println("Error: port cannot be negative");
-                System.exit(BAD_PORT_ERROR);
-            }
-        }catch(NumberFormatException e){
-            System.err.println("Invalid port");
-            System.err.println(e.getMessage());
-            System.exit(BAD_PORT_ERROR);
-        }
-
-        return toReturn;
     }
 
     /**
