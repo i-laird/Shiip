@@ -15,13 +15,15 @@ import shiip.util.MessageReceiver;
 import shiip.util.MessageSender;
 import shiip.util.TLS_Factory;
 
-import java.io.EOFException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.FileHandler;
@@ -29,8 +31,9 @@ import java.util.logging.Logger;
 
 import static shiip.serialization.Message.*;
 import static shiip.util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
-import static shiip.util.ErrorCodes.NETWORK_ERROR;
 import static shiip.util.ErrorCodes.SOCKET_CREATION_ERROR;
+import static shiip.serialization.Headers.STATUS;
+import static shiip.serialization.Headers.NAME_PATH;
 
 /**
  * Shiip Server
@@ -46,6 +49,8 @@ public class Server extends Thread{
     // the min data interval of the server
     public static final int MINDATAINTERVAL = 5;
 
+    // private constants ****************************************************
+
     // the number of arguments for the shiip server
     private static final int SERVER_ARG_COUNT = 3;
 
@@ -58,29 +63,41 @@ public class Server extends Thread{
     // the position of the document root in the args
     private static final int SERVER_ARG_DOC_ROOT_POS = 2;
 
-    // used for logging the server
-    private static Logger logger = Logger.getLogger("SHiip Server");
+    // private strings ******************************************************
 
     // unexpected message
-    private static String UNEXPECTED_MESSAGE = "Unexpected message: ";
+    private static final String UNEXPECTED_MESSAGE = "Unexpected message: ";
 
     // received message
-    private static String RECEIVED_MESSAGE = "Received message: ";
+    private static final String RECEIVED_MESSAGE = "Received message: ";
 
     // cannot open the requested file
-    private static String UNABLE_TO_OPEN_FILE = "Unable to open file: ";
+    private static final String UNABLE_TO_OPEN_FILE = "Unable to open file: ";
 
     // cannot access the requested directory
-    private static String CANNOT_REQUEST_DIRECTORY = "Cannot request directory: ";
+    private static final String CANNOT_REQUEST_DIRECTORY = "Cannot request directory: ";
 
     // no path in the Headers frame
-    private static String NO_PATH_SPECIFIED = "No path specified";
+    private static final String NO_PATH_SPECIFIED = "No path specified";
 
     // duplicate Stream id
-    private static String DUPLICATE_STREAM_ID = "Duplicate request: ";
+    private static final String DUPLICATE_STREAM_ID = "Duplicate request: ";
 
     // illegal stream id
-    private static String ILLEGAL_STREAM_ID = "Illegal stream ID: ";
+    private static final String ILLEGAL_STREAM_ID = "Illegal stream ID: ";
+
+    // 404 error for file not found
+    private static final String ERROR_404_FILE = "404 File not found";
+
+    // 404 error for directory not found
+    private static final String ERROR_404_DIRECTORY = "404 Cannot request directory";
+
+    // MISC *****************************************************************
+
+    // used for logging the server
+    private static final Logger logger = Logger.getLogger("SHiip Server");
+
+    // instance variables ***************************************************
 
     // uses TLS to communicate to the client
     private Socket socket = null;
@@ -93,6 +110,9 @@ public class Server extends Thread{
 
     // the input stream from the remote socket
     private InputStream in = null;
+
+    // all active stream ids for the session
+    private Set<Integer> activeStreamIds = new HashSet<>();
 
     /**
      * main method of the server
@@ -140,6 +160,15 @@ public class Server extends Thread{
                 System.exit(SOCKET_CREATION_ERROR);
             }
         }
+    }
+
+    /**
+     * sees if a stream id of a headers received from a client is valid
+     * @param streamId the stream id to test
+     * @return TRUE means that it is a valid stream id (positive and odd)
+     */
+    private static boolean testValidStreamId(int streamId){
+        return streamId >= 0 && ((streamId % 2) == 1);
     }
 
     /**
@@ -218,14 +247,47 @@ public class Server extends Thread{
      * handles a received {@link Headers} frame
      * @param h the headers frame
      */
-    private void handleHeadersFrame(Headers h){
+    private void handleHeadersFrame(Headers h) throws IOException{
         String path = h.getValue(Headers.NAME_PATH);
 
         // see if there is a path specified
         if(Objects.isNull(path)){
             logger.severe(NO_PATH_SPECIFIED);
-            // TODO 404
+            this.send404File(h.getStreamID(), ERROR_404_FILE);
+            return;
+            //TODO kill stream
         }
+
+        // now make sure that the stream id is valid
+        if(!testValidStreamId(h.getStreamID())){
+            logger.info(ILLEGAL_STREAM_ID + h.toString());
+            return;
+        }
+
+        // see if the stream id has already been encountered
+        if(activeStreamIds.contains(h.getStreamID())){
+            logger.info(DUPLICATE_STREAM_ID + h.toString());
+            return;
+        }
+
+        // see if the file exists and has correct permissions
+        String fileName = h.getValue(NAME_PATH);
+        File file = new File(fileName);
+        if(!file.exists() || !file.isFile() || !file.canRead()){
+            logger.severe(UNABLE_TO_OPEN_FILE + fileName);
+            this.send404File(h.getStreamID(), ERROR_404_FILE);
+            return;
+            //TODO kill stream
+        }
+
+        File directory = file.getParentFile();
+        //TODO check with Donahoo
+        if(!directory.canRead()){
+            logger.severe(CANNOT_REQUEST_DIRECTORY + directory.getAbsolutePath());
+            this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
+        }
+
+        this.activeStreamIds.add(h.getStreamID());
     }
 
     /**
@@ -244,6 +306,17 @@ public class Server extends Thread{
         Message m = this.messageReceiver.receiveMessage();
         if(m.getCode() != Settings.SETTINGS_TYPE){
             //TODO this is bad
+        }
+    }
+
+    private void send404File(int streamId, String message404){
+        try {
+            Headers toSend = new Headers(streamId, true);
+            toSend.addValue(STATUS, message404);
+            this.messageSender.sendFrame(toSend);
+        }catch(BadAttributeException | IOException e){
+            logger.severe("Unable to send 404 message");
+            //TODO kill the stream
         }
     }
 }
