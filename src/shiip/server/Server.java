@@ -10,10 +10,7 @@ import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 import shiip.client.Client;
 import shiip.serialization.*;
-import shiip.util.CommandLineParser;
-import shiip.util.MessageReceiver;
-import shiip.util.MessageSender;
-import shiip.util.TLS_Factory;
+import shiip.util.*;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -25,11 +22,10 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 import static shiip.serialization.Message.*;
-import static shiip.util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
-import static shiip.util.ErrorCodes.SOCKET_CREATION_ERROR;
 import static shiip.serialization.Headers.STATUS;
 import static shiip.serialization.Headers.NAME_PATH;
 import static shiip.serialization.Framer.HEADER_SIZE;
+import static shiip.util.ErrorCodes.*;
 
 /**
  * Shiip Server
@@ -141,9 +137,17 @@ public class Server extends Thread{
             logger.addHandler(logFile);
         }catch(IOException e){
             System.err.println("Error: Unable to create fileHandler for connections.log");
+            System.exit(LOGGER_PROBLEM);
         }
 
-        //TODO set the document root
+        File directory = new File(documentRoot);
+        if(!directory.exists()){
+            System.err.println("Error: Doc root does not exist");
+            System.exit(ERROR_DOC_ROOT);
+        }
+
+        // set the working directory to this directory
+        System.setProperty("user.dir", directory.getAbsolutePath());
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 
@@ -154,8 +158,7 @@ public class Server extends Thread{
             Socket conn = null;
             try{
                 conn = ss.accept();
-                // TODO fix this
-                Server s = new Server(conn, null, null);
+                Server s = new Server(conn, EncoderDecoderSingleton.getDecoder(), EncoderDecoderSingleton.getEncoder());
 
                 // run this task in the thread pool
                 executorService.submit(s);

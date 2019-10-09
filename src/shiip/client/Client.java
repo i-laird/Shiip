@@ -82,12 +82,6 @@ public class Client {
     // the length of the SERVER connection preface excluding settings frame
     private static final int SERVER_CONNECTION_PREFACE_SIZE = 24;
 
-    // max header size for encoder and decoder
-    private static final int MAX_HEADER_SIZE = 1024;
-
-    // max header table size
-    private static final int MAX_HEADER_TABLE_SIZE = 1024;
-	
 	private static final int STREAM_ID_FOR_SESSION = 0;
 
     // local variables ***************************************************
@@ -148,8 +142,8 @@ public class Client {
         }
 		
 		// create encoder and decoder
-        Encoder encoder = new Encoder(MAX_HEADER_TABLE_SIZE);
-        Decoder decoder = new Decoder(MAX_HEADER_SIZE, MAX_HEADER_TABLE_SIZE);
+        Encoder encoder = EncoderDecoderSingleton.getEncoder();
+        Decoder decoder = EncoderDecoderSingleton.getDecoder();
         
 		// create the connection
 		Client shiipConnection = 

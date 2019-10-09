@@ -49,4 +49,7 @@ public final class ErrorCodes {
 
     // unable to create the logger
     public static final int LOGGER_PROBLEM = 12;
+
+    // problem with doc root
+    public static final int ERROR_DOC_ROOT = 13;
 }
