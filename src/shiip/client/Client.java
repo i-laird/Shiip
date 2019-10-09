@@ -101,8 +101,8 @@ public class Client {
     // all of the paths that the client is going to send to the server
     private List<String> paths = null;
 
-    // maps a streamId to its corresponding Stream object
-    private Map<Integer, Stream> streams = new HashMap<>();
+    // maps a streamId to its corresponding ClientStream object
+    private Map<Integer, ClientStream> streams = new HashMap<>();
 
 	// the active streams in the session
     private Set<Integer> activeStreams = new HashSet<>();
@@ -245,7 +245,7 @@ public class Client {
         }
 
         // add the bytes from the data message to the stream
-        Stream s = this.streams.get(d.getStreamID());
+        ClientStream s = this.streams.get(d.getStreamID());
 
         /*
         No more data frames should be sent if we have already received the last one
@@ -331,7 +331,7 @@ public class Client {
                 this.messageSender.sendFrame(header);
 
                 //create a stream for this path
-                this.streams.put(currStreamid, new Stream(currStreamid, path));
+                this.streams.put(currStreamid, new ClientStream(currStreamid, path));
                 this.activeStreams.add(currStreamid);
             }catch(BadAttributeException e){
                 System.err.println("Error creating the GET request");
@@ -380,7 +380,7 @@ public class Client {
 	* writes all streams to files
 	*/
 	private void writeFiles(){
-		for(Stream s : this.streams.values()){
+		for(ClientStream s : this.streams.values()){
 
             /*
              * make sure that a data frame with END_STREAM set was

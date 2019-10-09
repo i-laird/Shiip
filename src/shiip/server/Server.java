@@ -80,7 +80,7 @@ public class Server extends Thread{
     // no path in the Headers frame
     private static final String NO_PATH_SPECIFIED = "No path specified";
 
-    // duplicate Stream id
+    // duplicate ClientStream id
     private static final String DUPLICATE_STREAM_ID = "Duplicate request: ";
 
     // illegal stream id
@@ -258,15 +258,15 @@ public class Server extends Thread{
             //TODO kill stream
         }
 
-        // now make sure that the stream id is valid
-        if(!testValidStreamId(h.getStreamID())){
-            logger.info(ILLEGAL_STREAM_ID + h.toString());
-            return;
-        }
-
         // see if the stream id has already been encountered
         if(activeStreamIds.contains(h.getStreamID())){
             logger.info(DUPLICATE_STREAM_ID + h.toString());
+            return;
+        }
+
+        // now make sure that the stream id is valid
+        if(!testValidStreamId(h.getStreamID())){
+            logger.info(ILLEGAL_STREAM_ID + h.toString());
             return;
         }
 
@@ -281,6 +281,7 @@ public class Server extends Thread{
         }
 
         File directory = file.getParentFile();
+
         //TODO check with Donahoo
         if(!directory.canRead()){
             logger.severe(CANNOT_REQUEST_DIRECTORY + directory.getAbsolutePath());

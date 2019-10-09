@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Represents a Stream to a Shiip Server
+ * Represents a ClientStream to a Shiip Server
  *
  * @author Laird
  */
-public class Stream {
+public class ClientStream {
 
     // the stream id of this stream
     private int streamId = 0;
@@ -42,7 +42,7 @@ public class Stream {
     }
 
     /**
-     * writes all contents of the Stream to the file
+     * writes all contents of the ClientStream to the file
      * The filename is determined by the path that was sent to the server.
      * @throws IOException if unable to write to the file
      */
@@ -55,11 +55,11 @@ public class Stream {
     }
 
     /**
-     * constructor for a Stream
+     * constructor for a ClientStream
      * @param streamId the id of the stream
      * @param path the path that the data is fetched from in the Server
      */
-    public Stream(int streamId, String path) {
+    public ClientStream(int streamId, String path) {
         this.streamId = streamId;
         this.path = path;
     }
@@ -115,11 +115,11 @@ public class Stream {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Stream stream = (Stream) o;
-        return streamId == stream.streamId &&
-                isComplete == stream.isComplete &&
-                Objects.equals(contents, stream.contents) &&
-                Objects.equals(path, stream.path);
+        ClientStream clientStream = (ClientStream) o;
+        return streamId == clientStream.streamId &&
+                isComplete == clientStream.isComplete &&
+                Objects.equals(contents, clientStream.contents) &&
+                Objects.equals(path, clientStream.path);
     }
 
     /**
