@@ -40,6 +40,9 @@ public class ServerStream {
     // the stream id of this stream
     private int streamId = 0;
 
+    // the next system time that the stream can send a message
+    private long nextAllowedSendTime;
+
     /**
      * constructor
      * @param fin the input stream that bytes will be read from
@@ -53,6 +56,7 @@ public class ServerStream {
         this.bytesToRead = bytesToRead;
         this.isDone = false;
         this.streamId = streamId;
+        this.nextAllowedSendTime = System.currentTimeMillis();
     }
 
     /**
@@ -62,6 +66,10 @@ public class ServerStream {
     public void writeFrameToOutputStream() throws IOException {
 
         if(this.isDone){
+            return;
+        }
+
+        if(System.currentTimeMillis() < this.nextAllowedSendTime){
             return;
         }
 
@@ -89,6 +97,7 @@ public class ServerStream {
         }
         // increment the processed count
         bytesProcessed += numToWrite;
+        this.nextAllowedSendTime = System.currentTimeMillis() + Server.MINDATAINTERVAL;
     }
 
     /**
@@ -97,5 +106,13 @@ public class ServerStream {
      */
     public boolean isDone() {
         return isDone;
+    }
+
+    /**
+     * the next allowed send time
+     * @return next allowed send time
+     */
+    public long getNextAllowedSendTime() {
+        return nextAllowedSendTime;
     }
 }

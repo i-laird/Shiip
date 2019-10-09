@@ -15,10 +15,7 @@ import shiip.util.MessageReceiver;
 import shiip.util.MessageSender;
 import shiip.util.TLS_Factory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
@@ -32,6 +29,7 @@ import static shiip.util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
 import static shiip.util.ErrorCodes.SOCKET_CREATION_ERROR;
 import static shiip.serialization.Headers.STATUS;
 import static shiip.serialization.Headers.NAME_PATH;
+import static shiip.serialization.Framer.HEADER_SIZE;
 
 /**
  * Shiip Server
@@ -63,6 +61,9 @@ public class Server extends Thread{
 
     // private strings ******************************************************
 
+    // for a parsing error that is encountered
+    private static final String UNABLE_TO_PARSE = "Unable to parse: ";
+
     // unexpected message
     private static final String UNEXPECTED_MESSAGE = "Unexpected message: ";
 
@@ -89,6 +90,12 @@ public class Server extends Thread{
 
     // 404 error for directory not found
     private static final String ERROR_404_DIRECTORY = "404 Cannot request directory";
+
+    // if bad connection preface
+    private static final String ERROR_CONNECTION_PREFACE = "Error establishing connection...BAD connection preface";
+
+    // if settings frame not sent during the startup
+    private static final String ERROR_NO_CONNECTION_SETTINGS_FRAME = "Error Did not receive Settings Frame";
 
     // MISC *****************************************************************
 
@@ -185,15 +192,40 @@ public class Server extends Thread{
      * each thread has this method called first
      */
     public void run(){
-        try {
+        try{
             this.setupConnection();
-            while(true){
-                Message m = this.messageReceiver.receiveMessage();
-                this.handleMessage(m);
-            }
+        }catch(IOException | BadAttributeException e){
+            logger.severe("Unable to establish the session: " + e.getMessage());
+            return;
         }
-        catch(Exception e){
-            //TODO
+        try {
+            while (true) {
+
+                // if there is a message in the input stream process it
+                if (this.in.available() >= HEADER_SIZE) {
+                    Message m = null;
+                    try {
+                        m = this.messageReceiver.receiveMessage();
+                    }catch(BadAttributeException e){
+                        logger.info(UNEXPECTED_MESSAGE + e.getMessage());
+                        continue;
+                    }catch(EOFException | IllegalArgumentException e2){
+                        logger.info(UNABLE_TO_PARSE + e2.getMessage());
+                        continue;
+                    }
+                    this.handleMessage(m);
+                }
+
+                // now send a data frame for every stream
+                for (ServerStream ss : this.streams.values()) {
+                    ss.writeFrameToOutputStream();
+                }
+
+                // remove the streams that are done
+                this.streams.entrySet().removeIf(x -> x.getValue().isDone());
+            }
+        }catch(IOException e) {
+            logger.severe("Error during communication: " + e.getMessage());
         }
     }
 
@@ -249,17 +281,17 @@ public class Server extends Thread{
     private void handleHeadersFrame(Headers h) throws IOException{
         String path = h.getValue(Headers.NAME_PATH);
 
+        // see if the stream id has already been encountered
+        if(streams.containsKey(h.getStreamID())){
+            logger.info(DUPLICATE_STREAM_ID + h.toString());
+            return;
+        }
+
         // see if there is a path specified
         if(Objects.isNull(path)){
             logger.severe(NO_PATH_SPECIFIED);
             this.send404File(h.getStreamID(), ERROR_404_FILE);
-            return;
-            //TODO kill stream
-        }
-
-        // see if the stream id has already been encountered
-        if(streams.containsKey(h.getStreamID())){
-            logger.info(DUPLICATE_STREAM_ID + h.toString());
+            this.terminateStream(h.getStreamID());
             return;
         }
 
@@ -272,19 +304,18 @@ public class Server extends Thread{
         // see if the file exists and has correct permissions
         String fileName = h.getValue(NAME_PATH);
         File file = new File(fileName);
-        if(!file.exists() || !file.isFile() || !file.canRead()){
+        if(!file.exists() || (file.isFile() && !file.canRead())){
             logger.severe(UNABLE_TO_OPEN_FILE + fileName);
             this.send404File(h.getStreamID(), ERROR_404_FILE);
+            this.terminateStream(h.getStreamID());
             return;
-            //TODO kill stream
         }
 
-        File directory = file.getParentFile();
-
-        //TODO check with Donahoo
-        if(!directory.canRead()){
-            logger.severe(CANNOT_REQUEST_DIRECTORY + directory.getAbsolutePath());
+        if(file.isDirectory()){
+            logger.severe(CANNOT_REQUEST_DIRECTORY + fileName);
             this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
+            this.terminateStream(h.getStreamID());
+            return;
         }
 
         ServerStream serverStream = new ServerStream(h.getStreamID(), new FileInputStream(file), this.messageSender, (int)file.length());
@@ -294,22 +325,27 @@ public class Server extends Thread{
     /**
      * sets up the connection to the client
      */
-    private void setupConnection() throws Exception{
+    private void setupConnection() throws IOException, BadAttributeException{
 
         // read in the connection preface octets
         byte [] clientConnectionPreface = new byte [Client.CLIENT_CONNECTION_PREFACE.length];
         in.readNBytes(clientConnectionPreface, 0, Client.CLIENT_CONNECTION_PREFACE.length);
         if(!Arrays.equals(clientConnectionPreface, Client.CLIENT_CONNECTION_PREFACE)){
-            //TODO this is bad
+            throw new IOException(ERROR_CONNECTION_PREFACE);
         }
 
         // now read in the settings frame
         Message m = this.messageReceiver.receiveMessage();
         if(m.getCode() != Settings.SETTINGS_TYPE){
-            //TODO this is bad
+            throw new IOException(ERROR_NO_CONNECTION_SETTINGS_FRAME);
         }
     }
 
+    /**
+     * sends a 404 message to the client
+     * @param streamId the is of the stream that has 404
+     * @param message404 the specific message to send
+     */
     private void send404File(int streamId, String message404){
         try {
             Headers toSend = new Headers(streamId, true);
@@ -317,7 +353,14 @@ public class Server extends Thread{
             this.messageSender.sendFrame(toSend);
         }catch(BadAttributeException | IOException e){
             logger.severe("Unable to send 404 message");
-            //TODO kill the stream
         }
+    }
+
+    /**
+     * terminates the specified stream
+     * @param streamId the id of the stream to terminate
+     */
+    private void terminateStream(int streamId){
+        this.streams.remove(streamId);
     }
 }
