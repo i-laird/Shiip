@@ -16,14 +16,12 @@ import shiip.util.MessageSender;
 import shiip.util.TLS_Factory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.FileHandler;
@@ -111,8 +109,8 @@ public class Server extends Thread{
     // the input stream from the remote socket
     private InputStream in = null;
 
-    // all active stream ids for the session
-    private Set<Integer> activeStreamIds = new HashSet<>();
+    // maps a streamId to its corresponding ServerStream object
+    private Map<Integer, ServerStream> streams = null;
 
     /**
      * main method of the server
@@ -180,6 +178,7 @@ public class Server extends Thread{
         this.in = socket.getInputStream();
         this.messageReceiver = new MessageReceiver(socket.getInputStream(), decoder);
         this.messageSender = new MessageSender(socket.getOutputStream(), encoder);
+        this.streams = new HashMap<>();
     }
 
     /**
@@ -202,7 +201,7 @@ public class Server extends Thread{
      * handles a message but calling the correct subroutine
      * @param m the message to handle
      */
-    private void handleMessage(Message m){
+    private void handleMessage(Message m) throws IOException{
         switch(m.getCode()){
             case DATA_TYPE:
                 this.handleDataFrame((Data)m);
@@ -259,7 +258,7 @@ public class Server extends Thread{
         }
 
         // see if the stream id has already been encountered
-        if(activeStreamIds.contains(h.getStreamID())){
+        if(streams.containsKey(h.getStreamID())){
             logger.info(DUPLICATE_STREAM_ID + h.toString());
             return;
         }
@@ -288,7 +287,8 @@ public class Server extends Thread{
             this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
         }
 
-        this.activeStreamIds.add(h.getStreamID());
+        ServerStream serverStream = new ServerStream(h.getStreamID(), new FileInputStream(file), this.messageSender, (int)file.length());
+        this.streams.put(h.getStreamID(), serverStream);
     }
 
     /**

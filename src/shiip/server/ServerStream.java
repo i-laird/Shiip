@@ -6,6 +6,10 @@
 
 package shiip.server;
 
+import shiip.serialization.BadAttributeException;
+import shiip.serialization.Data;
+import shiip.util.MessageSender;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,8 +25,8 @@ public class ServerStream {
     // the input stream associated with this stream
     private InputStream in;
 
-    // the output stream associated with this stream
-    private OutputStream out;
+    // sends messages to an output stream
+    private MessageSender messageSender;
 
     // the number of bytes that have been sent to the output stream
     private int bytesProcessed;
@@ -33,18 +37,22 @@ public class ServerStream {
     // indicates if the stream is done
     private boolean isDone;
 
+    // the stream id of this stream
+    private int streamId = 0;
+
     /**
      * constructor
      * @param fin the input stream that bytes will be read from
-     * @param out the output stream that bytes will be written to
+     * @param ms sends messages to output stream
      * @param bytesToRead the number of bytes to be read from the input stream
      */
-    public ServerStream(InputStream fin, OutputStream out, int bytesToRead){
+    public ServerStream(int streamId, InputStream fin, MessageSender ms, int bytesToRead){
         this.in = fin;
-        this.out = out;
+        this.messageSender = ms;
         this.bytesProcessed = 0;
         this.bytesToRead = bytesToRead;
         this.isDone = false;
+        this.streamId = streamId;
     }
 
     /**
@@ -67,11 +75,18 @@ public class ServerStream {
         }
 
         // read these bytes from the file
-        byte [] toWrite = in.readNBytes(numToWrite);
+        byte [] toWrite = new byte[numToWrite];
+        in.readNBytes(toWrite, 0, numToWrite);
 
-        // now write these to the output stream
-        out.write(toWrite);
+        try {
+            Data data = new Data(streamId, isDone, toWrite);
 
+            // now write to the output stream
+            messageSender.sendFrame(data);
+        }catch (BadAttributeException e){
+
+            // unreachable
+        }
         // increment the processed count
         bytesProcessed += numToWrite;
     }
