@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 3
+ * Class: Data Comm
+ *******************************************************/
+
 package tls;
 
 import java.io.IOException;
@@ -14,6 +20,11 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+/**
+ * creates sockets with TLS
+ *
+ * @author Donahoo
+ */
 public class TLSFactory {
     // Specify TLS version to use
     private static final String TLSVERSION = "TLS";

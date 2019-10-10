@@ -403,6 +403,8 @@ public class Client {
 	*/
 	private void closeSession(){
 		try {
+		    this.socket.getInputStream().close();
+		    this.socket.getOutputStream().close();
             this.socket.close();
         }catch(IOException e){
             System.err.println("Error: Unable to close the socket");

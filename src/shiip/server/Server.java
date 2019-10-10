@@ -172,8 +172,6 @@ public class Server extends Thread{
                 executorService.submit(s);
             }catch(IOException e){
                 logger.severe("Unable to create Socket");
-                executorService.shutdown();
-                System.exit(SOCKET_CREATION_ERROR);
             }
         }
     }
@@ -238,6 +236,7 @@ public class Server extends Thread{
         }catch(IOException e) {
             logger.severe("Error during communication: " + e.getMessage());
         }
+        this.terminateSession();
     }
 
     /**
@@ -373,5 +372,19 @@ public class Server extends Thread{
      */
     private void terminateStream(int streamId){
         this.streams.remove(streamId);
+    }
+
+    /**
+     * closes the socket
+     */
+    private void terminateSession(){
+        try {
+            this.socket.getInputStream().close();
+            this.socket.getOutputStream().close();
+            this.socket.close();
+        }catch(IOException e){
+            System.err.println("Error: Unable to close the socket");
+            System.exit(ERROR_CLOSING_SOCKET);
+        }
     }
 }
