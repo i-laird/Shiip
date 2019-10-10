@@ -155,7 +155,7 @@ public class Server extends Thread{
         ServerSocket ss = null;
         //TODO fix this
         try {
-            ss = TLSFactory.getServerListeningSocket(port, "mykeystore", "keystorepassword");
+            ss = TLSFactory.getServerListeningSocket(port, "mykeystore", "secret");
         }catch(Exception e){
             logger.severe("Unable to create the Server Socket");
             System.exit(SOCKET_CREATION_ERROR);
