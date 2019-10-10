@@ -11,6 +11,7 @@ import com.twitter.hpack.Encoder;
 import shiip.client.Client;
 import shiip.serialization.*;
 import shiip.util.*;
+import tls.TLSFactory;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -154,7 +155,7 @@ public class Server extends Thread{
         ServerSocket ss = null;
         //TODO fix this
         try {
-            ss = TLSFactory.getServerListeningSocket(port, null, null);
+            ss = TLSFactory.getServerListeningSocket(port, "mykeystore", "keystorepassword");
         }catch(Exception e){
             logger.severe("Unable to create the Server Socket");
             System.exit(SOCKET_CREATION_ERROR);

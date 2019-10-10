@@ -18,6 +18,7 @@ import java.util.*;
 // use Framer, Deframer, and all message types
 import shiip.serialization.*;
 import shiip.util.*;
+import tls.TLSFactory;
 
 //use many constants from here
 import static shiip.serialization.Headers.*;
