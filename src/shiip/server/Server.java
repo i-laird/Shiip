@@ -147,9 +147,6 @@ public class Server extends Thread{
             System.exit(ERROR_DOC_ROOT);
         }
 
-        // set the working directory to this directory
-        System.setProperty("user.dir", directory.getAbsolutePath());
-
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 
         ServerSocket ss = null;
@@ -158,8 +155,12 @@ public class Server extends Thread{
             ss = TLSFactory.getServerListeningSocket(port, "mykeystore", "secret");
         }catch(Exception e){
             logger.severe("Unable to create the Server Socket");
+            logger.severe(e.getMessage());
             System.exit(SOCKET_CREATION_ERROR);
         }
+
+        // set the working directory to this directory
+        System.setProperty("user.dir", directory.getAbsolutePath());
 
         // run forever accepting connections to the server
         while(true){
