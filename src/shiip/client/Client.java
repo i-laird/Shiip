@@ -135,7 +135,7 @@ public class Client {
         List<String> paths = Arrays.asList(Arrays.copyOfRange(args, PATH_START_POS, args.length));
         Socket socket = null;
         try {
-            socket = TLS_Factory.create_TLS_Client(args[SERVER_URL_ARG_POS], port);
+            socket = TLSFactory.getClientSocket(args[SERVER_URL_ARG_POS], port);
         }catch(Exception e){
             System.err.println("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);

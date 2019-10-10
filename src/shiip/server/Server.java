@@ -151,13 +151,20 @@ public class Server extends Thread{
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 
-        ServerSocket ss = TLS_Factory.create_TLS_Server(port);
+        ServerSocket ss = null;
+        //TODO fix this
+        try {
+            ss = TLSFactory.getServerListeningSocket(port, null, null);
+        }catch(Exception e){
+            logger.severe("Unable to create the Server Socket");
+            System.exit(SOCKET_CREATION_ERROR);
+        }
 
         // run forever accepting connections to the server
         while(true){
             Socket conn = null;
             try{
-                conn = ss.accept();
+                conn = TLSFactory.getServerConnectedSocket(ss);
                 Server s = new Server(conn, EncoderDecoderSingleton.getDecoder(), EncoderDecoderSingleton.getEncoder());
 
                 // run this task in the thread pool
