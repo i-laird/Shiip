@@ -16,6 +16,7 @@ import tls.TLSFactory;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,6 +56,12 @@ public class Server extends Thread{
 
     // the position of the document root in the args
     private static final int SERVER_ARG_DOC_ROOT_POS = 2;
+
+    // the wait if the client is inactive
+    private static final int CLIENT_INACTIVE_TIMEOUT = 1000 * 20;
+
+    // the wait if the client is active
+    private static final int CLIENT_ACTIVE_TIMEOUT = 5;
 
     // private strings ******************************************************
 
@@ -99,6 +106,9 @@ public class Server extends Thread{
     // used for logging the server
     private static final Logger logger = Logger.getLogger("SHiip Server");
 
+    // the base directory
+    private static File directory_base = null;
+
     // instance variables ***************************************************
 
     // uses TLS to communicate to the client
@@ -141,8 +151,8 @@ public class Server extends Thread{
             System.exit(LOGGER_PROBLEM);
         }
 
-        File directory = new File(documentRoot);
-        if(!directory.exists()){
+        directory_base= new File(documentRoot);
+        if(!directory_base.exists()){
             System.err.println("Error: Doc root does not exist");
             System.exit(ERROR_DOC_ROOT);
         }
@@ -158,9 +168,6 @@ public class Server extends Thread{
             logger.severe(e.getMessage());
             System.exit(SOCKET_CREATION_ERROR);
         }
-
-        // set the working directory to this directory
-        System.setProperty("user.dir", directory.getAbsolutePath());
 
         // run forever accepting connections to the server
         while(true){
@@ -210,20 +217,28 @@ public class Server extends Thread{
         }
         try {
             while (true) {
-
-                // if there is a message in the input stream process it
-                if (this.in.available() >= HEADER_SIZE) {
-                    Message m = null;
-                    try {
-                        m = this.messageReceiver.receiveMessage();
-                    }catch(BadAttributeException e){
-                        logger.info(UNEXPECTED_MESSAGE + e.getMessage());
-                        continue;
-                    }catch(EOFException | IllegalArgumentException e2){
-                        logger.info(UNABLE_TO_PARSE + e2.getMessage());
-                        continue;
-                    }
+                Message m = null;
+                this.socket.setSoTimeout(this.streams.keySet().isEmpty() ? CLIENT_INACTIVE_TIMEOUT : CLIENT_ACTIVE_TIMEOUT);
+                try {
+                    m = this.messageReceiver.receiveMessage();
                     this.handleMessage(m);
+                }catch(BadAttributeException e){
+                    logger.info(UNEXPECTED_MESSAGE + e.getMessage());
+                    continue;
+                }catch(EOFException | IllegalArgumentException e2){
+                    if(e2.getMessage().equals("Unable to read Prefix Bytes") && this.streams.keySet().isEmpty()){
+                        break;
+                    }
+                    logger.info(UNABLE_TO_PARSE + e2.getMessage());
+                    continue;
+                }catch(SocketTimeoutException e3){
+
+                    // if we timed out and there are no active streams then close the conection
+                    if(this.streams.keySet().isEmpty()){
+                        break;
+                    }
+
+                    // if there are active streams then process them
                 }
 
                 // now send a data frame for every stream
@@ -313,7 +328,7 @@ public class Server extends Thread{
         }
 
         // see if the file exists and has correct permissions
-        String fileName = h.getValue(NAME_PATH);
+        String fileName = directory_base.getCanonicalPath() + h.getValue(NAME_PATH);
         File file = new File(fileName);
         if(!file.exists() || (file.isFile() && !file.canRead())){
             logger.severe(UNABLE_TO_OPEN_FILE + fileName);
@@ -385,7 +400,7 @@ public class Server extends Thread{
             this.socket.close();
         }catch(IOException e){
             System.err.println("Error: Unable to close the socket");
-            System.exit(ERROR_CLOSING_SOCKET);
+           // System.exit(ERROR_CLOSING_SOCKET);
         }
     }
 }
