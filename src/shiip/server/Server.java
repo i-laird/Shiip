@@ -11,7 +11,7 @@ import com.twitter.hpack.Encoder;
 import shiip.client.Client;
 import shiip.serialization.*;
 import shiip.util.*;
-import tls.TLSFactory;
+import shiip.tls.TLSFactory;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -27,7 +27,6 @@ import java.util.logging.SimpleFormatter;
 import static shiip.serialization.Message.*;
 import static shiip.serialization.Headers.STATUS;
 import static shiip.serialization.Headers.NAME_PATH;
-import static shiip.serialization.Framer.HEADER_SIZE;
 import static shiip.util.ErrorCodes.*;
 
 /**
