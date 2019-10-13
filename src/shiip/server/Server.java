@@ -228,13 +228,15 @@ public class Server extends Thread{
                 }catch(BadAttributeException e){
                     logger.info(UNEXPECTED_MESSAGE + e.getMessage());
                     continue;
-                }catch(EOFException | IllegalArgumentException e2){
-                    if(e2.getMessage().equals("Unable to read Prefix Bytes") && this.streams.keySet().isEmpty()){
-                        break;
-                    }
-                    logger.info(UNABLE_TO_PARSE + e2.getMessage());
+                }catch(EOFException e2){
+
+                    // means that the client closed the stream
+                    break;
+                }catch(IllegalArgumentException e4){
+                    logger.info(UNABLE_TO_PARSE + e4.getMessage());
                     continue;
-                }catch(SocketTimeoutException e3){
+                }
+                catch(SocketTimeoutException e3){
 
                     // if we timed out and there are no active streams then close the conection
                     if(this.streams.keySet().isEmpty()){
