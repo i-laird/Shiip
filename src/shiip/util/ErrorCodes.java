@@ -52,4 +52,7 @@ public final class ErrorCodes {
 
     // problem with doc root
     public static final int ERROR_DOC_ROOT = 13;
+
+    // bad public value
+    public static final int BAD_PUBLIC_VALUE = 14;
 }

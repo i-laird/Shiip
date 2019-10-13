@@ -10,9 +10,8 @@ import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 import shiip.client.Client;
 import shiip.serialization.*;
-import shiip.util.*;
 import shiip.tls.TLSFactory;
-
+import shiip.util.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -26,6 +25,7 @@ import java.util.logging.SimpleFormatter;
 
 import static shiip.serialization.Message.*;
 import static shiip.serialization.Headers.STATUS;
+import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
 import static shiip.serialization.Headers.NAME_PATH;
 import static shiip.util.ErrorCodes.*;
 
@@ -157,6 +157,16 @@ public class Server extends Thread{
         if(!directory_base.exists()){
             System.err.println("Error: Doc root does not exist");
             System.exit(ERROR_DOC_ROOT);
+        }
+
+        // make sure that the public constants are valid numbers
+        if(MAXDATASIZE <= 0 || MAXDATASIZE > MAXIMUM_PAYLOAD_SIZE){
+            System.err.println("ERROR: Invalid MAXPAYLOAD size");
+            System.exit(BAD_PUBLIC_VALUE);
+        }
+        if(MINDATAINTERVAL < 0){
+            System.err.println("ERROR: Invalid MINDATAINTERVAL");
+            System.exit(BAD_PUBLIC_VALUE);
         }
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
