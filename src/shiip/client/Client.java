@@ -152,6 +152,12 @@ public class Client {
         
 		// run the connection
 		shiipConnection.go();
+		for(;;){
+		    int i = 100;
+		    if(i > 100){
+		        break;
+            }
+        }
 		shiipConnection.closeSession();
     }
 

@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import static shiip.serialization.Message.*;
 import static shiip.serialization.Headers.STATUS;
@@ -145,6 +146,8 @@ public class Server extends Thread{
         // setup the logger
         try {
             FileHandler logFile = new FileHandler("connections.log");
+            SimpleFormatter formatter = new SimpleFormatter();
+            logFile.setFormatter(formatter);
             logger.addHandler(logFile);
         }catch(IOException e){
             System.err.println("Error: Unable to create fileHandler for connections.log");
@@ -328,17 +331,19 @@ public class Server extends Thread{
         }
 
         // see if the file exists and has correct permissions
-        String fileName = directory_base.getCanonicalPath() + h.getValue(NAME_PATH);
-        File file = new File(fileName);
+        String fileName = h.getValue(NAME_PATH);
+        String slashPrepender = fileName.startsWith("/") ? "" : "/";
+        String filePath = directory_base.getCanonicalPath() + slashPrepender + fileName;
+        File file = new File(filePath);
         if(!file.exists() || (file.isFile() && !file.canRead())){
-            logger.severe(UNABLE_TO_OPEN_FILE + fileName);
+            logger.severe(UNABLE_TO_OPEN_FILE + filePath);
             this.send404File(h.getStreamID(), ERROR_404_FILE);
             this.terminateStream(h.getStreamID());
             return;
         }
 
         if(file.isDirectory()){
-            logger.severe(CANNOT_REQUEST_DIRECTORY + fileName);
+            logger.severe(CANNOT_REQUEST_DIRECTORY + filePath);
             this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
             this.terminateStream(h.getStreamID());
             return;
