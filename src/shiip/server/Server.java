@@ -231,14 +231,15 @@ public class Server extends Thread{
                 }catch(EOFException e2){
 
                     // means that the client closed the stream
-                    break;
+                    if(this.streams.isEmpty()){
+                        break;
+                    }
                 }catch(IllegalArgumentException e4){
                     logger.info(UNABLE_TO_PARSE + e4.getMessage());
-                    continue;
                 }
                 catch(SocketTimeoutException e3){
 
-                    // if we timed out and there are no active streams then close the conection
+                    // if we timed out and there are no active streams then close the connection
                     if(this.streams.keySet().isEmpty()){
                         break;
                     }
