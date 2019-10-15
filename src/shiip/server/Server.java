@@ -60,9 +60,6 @@ public class Server extends Thread{
     // the wait if the client is inactive
     private static final int CLIENT_INACTIVE_TIMEOUT = 1000 * 20;
 
-    // the wait if the client is active
-    private static final int CLIENT_ACTIVE_TIMEOUT = 5;
-
     // private strings ******************************************************
 
     // for a parsing error that is encountered
@@ -230,7 +227,7 @@ public class Server extends Thread{
         try {
             while (true) {
                 Message m = null;
-                this.socket.setSoTimeout(this.streams.keySet().isEmpty() ? CLIENT_INACTIVE_TIMEOUT : CLIENT_ACTIVE_TIMEOUT);
+                this.socket.setSoTimeout(CLIENT_INACTIVE_TIMEOUT);
                 try {
                     m = this.messageReceiver.receiveMessage();
                     this.handleMessage(m);
@@ -254,11 +251,6 @@ public class Server extends Thread{
                     }
 
                     // if there are active streams then process them
-                }
-
-                // now send a data frame for every stream
-                for (ServerStream ss : this.streams.values()) {
-                    ss.writeFrameToOutputStream();
                 }
 
                 // remove the streams that are done
@@ -363,6 +355,7 @@ public class Server extends Thread{
 
         ServerStream serverStream = new ServerStream(h.getStreamID(), new FileInputStream(file), this.messageSender, (int)file.length());
         this.streams.put(h.getStreamID(), serverStream);
+        serverStream.start();
     }
 
     /**
@@ -404,6 +397,7 @@ public class Server extends Thread{
      * @param streamId the id of the stream to terminate
      */
     private void terminateStream(int streamId){
+        this.streams.get(streamId).interrupt();
         this.streams.remove(streamId);
     }
 

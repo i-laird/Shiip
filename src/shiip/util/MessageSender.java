@@ -41,6 +41,8 @@ public class MessageSender {
      * @throws IOException if unable to send the message
      */
     public void sendFrame(Message m) throws IOException{
-        framer.putFrame(m.encode(this.encoder));
+        synchronized (this) {
+            framer.putFrame(m.encode(this.encoder));
+        }
     }
 }

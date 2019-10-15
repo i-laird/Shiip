@@ -20,7 +20,7 @@ import static shiip.server.Server.MAXDATASIZE;
  * a stream within the server side of a Shiip connection
  * @author ian laird
  */
-public class ServerStream {
+public class ServerStream extends Thread{
 
     // the input stream associated with this stream
     private InputStream in;
@@ -57,6 +57,17 @@ public class ServerStream {
         this.isDone = false;
         this.streamId = streamId;
         this.nextAllowedSendTime = System.currentTimeMillis();
+    }
+
+    public void run(){
+        try {
+            while (!this.isDone && !this.isInterrupted()) {
+                this.writeFrameToOutputStream();
+            }
+        }catch(IOException e){
+
+            // nothing needs to be done because the connection will terminate
+        }
     }
 
     /**
