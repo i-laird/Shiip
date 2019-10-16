@@ -112,16 +112,19 @@ public class Server extends Thread{
     private Socket socket = null;
 
     // used to receive messages
-    private MessageReceiver messageReceiver = null;
+    private final MessageReceiver messageReceiver;
 
     // used to send messages
-    private MessageSender messageSender = null;
+    private final MessageSender messageSender;
 
     // the input stream from the remote socket
     private InputStream in = null;
 
     // maps a streamId to its corresponding ServerStream object
     private Map<Integer, ServerStream> streams = null;
+
+    // the last encountered stream id in this server
+    private int lastEncounteredStreamId = 0;
 
     /**
      * main method of the server
@@ -199,10 +202,10 @@ public class Server extends Thread{
     /**
      * sees if a stream id of a headers received from a client is valid
      * @param streamId the stream id to test
-     * @return TRUE means that it is a valid stream id (positive and odd)
+     * @return TRUE means that it is a valid stream id (positive and odd and bigger than the last one
      */
-    private static boolean testValidStreamId(int streamId){
-        return streamId >= 0 && ((streamId % 2) == 1);
+    private boolean testValidStreamId(int streamId){
+        return streamId >= this.lastEncounteredStreamId && ((streamId % 2) == 1);
     }
 
     /**
@@ -356,6 +359,8 @@ public class Server extends Thread{
             return;
         }
 
+        // send file
+        this.lastEncounteredStreamId = h.getStreamID();
         ServerStream serverStream = new ServerStream(h.getStreamID(), new FileInputStream(file), this.messageSender, (int)file.length());
         this.streams.put(h.getStreamID(), serverStream);
         serverStream.start();
@@ -368,7 +373,9 @@ public class Server extends Thread{
 
         // read in the connection preface octets
         byte [] clientConnectionPreface = new byte [Client.CLIENT_CONNECTION_PREFACE.length];
-        in.readNBytes(clientConnectionPreface, 0, Client.CLIENT_CONNECTION_PREFACE.length);
+        synchronized (this.messageReceiver) {
+            in.readNBytes(clientConnectionPreface, 0, Client.CLIENT_CONNECTION_PREFACE.length);
+        }
         if(!Arrays.equals(clientConnectionPreface, Client.CLIENT_CONNECTION_PREFACE)){
             throw new IOException(ERROR_CONNECTION_PREFACE);
         }
@@ -413,8 +420,8 @@ public class Server extends Thread{
             this.socket.getOutputStream().close();
             this.socket.close();
         }catch(IOException e){
-            System.err.println("Error: Unable to close the socket");
-           // System.exit(ERROR_CLOSING_SOCKET);
+
+            //no need to do anything because it will stop automatically
         }
     }
 }

@@ -28,8 +28,10 @@ public class MessageReceiver {
      * @param decoder the decoder to use
      */
     public MessageReceiver(InputStream in, Decoder decoder) {
-        this.deframer = new Deframer(in);
-        this.decoder = decoder;
+        synchronized (this) {
+            this.deframer = new Deframer(in);
+            this.decoder = decoder;
+        }
     }
 
     /**
