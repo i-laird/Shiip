@@ -233,7 +233,6 @@ public class Server extends Thread{
                     this.handleMessage(m);
                 }catch(BadAttributeException e){
                     logger.info(UNEXPECTED_MESSAGE + e.getMessage());
-                    continue;
                 }catch(EOFException e2){
 
                     // means that the client closed the stream
@@ -250,7 +249,6 @@ public class Server extends Thread{
                         break;
                     }
 
-                    // if there are active streams then process them
                 }
 
                 // remove the streams that are done
