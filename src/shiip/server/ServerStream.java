@@ -61,12 +61,20 @@ public class ServerStream extends Thread{
 
     public void run(){
         try {
+
+            long currTime = System.currentTimeMillis();
+
+            //wait until the next allowed time
+            if(currTime < this.nextAllowedSendTime) {
+                this.wait(this.nextAllowedSendTime - currTime);
+            }
+
             while (!this.isDone && !this.isInterrupted()) {
                 this.writeFrameToOutputStream();
             }
-        }catch(IOException e){
+        }catch(IOException | InterruptedException e){
 
-            // nothing needs to be done because the connection will terminate
+            // nothing needs to be done because the thread will terminate
         }
     }
 
