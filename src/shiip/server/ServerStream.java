@@ -59,6 +59,9 @@ public class ServerStream extends Thread{
         this.nextAllowedSendTime = System.currentTimeMillis();
     }
 
+    /**
+     * the main method of a ServerStream
+     */
     public void run(){
         try {
 
