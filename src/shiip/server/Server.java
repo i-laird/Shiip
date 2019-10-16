@@ -139,6 +139,9 @@ public class Server extends Thread{
         int threadNum = CommandLineParser.getThreadNum(args[SERVER_ARG_THREAD_NUM_POS]);
         String documentRoot = args[SERVER_ARG_DOC_ROOT_POS];
 
+        // do not log to the console
+        logger.setUseParentHandlers(false);
+
         // setup the logger
         try {
             FileHandler logFile = new FileHandler("connections.log");
