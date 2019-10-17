@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird, Andrew walker
+ * Assignment: Prog 1
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
@@ -14,7 +20,7 @@ import static shiip.serialization.test.TestingConstants.SETTINGS_TYPE;
 /**
  * Tests the Settings class
  *
- * @author
+ * @author Ian Laird, Andrew Walker
  */
 public class SettingsTester {
 
@@ -94,6 +100,7 @@ public class SettingsTester {
 
         /**
          * Tests valid toString after setting streamID
+         * @param streamID the streamID
          */
         @ParameterizedTest(name = "streamID = {0}")
         @ValueSource(ints = {-1, 1, 100, 200, 500, 1000})

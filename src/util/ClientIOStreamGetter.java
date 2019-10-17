@@ -4,14 +4,14 @@
  * Class: Data Comm
  *******************************************************/
 
-package shiip.util;
+package util;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import static shiip.util.ErrorCodes.ERROR_SOCKET_GET_IO;
+import static util.ErrorCodes.ERROR_SOCKET_GET_IO;
 
 /**
  * catches exception encountered when getting io streams

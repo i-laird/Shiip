@@ -8,11 +8,10 @@ package shiip.server;
 
 import shiip.serialization.BadAttributeException;
 import shiip.serialization.Data;
-import shiip.util.MessageSender;
+import shiip.transmission.MessageSender;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import static shiip.server.Server.MAXDATASIZE;
 

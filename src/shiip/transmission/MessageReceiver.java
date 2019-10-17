@@ -4,7 +4,7 @@
  * Class: Data Comm
  *******************************************************/
 
-package shiip.util;
+package shiip.transmission;
 
 import com.twitter.hpack.Decoder;
 import shiip.serialization.BadAttributeException;

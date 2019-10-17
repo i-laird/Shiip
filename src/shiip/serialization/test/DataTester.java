@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird, Andrew walker
+ * Assignment: Prog 1
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +37,7 @@ public class DataTester {
 
         /**
          * Tests constructor with invalid streamID
+         * @param streamID the streamID
          */
         @ParameterizedTest(name = "streamID = {0}")
         @ValueSource(ints = {-10, -1, 0})
@@ -215,6 +222,7 @@ public class DataTester {
 
         /**
          * Tests that BadAttributeException is thrown on invalid streamID
+         * @param streamID the streamID
          */
         @ParameterizedTest(name = "streamID = {0}")
         @ValueSource(ints = {-10, -1, 0})
@@ -404,6 +412,9 @@ public class DataTester {
 
     /**
      * Tests valid toString
+     * @param streamID the streamID
+     * @param isEnd the isEnd
+     * @param data the data
      */
     @ParameterizedTest(name = "streamID = {0}, isEnd = {1}, data = {2}")
     @MethodSource("provideDataParametersValid")

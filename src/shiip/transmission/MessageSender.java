@@ -4,7 +4,7 @@
  * Class: Data Comm
  *******************************************************/
 
-package shiip.util;
+package shiip.transmission;
 
 import com.twitter.hpack.Encoder;
 import shiip.serialization.Framer;

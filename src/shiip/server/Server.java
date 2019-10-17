@@ -12,7 +12,9 @@ import com.twitter.hpack.Encoder;
 import shiip.client.Client;
 import shiip.serialization.*;
 import shiip.tls.TLSFactory;
-import shiip.util.*;
+import shiip.transmission.MessageReceiver;
+import shiip.transmission.MessageSender;
+import util.*;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -32,7 +34,7 @@ import static shiip.serialization.Message.*;
 import static shiip.serialization.Headers.STATUS;
 import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
 import static shiip.serialization.Headers.NAME_PATH;
-import static shiip.util.ErrorCodes.*;
+import static util.ErrorCodes.*;
 
 /**
  * Shiip Server

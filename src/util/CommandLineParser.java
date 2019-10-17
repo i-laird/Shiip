@@ -4,13 +4,13 @@
  * Class: Data Comm
  *******************************************************/
 
-package shiip.util;
+package util;
 
 import java.net.*;
 
-import static shiip.util.ErrorCodes.BAD_PORT_ERROR;
-import static shiip.util.ErrorCodes.BAD_URL_ERROR;
-import static shiip.util.ErrorCodes.BAD_PORT_NUM_ERROR;
+import static util.ErrorCodes.BAD_PORT_ERROR;
+import static util.ErrorCodes.BAD_URL_ERROR;
+import static util.ErrorCodes.BAD_PORT_NUM_ERROR;
 
 
 /**
@@ -58,7 +58,7 @@ public final class CommandLineParser {
      * @return the port number
      */
     public static final int getPort(String port){
-        return getPosInt(port, "port", BAD_PORT_ERROR);
+        return getPosInt(port, "Bad parameters: port", BAD_PORT_ERROR);
     }
 
     /**
@@ -73,20 +73,20 @@ public final class CommandLineParser {
     /**
      * Gets a numToChange number from its String representation
      * @param numToChange the number to Change
-     * @param name the name of the attribute being parsed
+     * @param toDisplay the name of the attribute being parsed
      * @param errorCode the error code to display on failure
      * @return numToChange as an int
      */
-    private static int getPosInt(String numToChange, String name, int errorCode){
+    private static int getPosInt(String numToChange, String toDisplay, int errorCode){
         int toReturn = 0;
         try {
             toReturn = Integer.parseInt(numToChange);
             if(toReturn < 0){
-                System.err.println("Error: " + name + " cannot be negative");
+                System.err.println(toDisplay + " cannot be negative");
                 System.exit(errorCode);
             }
         }catch(NumberFormatException e){
-            System.err.println("Invalid " + name);
+            System.err.println(toDisplay + " is an improperly formatted number");
             System.err.println(e.getMessage());
             System.exit(errorCode);
         }
