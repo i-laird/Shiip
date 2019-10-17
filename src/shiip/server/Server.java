@@ -8,17 +8,22 @@ package shiip.server;
 
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
+
 import shiip.client.Client;
 import shiip.serialization.*;
 import shiip.tls.TLSFactory;
 import shiip.util.*;
-import java.io.*;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+
+import java.io.*;
 import java.util.*;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -164,7 +169,7 @@ public class Server extends Thread{
 
         // make sure that the public constants are valid numbers
         if(MAXDATASIZE <= 0 || MAXDATASIZE > MAXIMUM_PAYLOAD_SIZE){
-            System.err.println("ERROR: Invalid MAXPAYLOAD size");
+            System.err.println("ERROR: Invalid MAXDATASIZE size");
             System.exit(BAD_PUBLIC_VALUE);
         }
         if(MINDATAINTERVAL < 0){
@@ -175,7 +180,7 @@ public class Server extends Thread{
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 
         ServerSocket ss = null;
-        //TODO fix this
+
         try {
             ss = TLSFactory.getServerListeningSocket(port, "mykeystore", "secret");
         }catch(Exception e){
@@ -250,11 +255,8 @@ public class Server extends Thread{
                 }
                 catch(SocketTimeoutException e3){
 
-                    // if we timed out and there are no active streams then close the connection
-                    if(this.streams.keySet().isEmpty()){
-                        break;
-                    }
-
+                    // if we timed out close the connection
+                    break;
                 }
 
                 // remove the streams that are done
@@ -318,23 +320,11 @@ public class Server extends Thread{
     private void handleHeadersFrame(Headers h) throws IOException{
         String path = h.getValue(Headers.NAME_PATH);
 
-        // see if the stream id has already been encountered
-        if(streams.containsKey(h.getStreamID())){
-            logger.info(DUPLICATE_STREAM_ID + h.toString());
-            return;
-        }
-
         // see if there is a path specified
         if(Objects.isNull(path)){
             logger.severe(NO_PATH_SPECIFIED);
             this.send404File(h.getStreamID(), ERROR_404_FILE);
             this.terminateStream(h.getStreamID());
-            return;
-        }
-
-        // now make sure that the stream id is valid
-        if(!testValidStreamId(h.getStreamID())){
-            logger.info(ILLEGAL_STREAM_ID + h.toString());
             return;
         }
 
@@ -344,16 +334,28 @@ public class Server extends Thread{
         String filePath = directory_base.getCanonicalPath() + slashPrepender + fileName;
         File file = new File(filePath);
         if(!file.exists() || (file.isFile() && !file.canRead())){
-            logger.severe(UNABLE_TO_OPEN_FILE + filePath);
+            logger.severe(UNABLE_TO_OPEN_FILE + fileName);
             this.send404File(h.getStreamID(), ERROR_404_FILE);
             this.terminateStream(h.getStreamID());
             return;
         }
 
         if(file.isDirectory()){
-            logger.severe(CANNOT_REQUEST_DIRECTORY + filePath);
+            logger.severe(CANNOT_REQUEST_DIRECTORY + fileName);
             this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
             this.terminateStream(h.getStreamID());
+            return;
+        }
+
+        // see if the stream id has already been encountered
+        if(streams.containsKey(h.getStreamID())){
+            logger.info(DUPLICATE_STREAM_ID + h.toString());
+            return;
+        }
+
+        // now make sure that the stream id is valid
+        if(!testValidStreamId(h.getStreamID())){
+            logger.info(ILLEGAL_STREAM_ID + h.toString());
             return;
         }
 
@@ -361,6 +363,8 @@ public class Server extends Thread{
         this.lastEncounteredStreamId = h.getStreamID();
         ServerStream serverStream = new ServerStream(h.getStreamID(), new FileInputStream(file), this.messageSender, (int)file.length());
         this.streams.put(h.getStreamID(), serverStream);
+
+        // spin off a new thread
         serverStream.start();
     }
 
@@ -371,9 +375,9 @@ public class Server extends Thread{
 
         // read in the connection preface octets
         byte [] clientConnectionPreface = new byte [Client.CLIENT_CONNECTION_PREFACE.length];
-        synchronized (this.messageReceiver) {
-            in.readNBytes(clientConnectionPreface, 0, Client.CLIENT_CONNECTION_PREFACE.length);
-        }
+
+        // does not need to be synchronized because no other threads have been spun off yet
+        in.readNBytes(clientConnectionPreface, 0, Client.CLIENT_CONNECTION_PREFACE.length);
         if(!Arrays.equals(clientConnectionPreface, Client.CLIENT_CONNECTION_PREFACE)){
             throw new IOException(ERROR_CONNECTION_PREFACE);
         }
