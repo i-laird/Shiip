@@ -21,6 +21,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import java.util.concurrent.ExecutorService;
@@ -75,17 +77,20 @@ public class Server extends Thread{
     // unexpected message
     private static final String UNEXPECTED_MESSAGE = "Unexpected message: ";
 
+    // for an invalid message
+    private static final String INVALID_MESSAGE = "Invalid message: ";
+
     // received message
     private static final String RECEIVED_MESSAGE = "Received message: ";
 
     // cannot open the requested file
-    private static final String UNABLE_TO_OPEN_FILE = "Unable to open file: ";
+    private static final String UNABLE_TO_OPEN_FILE = "File not found";
 
     // cannot access the requested directory
     private static final String CANNOT_REQUEST_DIRECTORY = "Cannot request directory: ";
 
     // no path in the Headers frame
-    private static final String NO_PATH_SPECIFIED = "No path specified";
+    private static final String NO_PATH_SPECIFIED = "No or bad path";
 
     // duplicate ClientStream id
     private static final String DUPLICATE_STREAM_ID = "Duplicate request: ";
@@ -93,22 +98,28 @@ public class Server extends Thread{
     // illegal stream id
     private static final String ILLEGAL_STREAM_ID = "Illegal stream ID: ";
 
+    // 404 for no path specified
+    private static final String ERROR_404_NO_PATH = "404 No or bad path";
+
     // 404 error for file not found
     private static final String ERROR_404_FILE = "404 File not found";
 
     // 404 error for directory not found
     private static final String ERROR_404_DIRECTORY = "404 Cannot request directory";
 
-    // if bad connection preface
-    private static final String ERROR_CONNECTION_PREFACE = "Error establishing connection...BAD connection preface";
-
     // if settings frame not sent during the startup
     private static final String ERROR_NO_CONNECTION_SETTINGS_FRAME = "Error Did not receive Settings Frame";
+
+    // for a bad connection preface
+    private static final String CONNECTION_PREFACE_ERROR = "Bad Preface: ";
 
     // MISC *****************************************************************
 
     // used for logging the server
     private static final Logger logger = Logger.getLogger("SHiip Server");
+
+    // the charset that is being used
+    private static final Charset ENC = StandardCharsets.US_ASCII;
 
     // the base directory
     private static File directory_base = null;
@@ -132,6 +143,48 @@ public class Server extends Thread{
 
     // the last encountered stream id in this server
     private int lastEncounteredStreamId = 0;
+
+    /**
+     * @author Ian Laird
+     * for an invalid connection preface
+     */
+    private class ConnectionPrefaceException extends Throwable{
+
+        private String receivedString = "";
+
+        /**
+         * default constructor
+         */
+        public ConnectionPrefaceException(){
+            super();
+        }
+
+        /**
+         * constructor
+         * @param message the message for the exception
+         */
+        public ConnectionPrefaceException(String message){
+            super(message);
+        }
+
+        /**
+         * custom constructor
+         * @param message the message
+         * @param receivedString the connection preface that was received
+         */
+        public ConnectionPrefaceException(String message, String receivedString){
+            super(message);
+            this.receivedString = receivedString;
+        }
+
+        /**
+         * gets the connection preface that was received
+         * @return the connection preface
+         */
+        public String getReceivedString() {
+            return receivedString;
+        }
+    }
 
     /**
      * main method of the server
@@ -184,7 +237,8 @@ public class Server extends Thread{
         ServerSocket ss = null;
 
         try {
-            ss = TLSFactory.getServerListeningSocket(port, "mykeystore", "secret");
+            ss = TLSFactory.getServerListeningSocket
+                    (port, "mykeystore", "secret");
         }catch(Exception e){
             logger.severe("Unable to create the Server Socket");
             logger.severe(e.getMessage());
@@ -196,7 +250,8 @@ public class Server extends Thread{
             Socket conn = null;
             try{
                 conn = TLSFactory.getServerConnectedSocket(ss);
-                Server s = new Server(conn, EncoderDecoderSingleton.getDecoder(), EncoderDecoderSingleton.getEncoder());
+                Server s = new Server(conn, EncoderDecoderSingleton.getDecoder(),
+                        EncoderDecoderSingleton.getEncoder());
 
                 // run this task in the thread pool
                 executorService.submit(s);
@@ -236,6 +291,9 @@ public class Server extends Thread{
         }catch(IOException | BadAttributeException e){
             logger.severe("Unable to establish the session: " + e.getMessage());
             return;
+        }catch(ConnectionPrefaceException e2){
+            logger.severe(CONNECTION_PREFACE_ERROR + e2.getReceivedString());
+            return;
         }
         try {
             while (true) {
@@ -245,7 +303,7 @@ public class Server extends Thread{
                     m = this.messageReceiver.receiveMessage();
                     this.handleMessage(m);
                 }catch(BadAttributeException e){
-                    logger.info(UNEXPECTED_MESSAGE + e.getMessage());
+                    logger.info(INVALID_MESSAGE + e.getMessage());
                 }catch(EOFException e2){
 
                     // means that the client closed the stream
@@ -322,10 +380,16 @@ public class Server extends Thread{
     private void handleHeadersFrame(Headers h) throws IOException{
         String path = h.getValue(Headers.NAME_PATH);
 
+        // see if the stream id has already been encountered
+        if(streams.containsKey(h.getStreamID())){
+            logger.info(DUPLICATE_STREAM_ID + h.toString());
+            return;
+        }
+
         // see if there is a path specified
         if(Objects.isNull(path)){
             logger.severe(NO_PATH_SPECIFIED);
-            this.send404File(h.getStreamID(), ERROR_404_FILE);
+            this.send404File(h.getStreamID(), ERROR_404_NO_PATH);
             this.terminateStream(h.getStreamID());
             return;
         }
@@ -335,23 +399,20 @@ public class Server extends Thread{
         String slashPrepender = fileName.startsWith("/") ? "" : "/";
         String filePath = directory_base.getCanonicalPath() + slashPrepender + fileName;
         File file = new File(filePath);
-        if(!file.exists() || (file.isFile() && !file.canRead())){
-            logger.severe(UNABLE_TO_OPEN_FILE + fileName);
-            this.send404File(h.getStreamID(), ERROR_404_FILE);
-            this.terminateStream(h.getStreamID());
-            return;
-        }
 
-        if(file.isDirectory()){
-            logger.severe(CANNOT_REQUEST_DIRECTORY + fileName);
+        // see if a directory
+        if(file.exists() && file.isDirectory()){
+            logger.severe(CANNOT_REQUEST_DIRECTORY);
             this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
             this.terminateStream(h.getStreamID());
             return;
         }
 
-        // see if the stream id has already been encountered
-        if(streams.containsKey(h.getStreamID())){
-            logger.info(DUPLICATE_STREAM_ID + h.toString());
+        // see if exists and has permissions
+        if(!file.exists() || (file.isFile() && !file.canRead())){
+            logger.severe(UNABLE_TO_OPEN_FILE + fileName);
+            this.send404File(h.getStreamID(), ERROR_404_FILE);
+            this.terminateStream(h.getStreamID());
             return;
         }
 
@@ -363,7 +424,9 @@ public class Server extends Thread{
 
         // send file
         this.lastEncounteredStreamId = h.getStreamID();
-        ServerStream serverStream = new ServerStream(h.getStreamID(), new FileInputStream(file), this.messageSender, (int)file.length());
+        ServerStream serverStream =
+                new ServerStream(h.getStreamID(), new FileInputStream(file),
+                                this.messageSender, (int)file.length());
         this.streams.put(h.getStreamID(), serverStream);
 
         // spin off a new thread
@@ -373,15 +436,22 @@ public class Server extends Thread{
     /**
      * sets up the connection to the client
      */
-    private void setupConnection() throws IOException, BadAttributeException{
+    private void setupConnection()
+            throws IOException, BadAttributeException, ConnectionPrefaceException{
 
         // read in the connection preface octets
         byte [] clientConnectionPreface = new byte [Client.CLIENT_CONNECTION_PREFACE.length];
 
         // does not need to be synchronized because no other threads have been spun off yet
-        in.readNBytes(clientConnectionPreface, 0, Client.CLIENT_CONNECTION_PREFACE.length);
-        if(!Arrays.equals(clientConnectionPreface, Client.CLIENT_CONNECTION_PREFACE)){
-            throw new IOException(ERROR_CONNECTION_PREFACE);
+        int numRead = in.readNBytes
+                (clientConnectionPreface, 0, Client.CLIENT_CONNECTION_PREFACE.length);
+        if((numRead != Client.CLIENT_CONNECTION_PREFACE.length)
+                || (!Arrays.equals(clientConnectionPreface,
+                    Client.CLIENT_CONNECTION_PREFACE))){
+
+            //get the bytes that were read
+            byte [] readBytes = Arrays.copyOfRange(clientConnectionPreface, 0, numRead);
+            throw new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, ENC) );
         }
 
         // now read in the settings frame
