@@ -15,7 +15,7 @@ import java.util.List;
  * must be sorted by Java's default String order for the String
  * representation of a service (e.g., &lt;name&gt;:&lt;port&gt;)
  */
-public class Response {
+public class Response extends Message {
 
     /**
      * Construct response with empty host:port list
@@ -48,16 +48,24 @@ public class Response {
     }
 
     /**
-     * Returns string of the form
-     *
+     * gets the operation
+     * @return the operation
+     */
+    @Override
+    public String getOperation(){
+        return RESPONSE_OP;
+    }
+
+    /**
+     * gets the payload of a message
      * RESPONSE [&lt;name&gt;:&lt;port&gt;&lt;space&gt;]*
      * For example
      *
      * RESPONSE [wind:8000][fire:7000]
-     * @return the string
+     * @return the payload
      */
     @Override
-    public String toString(){
+    public String getPayload(){
         return null;
     }
 }

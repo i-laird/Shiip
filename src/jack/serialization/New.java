@@ -11,7 +11,7 @@ package jack.serialization;
  * @version  1.0
  * New Message
  */
-public class New {
+public class New extends HostPortMessage{
 
     /**
      * Creates a New message from given values
@@ -20,55 +20,15 @@ public class New {
      * @throws IllegalArgumentException if any validation problem with host and/or port, including null, etc.
      */
     public New(String host, int port) throws IllegalArgumentException{
-
+        super(host, port);
     }
 
     /**
-     * returns string of the following form:
-     * ACK [&lt;name&gt;:&lt;port&gt;]
-     * For example
-     *
-     * ACK [google.com:8080]
-     * @return the string as defined above
+     * gets the operation
+     * @return the operation
      */
     @Override
-    public String toString(){
-        return null;
-    }
-
-    //TODO maybe get rid of all of these???
-    /**
-     * gets the host
-     * @return host
-     */
-    public String getHost(){
-        return null;
-    }
-
-    /**
-     * sets the host
-     * @param host the host
-     * @throws IllegalArgumentException if validation failure, including null host
-     */
-    public final void setHost​(String host) throws IllegalArgumentException{
-
-    }
-
-    /**
-     * sets the port
-     * @param port new port
-     * @throws IllegalArgumentException if validation fails
-     */
-    public final void setPort(int port) throws IllegalArgumentException{
-
-    }
-
-    /**
-     * gets the port num
-     * @return the port num
-     * @throws IllegalArgumentException if validation fails
-     */
-    public int getPort() throws IllegalArgumentException{
-        return 0;
+    public String getOperation(){
+        return NEW_OP;
     }
 }

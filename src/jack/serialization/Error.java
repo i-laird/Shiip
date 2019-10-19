@@ -10,7 +10,7 @@ package jack.serialization;
  * @author Ian Laird
  * Error Message
  */
-public class Error {
+public class Error extends Message{
 
     /**
      * Create an Error message from given values
@@ -39,15 +39,25 @@ public class Error {
     }
 
     /**
+     * gets the operation
+     * @return the operation
+     */
+    @Override
+    public String getOperation(){
+        return ERROR_OP;
+    }
+
+    /**
+     * gets the payload of a message
      * returns string of the form
      * ERROR &lt;message&gt;
      * For example
      *
      * ERROR Bad stuff
-     * @return the string
+     * @return the payload
      */
     @Override
-    public String toString(){
+    public String getPayload(){
         return null;
     }
 }

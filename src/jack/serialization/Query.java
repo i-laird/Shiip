@@ -11,7 +11,7 @@ package jack.serialization;
  * @version 1.0
  * query message
  */
-public class Query {
+public class Query extends Message{
 
     /**
      * Creates a Query message from given values
@@ -40,15 +40,24 @@ public class Query {
     }
 
     /**
-     * Returns string of the form
+     * gets the operation
+     * @return the operation
+     */
+    @Override
+    public String getOperation(){
+        return QUERY_OP;
+    }
+
+    /**
+     * gets the payload of a message
      *  QUERY &lt;query&gt;
      * For example
      *
      * QUERY win
-     * @return the string
+     * @return the payload
      */
     @Override
-    public String toString(){
+    public String getPayload(){
         return null;
     }
 }
