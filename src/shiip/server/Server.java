@@ -150,6 +150,7 @@ public class Server extends Thread{
      */
     private class ConnectionPrefaceException extends Throwable{
 
+        // the connection preface that was received
         private String receivedString = "";
 
         /**
