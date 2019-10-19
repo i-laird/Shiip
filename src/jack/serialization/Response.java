@@ -6,7 +6,7 @@
 
 package jack.serialization;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Ian Laird
@@ -17,11 +17,14 @@ import java.util.List;
  */
 public class Response extends Message {
 
+    // the host and port pairs stored as a string
+    private Set<String> hostPort;
+
     /**
      * Construct response with empty host:port list
      */
     public Response(){
-
+        this.hostPort = new TreeSet<>();
     }
 
     /**
@@ -31,7 +34,11 @@ public class Response extends Message {
      * @return service list
      */
     public List<String> getServiceList(){
-        return null;
+        List<String> toReturn = new LinkedList<>();
+        for(String s: this.hostPort){
+            toReturn.add(s);
+        }
+        return toReturn;
     }
 
     /**
@@ -44,7 +51,12 @@ public class Response extends Message {
      * @throws IllegalArgumentException  if validation fails, including null host
      */
     public final void addService​(String host, int port) throws IllegalArgumentException{
-
+        if(Objects.isNull(host)){
+            throw new IllegalArgumentException("host cannot be null", new NullPointerException("host cannot be null"));
+        }
+        portValidator(port);
+        //TODO ask about the space
+        this.hostPort.add(host + Integer.toString(port));
     }
 
     /**
@@ -66,6 +78,11 @@ public class Response extends Message {
      */
     @Override
     public String getPayload(){
-        return null;
+        StringBuilder stringBuilder = new StringBuilder();
+        for(String s: this.hostPort){
+            // TODO ask about the space
+            stringBuilder.append("[").append(s).append("]");
+        }
+        return stringBuilder.toString();
     }
 }

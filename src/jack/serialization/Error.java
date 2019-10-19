@@ -6,11 +6,18 @@
 
 package jack.serialization;
 
+import java.util.Objects;
+
 /**
  * @author Ian Laird
  * Error Message
  */
 public class Error extends Message{
+
+    // the minimum length of an error message
+    private static int ERROR_MESSAGE_MINIMUM_LENGTH = 1;
+
+    private String errorMessage = null;
 
     /**
      * Create an Error message from given values
@@ -18,7 +25,7 @@ public class Error extends Message{
      * @throws IllegalArgumentException if any validation problem with errorMessage, including null, etc.
      */
     public Error(String errorMessage) throws IllegalArgumentException{
-
+        setErrorMessage​(errorMessage);
     }
 
     /**
@@ -26,7 +33,7 @@ public class Error extends Message{
      * @return the error message
      */
     public String getErrorMessage(){
-        return null;
+        return this.errorMessage;
     }
 
     /**
@@ -35,7 +42,12 @@ public class Error extends Message{
      * @throws IllegalArgumentException if validation fails, including null
      */
     public final void setErrorMessage​(String errorMessage) throws IllegalArgumentException{
-
+        if(Objects.isNull(errorMessage)){
+            throw new IllegalArgumentException("error message cannot be null", new NullPointerException("error message cannot be null"));
+        }
+        if(errorMessage.length() < ERROR_MESSAGE_MINIMUM_LENGTH){
+            throw new IllegalArgumentException("Error message must be at least 1 char");
+        }
     }
 
     /**
@@ -50,7 +62,7 @@ public class Error extends Message{
     /**
      * gets the payload of a message
      * returns string of the form
-     * ERROR &lt;message&gt;
+     * &lt;message&gt;
      * For example
      *
      * ERROR Bad stuff
@@ -58,6 +70,6 @@ public class Error extends Message{
      */
     @Override
     public String getPayload(){
-        return null;
+        return this.getErrorMessage();
     }
 }

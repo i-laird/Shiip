@@ -75,6 +75,6 @@ public abstract class HostPortMessage extends Message {
      */
     @Override
     public String getPayload(){
-        return null;
+        return "[" + this.getHost() + ":" + Integer.toString(this.getPort()) + "]";
     }
 }

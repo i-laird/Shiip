@@ -6,6 +6,8 @@
 
 package jack.serialization;
 
+import java.util.Objects;
+
 /**
  * @author Ian Laird
  * @version 1.0
@@ -13,13 +15,15 @@ package jack.serialization;
  */
 public class Query extends Message{
 
+    private String searchString = null;
+
     /**
      * Creates a Query message from given values
      * @param searchString search String for query
      * @throws IllegalArgumentException if any validation problem with searchString, including null, etc.
      */
     public Query(String searchString) throws IllegalArgumentException{
-
+        this.setSearchString​(searchString);
     }
 
     /**
@@ -27,7 +31,7 @@ public class Query extends Message{
      * @return the search string
      */
     public String getSearchString(){
-        return null;
+        return this.getSearchString();
     }
 
     /**
@@ -36,7 +40,10 @@ public class Query extends Message{
      * @throws IllegalArgumentException if search string fails validation, including null
      */
     public final void setSearchString​(String searchString) throws IllegalArgumentException{
-
+        if(Objects.isNull(searchString)){
+            throw new IllegalArgumentException("search string cannot be null", new NullPointerException("search string cannot be null"));
+        }
+        this.searchString = searchString;
     }
 
     /**
@@ -58,6 +65,6 @@ public class Query extends Message{
      */
     @Override
     public String getPayload(){
-        return null;
+        return this.getSearchString();
     }
 }
