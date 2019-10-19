@@ -48,7 +48,7 @@ public abstract class Message {
      *     if validation fails, including null msgBytes
      */
     public static Message decode(byte [] msgBytes)  throws IllegalArgumentException{
-        return null;
+        return null; //TODO
     }
 
     /**
@@ -56,6 +56,7 @@ public abstract class Message {
      * @return the serialized message
      */
     public byte[] encode() {
+        // TODO check about the one letter or many
         String message = this.getOperation().charAt(0) + " " + this.getPayload();
         return message.getBytes(ENC);
     }

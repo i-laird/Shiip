@@ -6,6 +6,8 @@
 
 package jack.serialization;
 
+import java.util.Objects;
+
 /**
  * @author Ian Laird
  * @version 1.0
@@ -76,5 +78,28 @@ public abstract class HostPortMessage extends Message {
     @Override
     public String getPayload(){
         return "[" + this.getHost() + ":" + Integer.toString(this.getPort()) + "]";
+    }
+
+    /**
+     * equals
+     * @param o the object to compare against
+     * @return true means equal
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HostPortMessage that = (HostPortMessage) o;
+        return port == that.port &&
+                Objects.equals(host, that.host);
+    }
+
+    /**
+     * hashcode
+     * @return same values will have same hashcode
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(host, port);
     }
 }

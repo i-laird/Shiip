@@ -55,4 +55,7 @@ public final class ErrorCodes {
 
     // bad public value
     public static final int BAD_PUBLIC_VALUE = 14;
+
+    // error message received
+    public static final int ERROR_MESSAGE_RECEIVED = 15;
 }
