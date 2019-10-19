@@ -66,6 +66,17 @@ public class Client {
     // for an invalid message
     private static final String INVALID_MESSAGE = "Invalid message: ";
 
+    // ***********************************************
+
+    private InetAddress server_ip;
+    private int server_port;
+    private boolean qSent;
+    private boolean nSent;
+    private New optionallySent;
+    private String op;
+    private String payload;
+    private boolean repeat;
+
     /**
      * jack client
      * @param args
@@ -86,6 +97,31 @@ public class Client {
         // make sure that the server is valid too
         InetAddress server_ipAddr = CommandLineParser.getIpAddress(args[JACK_CLIENT_SERVER_ARG_POS]);
 
+        Client client = new Client(server_ipAddr, server_port, args[JACK_CLIENT_OP_ARG_POS], args[JACK_CLIENT_PAYLOAD_ARG_POS]);
+        client.go();
+
+    }
+
+    private static byte [] getMessageToSend(String op, String payload){
+        return null;
+    }
+
+    public Client(InetAddress server_ip, int server_port, String op, String payload) {
+        this.server_ip = server_ip;
+        this.server_port = server_port;
+        this.op = op;
+        this.payload = payload;
+        this.nSent = false;
+        this.qSent = false;
+        this.optionallySent = null;
+        this.repeat = false;
+       // this.nSent = "n".equals(op.toLowerCase().charAt(0));
+       // this.qSent = "q".equals(op.toLowerCase().charAt(0));
+
+    }
+
+    public void go(){
+
         //make the datagram socket
         DatagramSocket sock = null;
         try {
@@ -95,16 +131,15 @@ public class Client {
         }
 
         // get the encoded message that is to be sent to the server
-        byte [] bytes = getMessageToSend(args[JACK_CLIENT_OP_ARG_POS], args[JACK_CLIENT_PAYLOAD_ARG_POS]);
+        byte [] bytes = getMessageToSend(this.op, this.payload);
 
         // make the datagram packet that is to be sent
-        DatagramPacket toSend = new DatagramPacket(bytes, 0, bytes.length, server_ipAddr, server_port);
+        DatagramPacket toSend = new DatagramPacket(bytes, 0, bytes.length, this.server_ip, this.server_port);
 
         // now send the packet to the server
-        boolean repeat = false;
         int counter = 0;
         try {
-            while(repeat && counter < TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS ) {
+            while(this.repeat && counter < TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS ) {
                 byte [] receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
                 sock.setSoTimeout(TOTAL_TIME_WAIT_FOR_REPLY);
                 sock.send(toSend);
@@ -113,57 +148,60 @@ public class Client {
                     sock.receive(received);
                     try {
                         //TODO change this
-                        repeat = handleMessage(received, server_ipAddr, server_port, true);
+                        this.handleMessage(received);
                     }catch(IllegalArgumentException e2){
                         System.err.println(INVALID_MESSAGE + e2.getMessage());
-                        repeat = true;
+                        this.repeat = true;
                     }
                 }catch(SocketTimeoutException e){
-                    repeat = true;
+                    this.repeat = true;
                 }
                 counter += 1;
             }
 
             // if the expected response was never received it was an error
-            if(repeat){
+            if(this.repeat){
                 System.err.println("Error: Expected Response never received");
             }
         }catch(IOException e){
             System.err.println(COMMUNICATION_PROBLEM + e.getMessage());
             System.exit(NETWORK_ERROR);
         }
-
     }
 
-    private static byte [] getMessageToSend(String op, String payload){
-        return null;
-    }
-
-    private static boolean handleMessage(DatagramPacket packet, InetAddress server_address, int serverPort, boolean qSent){
+    /**
+     * handles a message
+     * @param packet contains the message to handle
+     */
+    private void handleMessage(DatagramPacket packet){
 
         // make sure that the message is from the correct server
         // the packet contains the senders ip and port
-        if(!(packet.getAddress().equals(server_address) && packet.getPort() != serverPort)){
+        if(!(packet.getAddress().equals(this.server_ip) && packet.getPort() != this.server_port)){
             System.err.println(UNEXPECTED_MESSAGE_SOURCE);
-            System.err.println("Expected source: " + server_address.toString() + ":" + Integer.toString(serverPort));
+            System.err.println("Expected source: " + this.server_ip.toString() + ":" + Integer.toString(this.server_port));
             System.err.println("Actual source: " + packet.getAddress().toString() + ":" + Integer.toString(packet.getPort()));
-            return true;
+            this.repeat = true;
+            return;
         }
 
         Message m = Message.decode(packet.getData());
 
         switch(m.getOperation().toUpperCase()){
             case "QUERY":
-                handleQ((Query)m);
+                this.handleQ((Query)m);
                 break;
             case "RESPONSE":
-                handleR((Response)m, qSent);
+                this.handleR((Response)m);
                 break;
             case "NEW":
+                this.handleN((New)m);
                 break;
             case "ACK":
+                this.handleA((ACK)m);
                 break;
             case "ERROR":
+                this.handleE((Error)m);
                 break;
         }
 
@@ -174,9 +212,9 @@ public class Client {
      * @param q the query message
      * @return true means that this is not the expected message
      */
-    private static boolean handleQ(Query q){
+    private void handleQ(Query q){
         System.err.println(UNEXPECTED_MESSAGE_TYPE);
-        return true;
+        this.repeat = true;
     }
 
     /**
@@ -184,9 +222,9 @@ public class Client {
      * @param n the New message
      * @return true means not the expected message
      */
-    private static boolean handleN(New n){
+    private void handleN(New n){
         System.err.println(UNEXPECTED_MESSAGE_TYPE);
-        return true;
+        this.repeat = true;
     }
 
     /**
@@ -194,10 +232,10 @@ public class Client {
      * @param e the Error Message
      * @return terminates the client
      */
-    private static boolean handleE(Error e){
+    private void handleE(Error e){
         System.err.println(e.getErrorMessage());
         System.exit(ERROR_MESSAGE_RECEIVED);
-        return true;
+        this.repeat = true;
     }
 
     /**
@@ -205,13 +243,13 @@ public class Client {
      * @param r the response message
      * @return true means that this was not an expected message
      */
-    private static boolean handleR(Response r, boolean qSent){
-        if(qSent){
+    private void handleR(Response r){
+        if(this.qSent){
             System.out.println(r.getServiceList());
             System.exit(0);
         }
         System.err.println(UNEXPECTED_RESPONSE);
-        return true;
+        this.repeat = true;
     }
 
     /**
@@ -219,20 +257,21 @@ public class Client {
      * @param a the ACK message
      * @return true means that the ACK was not expected by the client
      */
-    private static boolean handleA(ACK a, boolean nSent, New optionallyPresent ){
-        if(!nSent){
+    private void handleA(ACK a ){
+        if(!this.nSent){
             System.err.println(UNEXPECTED_ACK);
-            return true;
+            this.repeat = true;
+            return;
         }
 
         // see if they are the same
-        if(((HostPortMessage)a).equals(optionallyPresent)){
+        if(((HostPortMessage)a).equals(this.optionallySent)){
             System.out.println(a.toString());
             System.exit(0);
         }
 
         // if they are not the same
         System.err.println(UNEXPECTED_ACK);
-        return true;
+        this.repeat = true;
     }
 }
