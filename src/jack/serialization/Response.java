@@ -56,7 +56,7 @@ public class Response extends Message {
         }
         portValidator(port);
         //TODO ask about the space
-        this.hostPort.add(host + Integer.toString(port));
+        this.hostPort.add(host + Integer.toString(port) + " ");
     }
 
     /**
@@ -80,7 +80,6 @@ public class Response extends Message {
     public String getPayload(){
         StringBuilder stringBuilder = new StringBuilder();
         for(String s: this.hostPort){
-            // TODO ask about the space
             stringBuilder.append("[").append(s).append("]");
         }
         return stringBuilder.toString();

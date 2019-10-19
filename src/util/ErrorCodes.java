@@ -58,4 +58,7 @@ public final class ErrorCodes {
 
     // error message received
     public static final int ERROR_MESSAGE_RECEIVED = 15;
+
+    // for a bad op
+    public static final int ERROR_OP_SPECIFIED = 16;
 }

@@ -16,7 +16,7 @@ import java.net.*;
 import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
 import static util.ErrorCodes.NETWORK_ERROR;
 import static util.ErrorCodes.ERROR_MESSAGE_RECEIVED;
-
+import static util.ErrorCodes.ERROR_OP_SPECIFIED;
 
 /**
  * jack Client
@@ -66,6 +66,8 @@ public class Client {
     // for an invalid message
     private static final String INVALID_MESSAGE = "Invalid message: ";
 
+    private static final String BAD_PARAMETERS = "Bad parameters: ";
+
     // ***********************************************
 
     private InetAddress server_ip;
@@ -102,10 +104,6 @@ public class Client {
 
     }
 
-    private static byte [] getMessageToSend(String op, String payload){
-        return null;
-    }
-
     public Client(InetAddress server_ip, int server_port, String op, String payload) {
         this.server_ip = server_ip;
         this.server_port = server_port;
@@ -115,11 +113,11 @@ public class Client {
         this.qSent = false;
         this.optionallySent = null;
         this.repeat = false;
-       // this.nSent = "n".equals(op.toLowerCase().charAt(0));
-       // this.qSent = "q".equals(op.toLowerCase().charAt(0));
-
     }
 
+    /**
+     * runner for a client
+     */
     public void go(){
 
         //make the datagram socket
@@ -127,11 +125,12 @@ public class Client {
         try {
             sock = new DatagramSocket();
         }catch(SocketException e){
-            //TODO
+            System.err.println(COMMUNICATION_PROBLEM + "unable to create datagram socket");
+            System.exit(NETWORK_ERROR);
         }
 
         // get the encoded message that is to be sent to the server
-        byte [] bytes = getMessageToSend(this.op, this.payload);
+        byte [] bytes = getMessageToSend();
 
         // make the datagram packet that is to be sent
         DatagramPacket toSend = new DatagramPacket(bytes, 0, bytes.length, this.server_ip, this.server_port);
@@ -147,7 +146,7 @@ public class Client {
                 try {
                     sock.receive(received);
                     try {
-                        //TODO change this
+                        //TODO only 1500 bytes?
                         this.handleMessage(received);
                     }catch(IllegalArgumentException e2){
                         System.err.println(INVALID_MESSAGE + e2.getMessage());
@@ -167,6 +166,29 @@ public class Client {
             System.err.println(COMMUNICATION_PROBLEM + e.getMessage());
             System.exit(NETWORK_ERROR);
         }
+    }
+
+    /**
+     * gets the message to send from the op and payload
+     * @return byte array for the message
+     */
+    private byte [] getMessageToSend(){
+        switch(this.op.toLowerCase().charAt(0)){
+            case 'q':
+                qSent = true;
+                return new Query(this.payload).encode();
+            case 'n':
+                nSent = true;
+                //TODO fix this how to get payload for a New
+                //this.optionallySent = new New(this.payload);
+                return this.optionallySent.encode();
+            default:
+                System.err.println(BAD_PARAMETERS + "unexpected op " + this.op);
+                System.exit(ERROR_OP_SPECIFIED);
+        }
+
+        // unreachable
+        return new byte[0];
     }
 
     /**
