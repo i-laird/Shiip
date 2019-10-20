@@ -14,7 +14,7 @@ import shiip.serialization.*;
 import shiip.tls.TLSFactory;
 import shiip.transmission.MessageReceiver;
 import shiip.transmission.MessageSender;
-import util.*;
+import shiip.util.*;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -36,7 +36,7 @@ import static shiip.serialization.Message.*;
 import static shiip.serialization.Headers.STATUS;
 import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
 import static shiip.serialization.Headers.NAME_PATH;
-import static util.ErrorCodes.*;
+import static shiip.util.ErrorCodes.*;
 
 /**
  * Shiip Server

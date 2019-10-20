@@ -19,7 +19,7 @@ import java.util.*;
 import shiip.serialization.*;
 import shiip.transmission.MessageReceiver;
 import shiip.transmission.MessageSender;
-import util.*;
+import shiip.util.*;
 import shiip.tls.TLSFactory;
 
 //use many constants from here
@@ -28,7 +28,7 @@ import static shiip.serialization.Headers.*;
 import static shiip.serialization.Data.DATA_TYPE;
 
 // all error return nums
-import static util.ErrorCodes.*;
+import static shiip.util.ErrorCodes.*;
 
 import java.io.EOFException;
 import java.io.IOException;

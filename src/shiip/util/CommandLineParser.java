@@ -4,13 +4,13 @@
  * Class: Data Comm
  *******************************************************/
 
-package util;
+package shiip.util;
 
 import java.net.*;
 
-import static util.ErrorCodes.BAD_PORT_ERROR;
-import static util.ErrorCodes.BAD_URL_ERROR;
-import static util.ErrorCodes.BAD_PORT_NUM_ERROR;
+import static shiip.util.ErrorCodes.BAD_PORT_ERROR;
+import static shiip.util.ErrorCodes.BAD_URL_ERROR;
+import static shiip.util.ErrorCodes.BAD_PORT_NUM_ERROR;
 
 
 /**
@@ -18,6 +18,7 @@ import static util.ErrorCodes.BAD_PORT_NUM_ERROR;
  * @author Ian laird
  */
 public final class CommandLineParser {
+
     /**
      * Gets IpAddress from a server string
      * @param server the server

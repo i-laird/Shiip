@@ -8,15 +8,15 @@ package jack.client;
 
 import jack.serialization.*;
 import jack.serialization.Error;
-import util.CommandLineParser;
+import shiip.util.CommandLineParser;
 
 import java.io.IOException;
 import java.net.*;
 
-import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
-import static util.ErrorCodes.NETWORK_ERROR;
-import static util.ErrorCodes.ERROR_MESSAGE_RECEIVED;
-import static util.ErrorCodes.ERROR_OP_SPECIFIED;
+import static shiip.util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
+import static shiip.util.ErrorCodes.NETWORK_ERROR;
+import static shiip.util.ErrorCodes.ERROR_MESSAGE_RECEIVED;
+import static shiip.util.ErrorCodes.ERROR_OP_SPECIFIED;
 
 /**
  * jack Client
@@ -66,17 +66,34 @@ public class Client {
     // for an invalid message
     private static final String INVALID_MESSAGE = "Invalid message: ";
 
+    // message for if bad parameters are passed
     private static final String BAD_PARAMETERS = "Bad parameters: ";
 
     // ***********************************************
 
+    // the address of the server
     private InetAddress server_ip;
+
+    // the port number the UDP server is running on
     private int server_port;
+
+    // if the message sent was a query
     private boolean qSent;
+
+    // if the message sent was a new message
     private boolean nSent;
+
+    // if a new message was sent a record of it is kept here
     private New optionallySent;
+
+    // the op for the client
     private String op;
+
+    // the payload of the client
     private String payload;
+
+    // if client needs to keep trying to receive the response
+    // TODO rn this always resends, but we want it to wait for three seconds always
     private boolean repeat;
 
     /**
@@ -223,7 +240,7 @@ public class Client {
                 this.handleA((ACK)m);
                 break;
             case "ERROR":
-                this.handleE((Error)m);
+                this.handleE((jack.serialization.Error)m);
                 break;
         }
 
@@ -254,7 +271,7 @@ public class Client {
      * @param e the Error Message
      * @return terminates the client
      */
-    private void handleE(Error e){
+    private void handleE(jack.serialization.Error e){
         System.err.println(e.getErrorMessage());
         System.exit(ERROR_MESSAGE_RECEIVED);
         this.repeat = true;
