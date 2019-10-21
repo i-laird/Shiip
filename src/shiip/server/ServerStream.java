@@ -70,6 +70,8 @@ public class ServerStream extends Thread{
             }
         }catch(IOException  e){
 
+            //nothing needs to be done
+        }finally {
             this.isDone = true;
         }
     }
