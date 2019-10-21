@@ -18,6 +18,7 @@ import static shiip.server.Server.MAXDATASIZE;
 /**
  * a stream within the server side of a Shiip connection
  * @author ian laird
+ * @version 1.0
  */
 public class ServerStream extends Thread{
 
