@@ -145,8 +145,18 @@ public class Server {
         String receipt = q.toString();
         logger.info(receipt);
 
-        // TODO actually do the query
-        Response resultsOfQuery = null;
+        String stringToMatch = q.getSearchString();
+
+        // create an empty response
+        Response resultsOfQuery = new Response();
+
+        // put any services that match the regex into the response
+        this.serverList.stream().filter(x -> {
+            if(stringToMatch.equals("*")){
+                return true;
+            }
+            return x.getHost().contains(stringToMatch);
+        }).forEach( x -> resultsOfQuery.addService​(x.getHost(), x.getPort()));
 
         return resultsOfQuery;
     }
