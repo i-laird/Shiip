@@ -7,6 +7,8 @@
 
 package jack.util;
 
+import jack.client.Client;
+
 import java.util.Objects;
 
 public class HostPortPair {
@@ -21,10 +23,10 @@ public class HostPortPair {
     private static final int PARSE_NUM = 2;
 
     // the server name
-    public String host;
+    private String host;
 
     // the server port num
-    public int port;
+    private int port;
 
     /**
      * constructor
@@ -37,6 +39,38 @@ public class HostPortPair {
     }
 
     /**
+     * gets the host
+     * @return host
+     */
+    public String getHost() {
+        return host;
+    }
+
+    /**
+     * sets the host
+     * @param host the host
+     */
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    /**
+     * gets the port
+     * @return the port
+     */
+    public int getPort() {
+        return port;
+    }
+
+    /**
+     * sets the port
+     * @param port the port
+     */
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    /**
      * gets the host name and port number from a string of host:port
      * @param payload the string to parse
      * @return see above
@@ -44,7 +78,8 @@ public class HostPortPair {
     public static HostPortPair getFromString(String payload){
         String [] parts = payload.split(":");
         if(parts.length < PARSE_NUM){
-            throw new IllegalArgumentException("unable to parse the payload of a new");
+            throw new IllegalArgumentException(Client.INVALID_MESSAGE +
+                    "Unable to parse paylaod expected <host>:<port>");
         }
         return new HostPortPair(parts[server_LOC], Integer.parseInt(parts[PORT_LOC]));
     }

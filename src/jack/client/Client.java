@@ -64,7 +64,7 @@ public class Client {
     private static final String UNEXPECTED_ACK = "Unexpected ACK";
 
     // for an invalid message
-    private static final String INVALID_MESSAGE = "Invalid message: ";
+    public static final String INVALID_MESSAGE = "Invalid message: ";
 
     // message for if bad parameters are passed
     private static final String BAD_PARAMETERS = "Bad parameters: ";

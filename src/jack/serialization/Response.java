@@ -6,6 +6,8 @@
 
 package jack.serialization;
 
+import jack.util.HostPortPair;
+
 import java.util.*;
 
 /**
@@ -83,5 +85,21 @@ public class Response extends Message {
             stringBuilder.append("[").append(s).append("]");
         }
         return stringBuilder.toString();
+    }
+
+    /**
+     * gets a respnse
+     * @param payload the payload
+     * @return the response message
+     */
+    public static Response decodeResponse(String payload){
+        Response toReturn = new Response();
+        String removeLeftBracket = payload.replace("\\[", "");
+        String [] pairs = payload.split("\\]");
+        Arrays.stream(pairs).forEach( x -> {
+            HostPortPair hp = HostPortPair.getFromString(x);
+            toReturn.addService​(hp.getHost(), hp.getPort());
+        });
+        return toReturn;
     }
 }
