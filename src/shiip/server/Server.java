@@ -9,20 +9,26 @@ package shiip.server;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
+import shiip.util.CommandLineParser;
+import shiip.util.EncoderDecoderSingleton;
 import shiip.client.Client;
+
+// used for all message types
 import shiip.serialization.*;
 import shiip.tls.TLSFactory;
 import shiip.transmission.MessageReceiver;
 import shiip.transmission.MessageSender;
-import shiip.util.*;
 
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
+// used for file, inputstream, fileHandler, and IoException
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
+// used for Arrays, HashMap, Map, and Objects
 import java.util.*;
 
 import java.util.concurrent.ExecutorService;
@@ -308,6 +314,7 @@ public class Server extends Thread{
                 }catch(EOFException e2){
 
                     // means that the client closed the stream
+                    this.removeFinishedStreams();
                     if(this.streams.isEmpty()){
                         break;
                     }
@@ -321,12 +328,19 @@ public class Server extends Thread{
                 }
 
                 // remove the streams that are done
-                this.streams.entrySet().removeIf(x -> x.getValue().isDone());
+                this.removeFinishedStreams();
             }
         }catch(IOException e) {
             logger.severe("Error during communication: " + e.getMessage());
         }
         this.terminateSession();
+    }
+
+    /**
+     * removes all terminates streams
+     */
+    private void removeFinishedStreams(){
+        this.streams.entrySet().removeIf(x -> x.getValue().isDone());
     }
 
     /**
