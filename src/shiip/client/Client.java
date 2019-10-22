@@ -20,7 +20,7 @@ import shiip.serialization.*;
 import shiip.transmission.MessageReceiver;
 import shiip.transmission.MessageSender;
 import shiip.util.*;
-import shiip.tls.TLSFactory;
+import tls.TLSFactory;
 
 //use many constants from here
 import static shiip.serialization.Headers.*;
