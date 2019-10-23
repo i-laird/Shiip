@@ -46,8 +46,8 @@ public class Client {
     // the total number of times to send a message before giving up
     private static final int TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS = 3;
 
-    // the size of the receive buffer
-    private static final int RECEIVE_BUFFER_SIZE = 1500;
+    // the size of the receive buffer (65535 - 8 - 20)
+    private static final int RECEIVE_BUFFER_SIZE = 65507;
 
     // for a communication problem
     private static final String COMMUNICATION_PROBLEM = "Communication problem: ";

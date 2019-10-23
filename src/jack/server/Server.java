@@ -37,8 +37,8 @@ public class Server {
     // the port number should be the first arg
     private static final int JACK_SERVER_ARG_PORT_POS = 0;
 
-    // the size of the receive buffer
-    private static final int RECEIVE_BUFFER_SIZE = 1500;
+    // the size of the receive buffer (65535 - 8 - 20)
+    private static final int RECEIVE_BUFFER_SIZE = 65507;
 
     // the logger for the server
     private static final Logger logger = Logger.getLogger("jack server");
