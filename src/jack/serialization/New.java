@@ -25,6 +25,10 @@ public class New extends HostPortMessage{
         super(host, port);
     }
 
+    /**
+     * created from pair of host and port
+     * @param m the pair of host and port
+     */
     public New(HostPortPair m){
         super(m.getHost(), m.getPort());
     }
