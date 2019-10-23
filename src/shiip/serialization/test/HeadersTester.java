@@ -37,6 +37,7 @@ public class HeadersTester {
 
         /**
          * Tests constructor with invalid streamID
+         * @param streamID the streamID
          */
         @ParameterizedTest(name = "streamID = {0}")
         @ValueSource(ints = {-10, -1, 0})
@@ -75,6 +76,7 @@ public class HeadersTester {
             });
         }
 
+        @Test
         @DisplayName("No headers block")
         public void testNoHeadersBlock(){
             assertDoesNotThrow(() -> {
@@ -129,6 +131,7 @@ public class HeadersTester {
 
         /**
          * Tests that BadAttributeException is thrown on invalid streamID
+         * @param streamID the streamID
          */
         @ParameterizedTest(name = "streamID = {0}")
         @ValueSource(ints = {-10, -1, 0})
@@ -313,8 +316,8 @@ public class HeadersTester {
     class AddValue {
 
         @ParameterizedTest(name = "Invalid characters name - name{0}")
-        @ValueSource(chars = {'(', ')', ',', '/', ';', '<', '=',
-                '>', '?', '@', '[', '\\', ']', '{', '}'})
+        @ValueSource(strings = {"(", ")", ",", "/", ";", "<", "=",
+                ">", "?", "@", "[", "\\", "]", "{", "}"})
         public void testInvalidCharacters(char invalidChar){
             assertThrows(BadAttributeException.class, () -> {
                 Headers h = new Headers(1, false);
@@ -409,45 +412,45 @@ public class HeadersTester {
          */
         @Override
         public Stream<? extends Arguments> provideArguments
-        (ExtensionContext extensionContext) throws Exception {
+                (ExtensionContext extensionContext) {
             List<Integer> validStreamIDs = Arrays.asList( 1, 20, 50);
             List<Boolean> validIsEnd = Arrays.asList(true, false);
             List<Map<String, String>> validOptions = Arrays.asList(
                     new TreeMap<>(),
                     Map.of("name1", "value1"),
                     Map.of("name1", "value1", "name2", "value2"),
-                    Map.of("name1", "value1", "name2", "value2", "name3", "value3")
+                    Map.of("name1", "value1", "name2", "value2",
+                            "name3", "value3")
             );
 
             return validStreamIDs
-                    .stream()
-                    .flatMap(streamID ->
-                            validIsEnd
-                                    .stream()
-                                    .flatMap(isEnd ->
-                                            validOptions
-                                                    .stream()
-                                                    .map(options ->
-                                                            Arguments.of(streamID,
-                                                                    isEnd, options,
-                                                                    encode(streamID, isEnd,
-                                                                            new TreeMap<>(options))))
+                .stream()
+                .flatMap(streamID ->
+                    validIsEnd
+                        .stream()
+                        .flatMap(isEnd ->
+                            validOptions
+                                .stream()
+                                .map(options -> Arguments.of(
+                                    streamID,
+                                    isEnd,
+                                    options,
+                                    encode(streamID, isEnd, new TreeMap<>(options))
                                     )
+                                )
+                        )
                     );
         }
 
         /**
          * encodes the string
          */
-        private String encode(int streamID, boolean isEnd,
-                              Map<String, String> options){
+        private String encode(int streamID, boolean isEnd, Map<String, String> options){
             StringBuilder builder = new StringBuilder();
-            builder.append
-                    (String.format("Headers: StreamID=%d isEnd=%b",streamID, isEnd));
+            builder.append(String.format("Headers: StreamID=%d isEnd=%b",streamID, isEnd));
             builder.append(" (");
             for(Map.Entry<String, String> entry : options.entrySet()){
-                builder.append
-                        (String.format("[%s=%s]", entry.getKey(), entry.getValue()));
+                builder.append(String.format("[%s=%s]", entry.getKey(), entry.getValue()));
             }
             builder.append(")");
             return builder.toString();
@@ -457,8 +460,7 @@ public class HeadersTester {
     static class ToStringNoOptionsProvider implements ArgumentsProvider {
 
         @Override
-        public Stream<? extends Arguments> provideArguments
-                (ExtensionContext extensionContext) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
             List<Integer> validStreamIDs = Arrays.asList( 1, 20, 50);
             List<Boolean> validIsEnd = Arrays.asList(true, false);
 
@@ -468,8 +470,7 @@ public class HeadersTester {
                             validIsEnd
                                     .stream()
                                     .map(isEnd ->
-                                            Arguments.of(streamID,
-                                                    isEnd, encode(streamID, isEnd))
+                                            Arguments.of(streamID, isEnd, encode(streamID, isEnd))
                                     )
                     );
         }

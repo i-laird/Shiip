@@ -564,6 +564,33 @@ public class MessageTester {
                     assertEquals(h, reGenerated);
                 });
             }
+
+            @Test
+            @DisplayName("Encoding - END_HDR Not Set")
+            public void testHeadersEncodingInvalidEndHdrBit(){
+                assertThrows(BadAttributeException.class, () -> {
+                    byte [] generated = new byte[]{1, 0, 0, 0, 0, 1};
+                    Message.decode(generated, decoder);
+                });
+            }
+
+            @Test
+            @DisplayName("Encoding - BAD FLAGS 1 Set")
+            public void testHeadersEncodingInvalidBit1(){
+                assertThrows(BadAttributeException.class, () -> {
+                    byte [] generated = new byte[]{1, 0xC, 0, 0, 0, 1};
+                    Message.decode(generated, decoder);
+                });
+            }
+
+            @Test
+            @DisplayName("Encoding - BAD FLAGS 2 Set")
+            public void testHeadersEncodingInvalidBit2(){
+                assertThrows(BadAttributeException.class, () -> {
+                    byte [] generated = new byte[]{1, 0x24, 0, 0, 0, 1};
+                    Message.decode(generated, decoder);
+                });
+            }
         }
 
         /**
