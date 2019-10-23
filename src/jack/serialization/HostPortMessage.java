@@ -77,6 +77,17 @@ public abstract class HostPortMessage extends Message {
      */
     @Override
     public String getPayload(){
+        return this.getHost() + ":" + this.getPort();
+    }
+
+    /**
+     * gets the payload of the tostring
+     * returns string of the following form:
+     *     &lt;name&gt;:&lt;port&gt;
+     * @return the string
+     */
+    @Override
+    public String getToStringPayload(){
         return "[" + this.getHost() + ":" + Integer.toString(this.getPort()) + "]";
     }
 

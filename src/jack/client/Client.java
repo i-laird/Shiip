@@ -171,22 +171,7 @@ public class Client {
         try {
             while(this.repeat && counter < TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS ) {
                 this.repeat = false;
-                byte [] receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
-                this.sock.setSoTimeout(TOTAL_TIME_WAIT_FOR_REPLY);
-                this.sock.send(this.toSend);
-                DatagramPacket received = new DatagramPacket(receiveBuffer, RECEIVE_BUFFER_SIZE);
-                try {
-                    sock.receive(received);
-                    try {
-                        //TODO only 1500 bytes?
-                        this.handleMessage(received);
-                    }catch(IllegalArgumentException e2){
-                        System.err.println(INVALID_MESSAGE + e2.getMessage());
-                        this.repeat = true;
-                    }
-                }catch(SocketTimeoutException e){
-                    this.repeat = true;
-                }
+                this.attemptToReceiveMessage();
                 counter += 1;
             }
 
@@ -197,6 +182,30 @@ public class Client {
         }catch(IOException e){
             System.err.println(COMMUNICATION_PROBLEM + e.getMessage());
             System.exit(NETWORK_ERROR);
+        }
+    }
+
+    /**
+     * attempts to read a valid message from the server
+     * @throws IOException if io error occurs
+     * if needs to be run again repeat flag is set
+     */
+    public void attemptToReceiveMessage() throws IOException{
+        byte [] receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
+        this.sock.setSoTimeout(TOTAL_TIME_WAIT_FOR_REPLY);
+        this.sock.send(this.toSend);
+        DatagramPacket received = new DatagramPacket(receiveBuffer, RECEIVE_BUFFER_SIZE);
+        try {
+            sock.receive(received);
+            try {
+                //TODO only 1500 bytes?
+                this.handleMessage(received);
+            }catch(IllegalArgumentException e2){
+                System.err.println(INVALID_MESSAGE + e2.getMessage());
+                this.repeat = true;
+            }
+        }catch(SocketTimeoutException e){
+            this.repeat = true;
         }
     }
 

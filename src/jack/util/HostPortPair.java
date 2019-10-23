@@ -81,7 +81,9 @@ public class HostPortPair {
             throw new IllegalArgumentException(Client.INVALID_MESSAGE +
                     "Unable to parse paylaod expected <host>:<port>");
         }
-        return new HostPortPair(parts[server_LOC], Integer.parseInt(parts[PORT_LOC]));
+        String server = parts[server_LOC];
+        String port = parts[PORT_LOC];
+        return new HostPortPair(server, Integer.valueOf(port));
     }
 
     /**

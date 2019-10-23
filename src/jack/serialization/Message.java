@@ -145,7 +145,15 @@ public abstract class Message {
      */
     @Override
     public final String toString(){
-        return this.getOperation() + " " + this.getPayload();
+        return this.getOperation() + " " + this.getToStringPayload();
+    }
+
+    /**
+     * can be used to change how tostring is represented
+     * @return the payload of the string
+     */
+    public String getToStringPayload(){
+        return this.getPayload();
     }
 
     /**
@@ -171,7 +179,7 @@ public abstract class Message {
             throw new IllegalArgumentException("name cannot be null", new NullPointerException("name cannot be null"));
         }
 
-        if(!name.matches("\\([a\\-z]\\|[A\\-Z]\\|[0\\-9]\\|\\.\\|-\\)\\+")){
+        if(!name.matches("([a-zA-Z0-9\\.\\-])+")){
             throw new IllegalArgumentException("invalid name");
         }
     }

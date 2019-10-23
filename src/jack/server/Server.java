@@ -108,6 +108,8 @@ public class Server {
                 this.handleMessage(m, toReceive);
             }catch(IOException e){
                 logger.severe(COMMUNICATION_PROBLEM + e.getMessage());
+            }catch(NumberFormatException e2){
+                logger.severe(INVALID_MESSAGE + e2.getMessage());
             }
         }
     }
