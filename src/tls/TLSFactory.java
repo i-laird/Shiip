@@ -4,7 +4,7 @@
  * Class: Data Comm
  *******************************************************/
 
-package shiip.tls;
+package tls;
 
 import java.io.IOException;
 import java.net.ServerSocket;

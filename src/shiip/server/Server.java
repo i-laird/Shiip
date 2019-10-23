@@ -15,7 +15,7 @@ import shiip.client.Client;
 
 // used for all message types
 import shiip.serialization.*;
-import shiip.tls.TLSFactory;
+import tls.TLSFactory;
 import shiip.transmission.MessageReceiver;
 import shiip.transmission.MessageSender;
 
