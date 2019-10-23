@@ -176,4 +176,18 @@ public abstract class Message {
         }
     }
 
+    /**
+     * validates a query
+     * @param query the query to validate
+     * @throws IllegalArgumentException if the query is invalid
+     */
+    protected static void queryValidator(String query) throws IllegalArgumentException{
+        if(query.equals("*")){
+            return;
+        }
+
+        // if not all then check for name match
+        nameValidator(query);
+    }
+
 }

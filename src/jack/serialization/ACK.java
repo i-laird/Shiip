@@ -23,6 +23,14 @@ public class ACK extends HostPortMessage{
     }
 
     /**
+     * creates an ACK from a New
+     * @param n the new to use
+     */
+    public ACK(New n){
+        super(n.getHost(), n.getPort());
+    }
+
+    /**
      * gets the operation
      * @return the operation
      */

@@ -170,7 +170,7 @@ public class Server {
         logger.info(receipt);
 
         this.serverList.add(new HostPortPair(n.getHost(), n.getPort()));
-        ACK acknlowdgment = new ACK(n.getHost(), n.getPort());
+        ACK acknlowdgment = new ACK(n);
 
         return acknlowdgment;
     }

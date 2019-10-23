@@ -6,6 +6,8 @@
 
 package jack.serialization;
 
+import jack.util.HostPortPair;
+
 /**
  * @author Ian Laird
  * @version  1.0
@@ -21,6 +23,10 @@ public class New extends HostPortMessage{
      */
     public New(String host, int port) throws IllegalArgumentException{
         super(host, port);
+    }
+
+    public New(HostPortPair m){
+        super(m.getHost(), m.getPort());
     }
 
     /**
