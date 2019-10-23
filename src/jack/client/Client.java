@@ -8,6 +8,7 @@ package jack.client;
 
 import jack.serialization.*;
 import jack.serialization.Error;
+import jack.util.HostPortPair;
 import shiip.util.CommandLineParser;
 
 import java.io.IOException;
@@ -96,6 +97,15 @@ public class Client {
     // TODO rn this always resends, but we want it to wait for three seconds always
     private boolean repeat;
 
+    // the socket for the client
+    private DatagramSocket sock;
+
+    // the bytes that are to be sent across the network
+    private byte [] bytes = null;
+
+    // the datagram that is to be sent by the server
+    private DatagramPacket toSend = null;
+
     /**
      * jack client
      * @param args
@@ -129,7 +139,26 @@ public class Client {
         this.nSent = false;
         this.qSent = false;
         this.optionallySent = null;
-        this.repeat = false;
+        this.repeat = true;
+
+        // init the socket
+        try {
+            this.sock = new DatagramSocket();
+        }catch(SocketException e){
+            System.err.println(COMMUNICATION_PROBLEM + "unable to create datagram socket");
+            System.exit(NETWORK_ERROR);
+        }
+
+        // get the encoded message that is to be sent to the server
+        try {
+            this.bytes = getMessageToSend();
+        }catch(IllegalArgumentException e){
+            System.err.println(BAD_PARAMETERS + e.getMessage());
+            System.exit(ERROR_OP_SPECIFIED);
+        }
+
+        // make the datagram packet that is to be sent
+        this.toSend = new DatagramPacket(bytes, 0, bytes.length, this.server_ip, this.server_port);
     }
 
     /**
@@ -137,28 +166,14 @@ public class Client {
      */
     public void go(){
 
-        //make the datagram socket
-        DatagramSocket sock = null;
-        try {
-            sock = new DatagramSocket();
-        }catch(SocketException e){
-            System.err.println(COMMUNICATION_PROBLEM + "unable to create datagram socket");
-            System.exit(NETWORK_ERROR);
-        }
-
-        // get the encoded message that is to be sent to the server
-        byte [] bytes = getMessageToSend();
-
-        // make the datagram packet that is to be sent
-        DatagramPacket toSend = new DatagramPacket(bytes, 0, bytes.length, this.server_ip, this.server_port);
-
         // now send the packet to the server
         int counter = 0;
         try {
             while(this.repeat && counter < TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS ) {
+                this.repeat = false;
                 byte [] receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
-                sock.setSoTimeout(TOTAL_TIME_WAIT_FOR_REPLY);
-                sock.send(toSend);
+                this.sock.setSoTimeout(TOTAL_TIME_WAIT_FOR_REPLY);
+                this.sock.send(this.toSend);
                 DatagramPacket received = new DatagramPacket(receiveBuffer, RECEIVE_BUFFER_SIZE);
                 try {
                     sock.receive(received);
@@ -196,8 +211,7 @@ public class Client {
                 return new Query(this.payload).encode();
             case 'n':
                 nSent = true;
-                //TODO fix this how to get payload for a New
-                //this.optionallySent = new New(this.payload);
+                this.optionallySent = new New(HostPortPair.getFromString(this.payload));
                 return this.optionallySent.encode();
             default:
                 System.err.println(BAD_PARAMETERS + "unexpected op " + this.op);

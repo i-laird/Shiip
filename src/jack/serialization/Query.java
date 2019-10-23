@@ -43,6 +43,7 @@ public class Query extends Message{
         if(Objects.isNull(searchString)){
             throw new IllegalArgumentException("search string cannot be null", new NullPointerException("search string cannot be null"));
         }
+        queryValidator(searchString);
         this.searchString = searchString;
     }
 
