@@ -13,6 +13,7 @@ import shiip.util.CommandLineParser;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 
 import static shiip.util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
 import static shiip.util.ErrorCodes.NETWORK_ERROR;
@@ -238,16 +239,14 @@ public class Client {
     private void handleMessage(DatagramPacket packet){
 
         // make sure that the message is from the correct server
-        // the packet contains the senders ip and port
-        if(!(packet.getAddress().equals(this.server_ip) && packet.getPort() != this.server_port)){
-            System.err.println(UNEXPECTED_MESSAGE_SOURCE);
-            System.err.println("Expected source: " + this.server_ip.toString() + ":" + Integer.toString(this.server_port));
-            System.err.println("Actual source: " + packet.getAddress().toString() + ":" + Integer.toString(packet.getPort()));
-            this.repeat = true;
+        if(!this.correctSender(packet)){
             return;
         }
 
-        Message m = Message.decode(packet.getData());
+        // get the bytes that were actually sent
+        byte [] receivedBytes = Arrays.copyOfRange(packet.getData(), 0, packet.getLength());
+
+        Message m = Message.decode(receivedBytes);
 
         switch(m.getOperation().toUpperCase()){
             case "QUERY":
@@ -269,10 +268,22 @@ public class Client {
 
     }
 
+    public boolean correctSender(DatagramPacket packet){
+        // the packet contains the senders ip and port
+        if((packet.getPort() != this.server_port) ||
+                (!packet.getAddress().getHostAddress().equals(this.server_ip.getHostAddress()))){
+            System.err.println(UNEXPECTED_MESSAGE_SOURCE);
+            System.err.println("Expected source: " + this.server_ip.getHostAddress() + ":" + Integer.toString(this.server_port));
+            System.err.println("Actual source: " + packet.getAddress().getHostAddress() + ":" + Integer.toString(packet.getPort()));
+            this.repeat = true;
+            return false;
+        }
+        return true;
+    }
+
     /**
      * handles a {@link Query} message
      * @param q the query message
-     * @return true means that this is not the expected message
      */
     private void handleQ(Query q){
         System.err.println(UNEXPECTED_MESSAGE_TYPE);
@@ -282,7 +293,6 @@ public class Client {
     /**
      * handles a {@link New} message
      * @param n the New message
-     * @return true means not the expected message
      */
     private void handleN(New n){
         System.err.println(UNEXPECTED_MESSAGE_TYPE);
@@ -292,7 +302,6 @@ public class Client {
     /**
      * handles an {@link Error} message
      * @param e the Error Message
-     * @return terminates the client
      */
     private void handleE(jack.serialization.Error e){
         System.err.println(e.getErrorMessage());
@@ -303,11 +312,10 @@ public class Client {
     /**
      * handles a {@link Response} message
      * @param r the response message
-     * @return true means that this was not an expected message
      */
     private void handleR(Response r){
         if(this.qSent){
-            System.out.println(r.getServiceList());
+            System.out.println(r.getToStringPayload());
             System.exit(0);
         }
         System.err.println(UNEXPECTED_RESPONSE);
@@ -317,7 +325,6 @@ public class Client {
     /**
      * handles a {@link ACK} message
      * @param a the ACK message
-     * @return true means that the ACK was not expected by the client
      */
     private void handleA(ACK a ){
         if(!this.nSent){
@@ -327,7 +334,7 @@ public class Client {
         }
 
         // see if they are the same
-        if(((HostPortMessage)a).equals(this.optionallySent)){
+        if(((HostPortMessage)a).equals((HostPortMessage)this.optionallySent)){
             System.out.println(a.toString());
             System.exit(0);
         }

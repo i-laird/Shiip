@@ -57,8 +57,7 @@ public class Response extends Message {
             throw new IllegalArgumentException("host cannot be null", new NullPointerException("host cannot be null"));
         }
         portValidator(port);
-        //TODO ask about the space
-        this.hostPort.add(host + Integer.toString(port) + " ");
+        this.hostPort.add(host + ":" + Integer.toString(port));
     }
 
     /**
@@ -94,8 +93,8 @@ public class Response extends Message {
      */
     public static Response decodeResponse(String payload){
         Response toReturn = new Response();
-        String removeLeftBracket = payload.replace("\\[", "");
-        String [] pairs = payload.split("\\]");
+        String removeLeftBracket = payload.replace("[", "");
+        String [] pairs = removeLeftBracket.split("]");
         Arrays.stream(pairs).forEach( x -> {
             HostPortPair hp = HostPortPair.getFromString(x);
             toReturn.addService​(hp.getHost(), hp.getPort());

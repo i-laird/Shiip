@@ -98,8 +98,15 @@ public abstract class HostPortMessage extends Message {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o){
+            return true;
+        }
+        if (o == null){
+            return false;
+        }
+        if(!(o instanceof HostPortMessage)){
+            return false;
+        }
         HostPortMessage that = (HostPortMessage) o;
         return port == that.port &&
                 Objects.equals(host, that.host);

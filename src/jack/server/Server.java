@@ -17,6 +17,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -104,7 +105,8 @@ public class Server {
             DatagramPacket toReceive = new DatagramPacket(buffer, RECEIVE_BUFFER_SIZE);
             try {
                 this.sock.receive(toReceive);
-                Message m = Message.decode(toReceive.getData());
+                byte [] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
+                Message m = Message.decode(receivedBytes);
                 this.handleMessage(m, toReceive);
             }catch(IOException e){
                 logger.severe(COMMUNICATION_PROBLEM + e.getMessage());

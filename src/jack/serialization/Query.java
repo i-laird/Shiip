@@ -31,7 +31,7 @@ public class Query extends Message{
      * @return the search string
      */
     public String getSearchString(){
-        return this.getSearchString();
+        return this.searchString;
     }
 
     /**
