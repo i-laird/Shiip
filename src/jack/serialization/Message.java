@@ -123,7 +123,7 @@ public abstract class Message {
      */
     public byte[] encode() {
         // TODO check about the one letter or many
-        String message = this.getOperation().charAt(0) + " " + this.getPayload();
+        String message = this.getOperation().toUpperCase().charAt(0) + " " + this.getPayload();
         return message.getBytes(ENC);
     }
 

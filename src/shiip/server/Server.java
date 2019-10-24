@@ -405,7 +405,6 @@ public class Server extends Thread{
         if(Objects.isNull(path)){
             logger.severe(NO_PATH_SPECIFIED);
             this.send404File(h.getStreamID(), ERROR_404_NO_PATH);
-            this.terminateStream(h.getStreamID());
             return;
         }
 
@@ -419,7 +418,6 @@ public class Server extends Thread{
         if(file.exists() && file.isDirectory()){
             logger.severe(CANNOT_REQUEST_DIRECTORY);
             this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
-            this.terminateStream(h.getStreamID());
             return;
         }
 
@@ -427,7 +425,6 @@ public class Server extends Thread{
         if(!file.exists() || (file.isFile() && !file.canRead())){
             logger.severe(UNABLE_TO_OPEN_FILE + fileName);
             this.send404File(h.getStreamID(), ERROR_404_FILE);
-            this.terminateStream(h.getStreamID());
             return;
         }
 
@@ -489,15 +486,6 @@ public class Server extends Thread{
         }catch(BadAttributeException | IOException e){
             logger.severe("Unable to send 404 message");
         }
-    }
-
-    /**
-     * terminates the specified stream
-     * @param streamId the id of the stream to terminate
-     */
-    private void terminateStream(int streamId){
-        this.streams.get(streamId).interrupt();
-        this.streams.remove(streamId);
     }
 
     /**
