@@ -145,8 +145,8 @@ public class Client {
         }
 		
 		// create encoder and decoder
-        Encoder encoder = EncoderDecoderSingleton.getEncoder();
-        Decoder decoder = EncoderDecoderSingleton.getDecoder();
+        Encoder encoder = EncoderDecoderWrapper.getEncoder();
+        Decoder decoder = EncoderDecoderWrapper.getDecoder();
         
 		// create the connection
 		Client shiipConnection = 

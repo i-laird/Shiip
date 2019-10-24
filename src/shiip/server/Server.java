@@ -10,7 +10,7 @@ import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
 import shiip.util.CommandLineParser;
-import shiip.util.EncoderDecoderSingleton;
+import shiip.util.EncoderDecoderWrapper;
 import shiip.client.Client;
 
 // used for all message types
@@ -257,8 +257,8 @@ public class Server extends Thread{
             Socket conn = null;
             try{
                 conn = TLSFactory.getServerConnectedSocket(ss);
-                Server s = new Server(conn, EncoderDecoderSingleton.getDecoder(),
-                        EncoderDecoderSingleton.getEncoder());
+                Server s = new Server(conn, EncoderDecoderWrapper.getDecoder(),
+                        EncoderDecoderWrapper.getEncoder());
 
                 // run this task in the thread pool
                 executorService.submit(s);
