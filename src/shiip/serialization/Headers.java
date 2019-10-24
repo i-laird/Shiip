@@ -265,6 +265,9 @@ public class Headers extends Message {
      * @return the value
      */
     public String getValue(String name){
+        if(Objects.isNull(name)){
+            return null;
+        }
         return this.nameValuePairs.get(name);
     }
 
@@ -333,8 +336,7 @@ public class Headers extends Message {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Headers h1 = (Headers) o;
-        return isEnd == h1.isEnd &&
-                streamId == h1.streamId;
+        return isEnd == h1.isEnd && streamId == h1.streamId && this.nameValuePairs.equals(h1.nameValuePairs);
     }
 
     /**
@@ -343,7 +345,7 @@ public class Headers extends Message {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(isEnd, streamId);
+        return Objects.hash(isEnd, streamId, nameValuePairs);
     }
 
     /**

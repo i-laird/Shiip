@@ -402,7 +402,7 @@ public class Server extends Thread{
         }
 
         // see if there is a path specified
-        if(Objects.isNull(path)){
+        if(Objects.isNull(path) || path.isEmpty()){
             logger.severe(NO_PATH_SPECIFIED);
             this.send404File(h.getStreamID(), ERROR_404_NO_PATH);
             return;
