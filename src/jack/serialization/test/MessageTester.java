@@ -78,6 +78,12 @@ public class MessageTester {
     //invalid because there is no space
     private static final String INVALID_RESPONSE_MESSAGE_TWO = "R";
 
+    // only one char is allowed for the OP
+    private static final String INVALID_MESSAGE_ONE = "QUERY *";
+
+    // Z is not a valid OP
+    private static final String INVALID_MESSAGE_TWO = "Z localhost:3000";
+
     // all of the valid strings in a list
     private static List<String> validMessages = new LinkedList<>();
 
@@ -107,6 +113,9 @@ public class MessageTester {
         invalidMessages.add(INVALID_RESPONSE_MESSAGE);
 
         invalidMessages.add(INVALID_RESPONSE_MESSAGE_TWO);
+
+        invalidMessages.add(INVALID_MESSAGE_ONE);
+        invalidMessages.add(INVALID_MESSAGE_TWO);
     }
 
     /**
