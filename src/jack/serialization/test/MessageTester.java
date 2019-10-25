@@ -125,6 +125,8 @@ public class MessageTester {
 
         invalidMessages.add(INVALID_MESSAGE_ONE);
         invalidMessages.add(INVALID_MESSAGE_TWO);
+        invalidMessages.add(INVALID_MESSAGE_THREE);
+        invalidMessages.add(INVALID_MESSAGE_FOUR);
     }
 
     /**
