@@ -52,7 +52,7 @@ public class Response extends Message {
      * @param port new service port
      * @throws IllegalArgumentException  if validation fails, including null host
      */
-    public final void addService​(String host, int port) throws IllegalArgumentException{
+    public final void addService(String host, int port) throws IllegalArgumentException{
         if(Objects.isNull(host)){
             throw new IllegalArgumentException("host cannot be null", new NullPointerException("host cannot be null"));
         }
@@ -102,7 +102,7 @@ public class Response extends Message {
         String [] pairs = removeLeftBracket.split("]");
         Arrays.stream(pairs).forEach( x -> {
             HostPortPair hp = HostPortPair.getFromString(x);
-            toReturn.addService​(hp.getHost(), hp.getPort());
+            toReturn.addService(hp.getHost(), hp.getPort());
         });
         return toReturn;
     }

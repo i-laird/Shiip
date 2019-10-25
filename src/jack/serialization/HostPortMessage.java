@@ -33,7 +33,7 @@ public abstract class HostPortMessage extends Message {
      * @throws IllegalArgumentException if any validation problem with host and/or port, including null, etc.
      */
     public HostPortMessage(String host, int port){
-        setHost​(host);
+        setHost(host);
         setPort(port);
     }
 
@@ -42,7 +42,7 @@ public abstract class HostPortMessage extends Message {
      * @param host the host
      * @throws IllegalArgumentException if validation failure, including null host
      */
-    public final void setHost​(String host) throws IllegalArgumentException{
+    public final void setHost(String host) throws IllegalArgumentException{
         nameValidator(host);
         this.host = host;
     }

@@ -79,6 +79,10 @@ public abstract class Message {
      */
     public static Message decode(byte [] msgBytes)  throws IllegalArgumentException{
 
+        if(Objects.isNull(msgBytes)){
+            throw new IllegalArgumentException("msgbytes cannot be null", new NullPointerException("msgbytes"));
+        }
+
         // convert to a String
         String msgString = new String(msgBytes, ENC);
 

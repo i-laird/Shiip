@@ -9,12 +9,9 @@ package jack.serialization.test;
 
 import jack.serialization.Message;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +19,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+/**
+ * @author Ian Laird and Andrew Walker
+ */
 public class MessageTester {
 
     // the charset that is being used
@@ -84,6 +87,12 @@ public class MessageTester {
     // Z is not a valid OP
     private static final String INVALID_MESSAGE_TWO = "Z localhost:3000";
 
+    // q should be capitalized
+    private static final String INVALID_MESSAGE_THREE = "q *";
+
+    // port needs to be a number
+    private static final String INVALID_MESSAGE_FOUR = "N host:port";
+
     // all of the valid strings in a list
     private static List<String> validMessages = new LinkedList<>();
 
@@ -143,6 +152,10 @@ public class MessageTester {
         return invalidMessages.stream();
     }
 
+    /**
+     * tests for valid messages
+     * @param msg the message to decode and then encode
+     */
     @ParameterizedTest(name = "bytes = {0}")
     @MethodSource("validMessages")
     @DisplayName("Valid Messages")
@@ -161,12 +174,39 @@ public class MessageTester {
 
     }
 
+    /**
+     * tests invalid messages
+     * @param msg the invalid message to test
+     */
     @ParameterizedTest(name = "bytes = {0}")
     @MethodSource("invalidMessages")
     @DisplayName("Invalid Messages")
     public void testInvalidString(String msg){
-        byte [] invalidMessage = toAscii(msg);
+        byte[] invalidMessage = toAscii(msg);
         assertThrows(IllegalArgumentException.class, () ->{
+            Message.decode(invalidMessage);
+        });
+    }
+
+    /**
+     * tests null for bytes
+     */
+    @Test
+    @DisplayName("Null msgBytes")
+    public void testNullMsgBytes(){
+        assertThrows(IllegalArgumentException.class, () ->{
+            Message.decode(null);
+        });
+    }
+
+    /**
+     * tests empty bytes for message
+     */
+    @Test
+    @DisplayName("Empty msgBytes")
+    public void testEmptyMsgBytes(){
+        assertThrows(IllegalArgumentException.class, () ->{
+            byte[] invalidMessage = new byte[0];
             Message.decode(invalidMessage);
         });
     }

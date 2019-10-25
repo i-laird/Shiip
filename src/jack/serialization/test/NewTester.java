@@ -8,28 +8,57 @@ package jack.serialization.test;
 
 import jack.serialization.Message;
 import jack.serialization.New;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static jack.serialization.test.ResponseTester.VALID_PORT;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class NewTester extends HostPortTester{
+/**
+ * @author Ian Laird and Andrew Walker
+ */
+public class NewTester extends HostPortTester {
 
+    /**
+     * gets a New for the vals
+     * @param host the host
+     * @param port the port
+     * @return a New
+     */
     protected Message getNewObject(String host, int port){
         return new New(host, port);
     }
 
+    /**
+     * tests setting host
+     * @param s the string to set
+     * @return the get host
+     */
     protected String testHostSetter(String s){
         New toTest = new New("toChange", VALID_PORT);
-        toTest.setHost​(s);
+        toTest.setHost(s);
         return toTest.getHost();
     }
 
+    /**
+     * tests setting port
+     * @param port the port to set
+     * @return the get port
+     */
     protected int testPortSetter(int port){
         New toTest = new New("toChange", port + 1);
         toTest.setPort(port);
         return toTest.getPort();
     }
+
+    /**
+     * NEW
+     * @return NEW
+     */
     protected String getMessageType(){
         return "NEW";
     }
-
 }

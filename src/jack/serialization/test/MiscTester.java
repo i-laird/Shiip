@@ -15,9 +15,17 @@ import org.junit.jupiter.api.Test;
 import static jack.serialization.test.ResponseTester.VALID_PORT;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+/**
+ * @author Ian Laird and Andrew Walker
+ */
 public class MiscTester {
+
+    // an example host
     private static final String testString = "localhost";
 
+    /**
+     * ack and new with same val are not equal
+     */
     @Test
     @DisplayName("equal new and ack")
     public void testNewAckSameValues(){
