@@ -48,6 +48,7 @@ public class Error extends Message{
         if(errorMessage.length() < ERROR_MESSAGE_MINIMUM_LENGTH){
             throw new IllegalArgumentException("Error message must be at least 1 char");
         }
+        this.errorMessage = errorMessage;
     }
 
     /**

@@ -92,6 +92,11 @@ public class Response extends Message {
      * @return the response message
      */
     public static Response decodeResponse(String payload){
+        // first make sure that the payload is properly formatted
+        if(!payload.matches(RESPONSE_REGEX)){
+            throw new IllegalArgumentException("Payload not properly formatted");
+        }
+
         Response toReturn = new Response();
         String removeLeftBracket = payload.replace("[", "");
         String [] pairs = removeLeftBracket.split("]");

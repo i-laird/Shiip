@@ -21,6 +21,12 @@ import java.util.Objects;
  */
 public abstract class Message {
 
+    // the regex for matching a name
+    public static final String NAME_REGEX = "([a-zA-Z0-9\\.\\-])+";
+
+    // the regex for matching a response payload
+    public static final String RESPONSE_REGEX = "(\\[" + NAME_REGEX + ":[0-9]+\\])*";
+
     // the charset that is being used
     protected static final Charset ENC = StandardCharsets.US_ASCII;
 
@@ -39,6 +45,9 @@ public abstract class Message {
     // the op for error message
     protected static final String ERROR_OP    = "ERROR";
 
+    // if unable to parse the message
+    private static final String DECODE_ISSUE = Client.INVALID_MESSAGE + " expected <Op><sp><Payload>";
+
     private static List<String> acceptableOP = new LinkedList<>();
 
     static {
@@ -50,16 +59,16 @@ public abstract class Message {
     }
 
     // the lowest valid port
-    private static int PORT_LOWER_BOUND = 1;
+    private static final int PORT_LOWER_BOUND = 1;
 
     // the highest valid port
-    private static int PORT_UPPER_BOUND = 65535;
+    private static final int PORT_UPPER_BOUND = 65535;
 
-    // there should be two tokens (one for OP and one for payload)
-    private static int NUM_TOKENS_EXPECTED = 2;
+    // shortest possible (only an empty response)
+    private static final int SHORTEST_POSSIBLE_LENGTH = 2;
 
-    // op char is one long
-    private static int OP_CHAR_LEN = 1;
+    // space is the second character
+    private static final int SPACE_LOC = 1;
 
     /**
      * deserialize message from given bytes
@@ -73,31 +82,34 @@ public abstract class Message {
         // convert to a String
         String msgString = new String(msgBytes, ENC);
 
-        // now tokenize it according to space character
-        String [] tokenized = msgString.split("\\s");
-
-        if(tokenized.length != NUM_TOKENS_EXPECTED){
-            throw new IllegalArgumentException
-                    (Client.INVALID_MESSAGE +
-                            "tokenization failed expected <Op><sp><Payload>");
+        // if less than 2 is always invalid
+        if(msgBytes.length < SHORTEST_POSSIBLE_LENGTH){
+            throw new IllegalArgumentException(DECODE_ISSUE);
         }
 
-        String OP = tokenized[0];
-        String payload = tokenized[1];
-        char OP_char = OP.charAt(0);
-
-        // if it is more than one char make sure it is one of the expected ones
-        if(OP.length() != OP_CHAR_LEN){
-            String toCompare = OP.toUpperCase();
-            boolean flag = false;
-            for(String compareAgainst : acceptableOP){
-                flag |= compareAgainst.equals(toCompare);
-            }
-            if(!flag){
-                throw new IllegalArgumentException(Client.INVALID_MESSAGE + "Unrecognized OP");
-            }
+        // make sure that the second char is a space
+        if (msgString.charAt(SPACE_LOC) != ' ') {
+            throw new IllegalArgumentException(DECODE_ISSUE);
         }
-        Message toReturn = null;
+
+        // if the message is of length 3 it must be a response
+        if(msgBytes.length == SHORTEST_POSSIBLE_LENGTH){
+
+            // see if it is an invalid message
+            if(msgString.charAt(0) != 'R'){
+                throw new IllegalArgumentException(DECODE_ISSUE);
+            }
+
+            // an empty response
+            return new Response();
+        }
+
+        // now get the code
+        char OP_char = msgString.charAt(0);
+
+        // get the payload
+        String payload = msgString.substring(2);
+
         HostPortPair parsed = null;
         switch(OP_char){
             case 'Q':
@@ -179,7 +191,7 @@ public abstract class Message {
             throw new IllegalArgumentException("name cannot be null", new NullPointerException("name cannot be null"));
         }
 
-        if(!name.matches("([a-zA-Z0-9\\.\\-])+")){
+        if(!name.matches(NAME_REGEX)){
             throw new IllegalArgumentException("invalid name");
         }
     }
