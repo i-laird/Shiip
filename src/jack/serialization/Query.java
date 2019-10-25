@@ -68,4 +68,17 @@ public class Query extends Message{
     public String getPayload(){
         return this.getSearchString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Query query = (Query) o;
+        return Objects.equals(searchString, query.searchString);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(searchString);
+    }
 }

@@ -106,4 +106,21 @@ public class Response extends Message {
         });
         return toReturn;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Response response = (Response) o;
+        return Objects.equals(hostPort, response.hostPort);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(hostPort);
+    }
 }

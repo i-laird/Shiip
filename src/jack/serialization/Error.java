@@ -73,4 +73,17 @@ public class Error extends Message{
     public String getPayload(){
         return this.getErrorMessage();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Error error = (Error) o;
+        return Objects.equals(errorMessage, error.errorMessage);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(errorMessage);
+    }
 }

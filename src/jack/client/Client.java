@@ -334,7 +334,8 @@ public class Client {
         }
 
         // see if they are the same
-        if(((HostPortMessage)a).equals((HostPortMessage)this.optionallySent)){
+        New toTest = new New(a);
+        if(toTest.equals(this.optionallySent)){
             System.out.println(a.toString());
             System.exit(0);
         }

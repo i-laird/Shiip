@@ -104,7 +104,7 @@ public abstract class HostPortMessage extends Message {
         if (o == null){
             return false;
         }
-        if(!(o instanceof HostPortMessage)){
+        if (getClass() != o.getClass()) {
             return false;
         }
         HostPortMessage that = (HostPortMessage) o;

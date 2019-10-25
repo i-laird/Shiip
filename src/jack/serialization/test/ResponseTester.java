@@ -17,13 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ResponseTester {
 
     // a valid port
-    private static int VALID_PORT = 1;
+    public static int VALID_PORT = 1;
 
     // not an allowed port num
-    private static int PORT_TOO_LOW = 0;
+    public static int PORT_TOO_LOW = 0;
 
     // not an allowed port num
-    private static int PORT_TOO_HIGH = 65536;
+    public static int PORT_TOO_HIGH = 65536;
 
     @Test
     @DisplayName("Null host")
@@ -99,6 +99,61 @@ public class ResponseTester {
             String port = Integer.toString(VALID_PORT);
             String expected = "RESPONSE [aaa:" + port + "][localhost:" + port + "]";
             assertEquals(expected, response.toString());
+        }
+    }
+
+    @Nested
+    @DisplayName("equality")
+    public class TestEquality{
+
+        @Test
+        @DisplayName("empty response")
+        public void testEmptyResponse(){
+            Response r1 = new Response();
+            Response r2 = new Response();
+            assertEquals(r1, r2);
+        }
+
+        @Test
+        @DisplayName("equal with services")
+        public void testEqualServices(){
+            Response r1 = new Response();
+            Response r2 = new Response();
+            r1.addService​("aaa", VALID_PORT);
+            r2.addService​("aaa", VALID_PORT);
+            assertEquals(r1, r2);
+        }
+
+        @Test
+        @DisplayName("unequal with services")
+        public void testUnequalServices(){
+            Response r1 = new Response();
+            Response r2 = new Response();
+            r1.addService​("aaa", VALID_PORT);
+            assertNotEquals(r1, r2);
+        }
+    }
+
+    @Nested
+    @DisplayName("hash code")
+    public class TestHashcode {
+
+        @Test
+        @DisplayName("hashcode empty response")
+        public void testHashCode() {
+            Response r1 = new Response();
+            Response r2 = new Response();
+            assertEquals(r1.hashCode(), r2.hashCode());
+        }
+
+        @Test
+        @DisplayName("hashcode with services")
+        public void testEqualServices(){
+            Response r1 = new Response();
+            Response r2 = new Response();
+            r1.addService​("aaa", VALID_PORT);
+            r2.addService​("aaa", VALID_PORT);
+            assertEquals(r1.hashCode(), r2.hashCode());
         }
     }
 }
