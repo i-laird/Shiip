@@ -107,6 +107,9 @@ public class Client {
     // the datagram that is to be sent by the server
     private DatagramPacket toSend = null;
 
+    // the receive buffer
+    byte [] receiveBuffer = null;
+
     /**
      * jack client
      * @param args
@@ -160,6 +163,8 @@ public class Client {
 
         // make the datagram packet that is to be sent
         this.toSend = new DatagramPacket(bytes, 0, bytes.length, this.server_ip, this.server_port);
+
+        this.receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
     }
 
     /**
@@ -192,14 +197,12 @@ public class Client {
      * if needs to be run again repeat flag is set
      */
     public void attemptToReceiveMessage() throws IOException{
-        byte [] receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
         this.sock.setSoTimeout(TOTAL_TIME_WAIT_FOR_REPLY);
         this.sock.send(this.toSend);
         DatagramPacket received = new DatagramPacket(receiveBuffer, RECEIVE_BUFFER_SIZE);
         try {
             sock.receive(received);
             try {
-                //TODO only 1500 bytes?
                 this.handleMessage(received);
             }catch(IllegalArgumentException e2){
                 System.err.println(INVALID_MESSAGE + e2.getMessage());
@@ -223,6 +226,12 @@ public class Client {
                 nSent = true;
                 this.optionallySent = new New(HostPortPair.getFromString(this.payload));
                 return this.optionallySent.encode();
+            case 'a':
+                return new ACK(HostPortPair.getFromString(payload)).encode();
+            case 'r':
+                return Response.decodeResponse(this.payload).encode();
+            case 'e':
+                return new Error(this.payload).encode();
             default:
                 System.err.println(BAD_PARAMETERS + "unexpected op " + this.op);
                 System.exit(ERROR_OP_SPECIFIED);
@@ -315,7 +324,7 @@ public class Client {
      */
     private void handleR(Response r){
         if(this.qSent){
-            System.out.println(r.getToStringPayload());
+            System.out.println(r.toString());
             System.exit(0);
         }
         System.err.println(UNEXPECTED_RESPONSE);

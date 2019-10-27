@@ -25,6 +25,10 @@ public class New extends HostPortMessage{
         super(host, port);
     }
 
+    /**
+     * creates from an ACK or New
+     * @param m the other message to copy
+     */
     public New(HostPortMessage m ){
         super(m.getHost(), m.getPort());
     }

@@ -6,6 +6,8 @@
 
 package jack.serialization;
 
+import jack.util.HostPortPair;
+
 /**
  * @author Ian Laird
  * ACK message
@@ -28,6 +30,14 @@ public class ACK extends HostPortMessage{
      */
     public ACK(HostPortMessage n){
         super(n.getHost(), n.getPort());
+    }
+
+    /**
+     * created from pair of host and port
+     * @param m the pair of host and port
+     */
+    public ACK(HostPortPair m){
+        super(m.getHost(), m.getPort());
     }
 
     /**

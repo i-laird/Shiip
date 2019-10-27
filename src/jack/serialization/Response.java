@@ -92,6 +92,9 @@ public class Response extends Message {
      * @return the response message
      */
     public static Response decodeResponse(String payload){
+        if(Objects.isNull(payload) || payload.length() == 0){
+            return new Response();
+        }
         // first make sure that the payload is properly formatted
         if(!payload.matches(RESPONSE_REGEX)){
             throw new IllegalArgumentException("Payload not properly formatted");

@@ -32,6 +32,8 @@ import static shiip.util.ErrorCodes.NETWORK_ERROR;
  */
 public class Server {
 
+    // static *****************************************************************
+
     // only one parameter should be passed to jack server
     private static final int JACK_SERVER_ARG_COUNT = 1;
 
@@ -52,6 +54,8 @@ public class Server {
 
     // the charset that is being used
     private static final Charset ENC = StandardCharsets.US_ASCII;
+
+    // instance ***************************************************************
 
     // the port that this server is to run on
     private int port;
@@ -77,8 +81,13 @@ public class Server {
 
         // will make sure that it is a valid port number
         int port = CommandLineParser.getPort(args[JACK_SERVER_ARG_PORT_POS]);
-
-        Server server = new Server(port);
+        Server server = null;
+        try {
+            server = new Server(port);
+        }catch(SocketException e){
+            logger.severe("Unable to create the datagram socket");
+            System.exit(NETWORK_ERROR);
+        }
         server.go();
     }
 
@@ -86,31 +95,31 @@ public class Server {
      * creates a server
      * @param port the port that the server is to run on
      */
-    public Server(int port) {
+    public Server(int port) throws SocketException{
         this.port = port;
-        try {
-            this.sock = new DatagramSocket(port);
-        }catch(SocketException e){
-            logger.severe("Unable to create the datagram socket");
-            System.exit(NETWORK_ERROR);
-        }
+        this.sock = new DatagramSocket(port);
     }
 
     /**
      * runs the server
      */
     public void go(){
+        // create the buffer
+        byte [] buffer = new byte[RECEIVE_BUFFER_SIZE];
+
+        // run forever
         while(true){
-            byte [] buffer = new byte[RECEIVE_BUFFER_SIZE];
-            DatagramPacket toReceive = new DatagramPacket(buffer, RECEIVE_BUFFER_SIZE);
             try {
+
+                // create the datagram packet
+                DatagramPacket toReceive = new DatagramPacket(buffer, RECEIVE_BUFFER_SIZE);
                 this.sock.receive(toReceive);
                 byte [] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
                 Message m = Message.decode(receivedBytes);
                 this.handleMessage(m, toReceive);
             }catch(IOException e){
                 logger.severe(COMMUNICATION_PROBLEM + e.getMessage());
-            }catch(NumberFormatException e2){
+            }catch(IllegalArgumentException e2){
                 logger.severe(INVALID_MESSAGE + e2.getMessage());
             }
         }
@@ -160,7 +169,7 @@ public class Server {
                 return true;
             }
             return x.getHost().contains(stringToMatch);
-        }).forEach( x -> resultsOfQuery.addService​(x.getHost(), x.getPort()));
+        }).forEach( x -> resultsOfQuery.addService(x.getHost(), x.getPort()));
 
         return resultsOfQuery;
     }
