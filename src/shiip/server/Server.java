@@ -441,6 +441,9 @@ public class Server extends Thread{
                                 this.messageSender, (int)file.length());
         this.streams.put(h.getStreamID(), serverStream);
 
+        // send a 200 status message
+        send404File(h.getStreamID(), "200 file found");
+
         // spin off a new thread
         serverStream.start();
     }
