@@ -110,6 +110,20 @@ public class Client {
     // the receive buffer
     byte [] receiveBuffer = null;
 
+    // the amount of time left for the client to receive the valid message
+    private int timeoutRemaining;
+
+    // the time at which the mesage was sent
+    private long timeMessageSent;
+
+    // the time by which a response is expected
+    private long timeMessageExpected;
+
+    // if a timeout has occurred
+    private boolean timeoutOccurred;
+
+    private int messagesSent;
+
     /**
      * jack client
      * @param args
@@ -165,6 +179,10 @@ public class Client {
         this.toSend = new DatagramPacket(bytes, 0, bytes.length, this.server_ip, this.server_port);
 
         this.receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
+
+        this.messagesSent = 0;
+        this.timeoutOccurred = true;
+        this.timeoutRemaining = TOTAL_TIME_WAIT_FOR_REPLY;
     }
 
     /**
@@ -173,12 +191,10 @@ public class Client {
     public void go(){
 
         // now send the packet to the server
-        int counter = 0;
         try {
-            while(this.repeat && counter < TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS ) {
+            while(this.repeat && this.messagesSent < TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS ) {
                 this.repeat = false;
                 this.attemptToReceiveMessage();
-                counter += 1;
             }
 
             // if the expected response was never received it was an error
@@ -197,8 +213,24 @@ public class Client {
      * if needs to be run again repeat flag is set
      */
     public void attemptToReceiveMessage() throws IOException{
-        this.sock.setSoTimeout(TOTAL_TIME_WAIT_FOR_REPLY);
-        this.sock.send(this.toSend);
+        if(timeoutOccurred) {
+            this.sock.send(this.toSend);
+            this.timeMessageSent = System.currentTimeMillis();
+            this.timeMessageExpected = this.timeMessageSent + TOTAL_TIME_WAIT_FOR_REPLY;
+            this.messagesSent += 1;
+            this.timeoutRemaining = TOTAL_TIME_WAIT_FOR_REPLY;
+        }
+        else{
+            long currTime = System.currentTimeMillis();
+            //if the amount of time that has elapsed is too much
+            if(currTime >= this.timeMessageExpected){
+                this.timeoutOccurred = true;
+                this.repeat = true;
+                return;
+            }
+            this.timeoutRemaining = (int)(this.timeMessageExpected - currTime);
+        }
+        this.sock.setSoTimeout(this.timeoutRemaining);
         DatagramPacket received = new DatagramPacket(receiveBuffer, RECEIVE_BUFFER_SIZE);
         try {
             sock.receive(received);
@@ -210,6 +242,7 @@ public class Client {
             }
         }catch(SocketTimeoutException e){
             this.repeat = true;
+            this.timeoutOccurred = true;
         }
     }
 
