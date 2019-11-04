@@ -9,6 +9,7 @@ package jack.serialization;
 import jack.util.HostPortPair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Ian Laird
@@ -36,11 +37,7 @@ public class Response extends Message {
      * @return service list
      */
     public List<String> getServiceList(){
-        List<String> toReturn = new LinkedList<>();
-        for(String s: this.hostPort){
-            toReturn.add(s);
-        }
-        return toReturn;
+        return this.hostPort.stream().map(x -> x + " ").collect(Collectors.toList());
     }
 
     /**
@@ -57,6 +54,8 @@ public class Response extends Message {
             throw new IllegalArgumentException("host cannot be null", new NullPointerException("host cannot be null"));
         }
         portValidator(port);
+
+        // each string is host:port
         this.hostPort.add(host + ":" + Integer.toString(port));
     }
 
@@ -81,6 +80,19 @@ public class Response extends Message {
     public String getPayload(){
         StringBuilder stringBuilder = new StringBuilder();
         for(String s: this.hostPort){
+            stringBuilder.append(s).append(" ");
+        }
+        return stringBuilder.toString();
+    }
+
+    /**
+     * the tostring payload of a response message
+     * @return the tostring payload
+     */
+    @Override
+    public String getToStringPayload() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for(String s: this.hostPort){
             stringBuilder.append("[").append(s).append("]");
         }
         return stringBuilder.toString();
@@ -101,8 +113,7 @@ public class Response extends Message {
         }
 
         Response toReturn = new Response();
-        String removeLeftBracket = payload.replace("[", "");
-        String [] pairs = removeLeftBracket.split("]");
+        String [] pairs = payload.split(" ");
         Arrays.stream(pairs).forEach( x -> {
             HostPortPair hp = HostPortPair.getFromString(x);
             toReturn.addService(hp.getHost(), hp.getPort());

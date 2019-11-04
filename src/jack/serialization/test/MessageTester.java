@@ -43,7 +43,7 @@ public class MessageTester {
     private static final String VALID_QUERY_MESSAGE    = "Q *";
 
     // a valid response
-    private static final String VALID_RESPONSE_MESSAGE = "R [localhost:3500][www.google.com:4987]";
+    private static final String VALID_RESPONSE_MESSAGE = "R localhost:3500 www.google.com:4987 ";
 
     // a valid ack
     private static final String VALID_ACK_MESSAGE_TWO      = "A 0:1";
@@ -58,7 +58,7 @@ public class MessageTester {
     private static final String VALID_QUERY_MESSAGE_TWO    = "Q Z";
 
     // a valid response
-    private static final String VALID_RESPONSE_MESSAGE_TWO = "R [Z:65535]";
+    private static final String VALID_RESPONSE_MESSAGE_TWO = "R Z:65535 ";
 
     // this is valid because there could be no response
     private static final String VALID_RESPONSE_MESSAGE_THREE = "R ";
@@ -80,6 +80,9 @@ public class MessageTester {
 
     //invalid because there is no space
     private static final String INVALID_RESPONSE_MESSAGE_TWO = "R";
+
+    //invalid because there is no space at the end
+    private static final String INVALID_RESPONSE_MESSAGE_THREE = "R localhost:3500 www.google.com:4987";
 
     // only one char is allowed for the OP
     private static final String INVALID_MESSAGE_ONE = "QUERY *";
@@ -122,6 +125,7 @@ public class MessageTester {
         invalidMessages.add(INVALID_RESPONSE_MESSAGE);
 
         invalidMessages.add(INVALID_RESPONSE_MESSAGE_TWO);
+        invalidMessages.add(INVALID_RESPONSE_MESSAGE_THREE);
 
         invalidMessages.add(INVALID_MESSAGE_ONE);
         invalidMessages.add(INVALID_MESSAGE_TWO);

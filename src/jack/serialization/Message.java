@@ -25,7 +25,7 @@ public abstract class Message {
     public static final String NAME_REGEX = "([a-zA-Z0-9\\.\\-])+";
 
     // the regex for matching a response payload
-    public static final String RESPONSE_REGEX = "(\\[" + NAME_REGEX + ":[0-9]+\\])*";
+    public static final String RESPONSE_REGEX = "(" + NAME_REGEX + ":[0-9]+ )*";
 
     // the charset that is being used
     protected static final Charset ENC = StandardCharsets.US_ASCII;

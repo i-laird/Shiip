@@ -251,19 +251,19 @@ public class Client {
      * @return byte array for the message
      */
     private byte [] getMessageToSend(){
-        switch(this.op.toLowerCase().charAt(0)){
-            case 'q':
+        switch(this.op.charAt(0)){
+            case 'Q':
                 qSent = true;
                 return new Query(this.payload).encode();
-            case 'n':
+            case 'N':
                 nSent = true;
                 this.optionallySent = new New(HostPortPair.getFromString(this.payload));
                 return this.optionallySent.encode();
-            case 'a':
+            case 'A':
                 return new ACK(HostPortPair.getFromString(payload)).encode();
-            case 'r':
+            case 'R':
                 return Response.decodeResponse(this.payload).encode();
-            case 'e':
+            case 'E':
                 return new Error(this.payload).encode();
             default:
                 System.err.println(BAD_PARAMETERS + "unexpected op " + this.op);
