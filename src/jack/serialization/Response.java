@@ -112,6 +112,7 @@ public class Response extends Message {
             throw new IllegalArgumentException("Payload not properly formatted");
         }
 
+        payload = payload.trim();
         Response toReturn = new Response();
         String [] pairs = payload.split(" ");
         Arrays.stream(pairs).forEach( x -> {
