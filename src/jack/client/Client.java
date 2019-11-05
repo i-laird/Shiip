@@ -49,7 +49,7 @@ public class Client {
     private static final int TOTAL_TIME_WAIT_FOR_REPLY = 3000;
 
     // the total number of times to send a message before giving up
-    private static final int TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS = 3;
+    private static final int TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS = 4;
 
     // for a communication problem
     private static final String COMMUNICATION_PROBLEM = "Communication problem: ";

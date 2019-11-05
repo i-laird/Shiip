@@ -22,6 +22,23 @@ public abstract class HostPortTester {
     // a valid host
     private static final String testString = "localhost";
 
+    // the size of a maximum string for testing
+    private static final int BIG_STRING_SIZE = 65503;
+
+    // the big string that will be used for max size testing
+    private static String HOST_THREE_FROM_MAX = null;
+
+    private static String HOST_TWO_FROM_MAX = null;
+
+    static{
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < BIG_STRING_SIZE; i++) {
+            builder.append("A");
+        }
+        HOST_THREE_FROM_MAX = builder.toString();
+        HOST_TWO_FROM_MAX = HOST_THREE_FROM_MAX + "A";
+    }
+
     /**
      * tests null host
      */
@@ -47,7 +64,7 @@ public abstract class HostPortTester {
     @Test
     @DisplayName("port setter")
     public void testPortSetter(){
-        assertEquals(testPortSetter(VALID_PORT), VALID_PORT);
+        assertEquals(testPortSetter("localhost", VALID_PORT), VALID_PORT);
     }
 
     /**
@@ -106,6 +123,48 @@ public abstract class HostPortTester {
     }
 
     /**
+     * oversized host
+     */
+    @Test
+    public void testOversizedHostConstructor(){
+        assertThrows(IllegalArgumentException.class, () -> {
+            getNewObject(HOST_TWO_FROM_MAX, 1);
+        });
+    }
+
+    /**
+     * oversized host
+     */
+    @Test
+    public void testOversizedHostSetter(){
+        assertThrows(IllegalArgumentException.class, () -> {
+            testHostSetter(HOST_TWO_FROM_MAX);
+        });
+    }
+
+    /**
+     * oversized port
+     */
+    @Test
+    public void testOversizedPortConstructor(){
+        int port = 12;
+        assertThrows(IllegalArgumentException.class, () -> {
+            getNewObject(HOST_THREE_FROM_MAX, port);
+        });
+    }
+
+    /**
+     * oversized port
+     */
+    @Test
+    public void testOversizedPortSetter(){
+        assertThrows(IllegalArgumentException.class, () -> {
+            int newPort = 12;
+            testPortSetter( HOST_THREE_FROM_MAX, newPort);
+        });
+    }
+
+    /**
      * gets an object of the specific type being tested
      * @param host the host
      * @param port the port
@@ -122,10 +181,11 @@ public abstract class HostPortTester {
 
     /**
      * sets and return the port
+     * @param host the host name
      * @param port the port to set
      * @return the port retrieved
      */
-    protected abstract int testPortSetter(int port);
+    protected abstract int testPortSetter(String host, int port);
 
     /**
      * gets the full OP for the message type

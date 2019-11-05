@@ -37,7 +37,7 @@ public class Response extends Message {
      * @return service list
      */
     public List<String> getServiceList(){
-        return Collections.unmodifiableList(this.hostPort.stream().map(x -> x + " ").collect(Collectors.toList()));
+        return this.hostPort.stream().collect(Collectors.toUnmodifiableList());
     }
 
     /**

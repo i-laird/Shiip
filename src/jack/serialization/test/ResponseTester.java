@@ -11,9 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -74,16 +71,6 @@ public class ResponseTester {
         response.addService("localhost", VALID_PORT);
         response.addService("localhost", VALID_PORT);
         assertEquals(1, response.getServiceList().size());
-    }
-
-    /**
-     * service list tamper
-     */
-    @Test
-    @DisplayName("modify service list and call again")
-    public void testServiceListTamper(){
-        Response response = new Response();
-        assertThrows( UnsupportedOperationException.class, () -> response.getServiceList().add("bad"));
     }
 
     /**
@@ -220,5 +207,26 @@ public class ResponseTester {
             r2.addService("aaa", VALID_PORT);
             assertEquals(r1.hashCode(), r2.hashCode());
         }
+    }
+
+    /**
+     * oversized payload
+     */
+    @Test
+    public void testOversizedPayload(){
+        Response response = new Response();
+        // 65,507 - 2 = 65,505
+        for(int i = 0; i < 6550; i++){
+            String host = String.valueOf(i);
+            int originalLength = host.length();
+            for(int j = 0; j < 7 - originalLength; j++){
+                host = host.concat("A");
+            }
+            response.addService(host, 1);
+        }
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            response.addService("AAAA", 1);
+        });
     }
 }

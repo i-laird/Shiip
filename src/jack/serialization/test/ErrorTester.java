@@ -80,4 +80,19 @@ public class ErrorTester {
         Error error = new Error(errorStr);
         assertEquals("ERROR " + errorStr, error.toString());
     }
+
+    /**
+     * tests oversized error message
+     */
+    @Test
+    public void testOversizedErrorStringConstructor(){
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 65506; i++) {
+            builder.append("A");
+        }
+        String errorMessage = builder.toString();
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Error(errorMessage);
+        });
+    }
 }

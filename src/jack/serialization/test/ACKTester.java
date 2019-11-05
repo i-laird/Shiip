@@ -38,12 +38,14 @@ public class ACKTester extends HostPortTester{
     }
 
     /**
-     * sets and gets the port
+     * tests setting port
+     * @param host the host name
      * @param port the port to set
-     * @return the port that was retrieved
+     * @return the get port
      */
-    protected int testPortSetter(int port){
-        ACK toTest = new ACK("toChange", port + 1);
+    @Override
+    protected int testPortSetter(String host, int port){
+        ACK toTest = new ACK(host, 1);
         toTest.setPort(port);
         return toTest.getPort();
     }

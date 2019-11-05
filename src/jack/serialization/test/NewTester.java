@@ -39,11 +39,13 @@ public class NewTester extends HostPortTester {
 
     /**
      * tests setting port
+     * @param host the host name
      * @param port the port to set
      * @return the get port
      */
-    protected int testPortSetter(int port){
-        New toTest = new New("toChange", port + 1);
+    @Override
+    protected int testPortSetter(String host, int port){
+        New toTest = new New(host, port + 1);
         toTest.setPort(port);
         return toTest.getPort();
     }

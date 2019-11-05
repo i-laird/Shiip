@@ -70,7 +70,6 @@ public class Server {
      *     should be port number
      */
     public static void main(String[] args) {
-
         // only parameter should be the port number
         if(args.length != JACK_SERVER_ARG_COUNT){
             System.err.println("Usage: <port>");
@@ -80,6 +79,9 @@ public class Server {
         // will make sure that it is a valid port number
         int port = CommandLineParser.getPort(args[JACK_SERVER_ARG_PORT_POS]);
         Server server = null;
+
+        util.LoggerConfig.setupLogger(logger, "jack.log");
+
         try {
             server = new Server(port);
         }catch(SocketException e){
@@ -153,6 +155,11 @@ public class Server {
      * @param q the New message
      */
     private Message handleQ(Query q){
+
+        // if it is empty just treat it like a wildcard
+        if(q.getSearchString().isEmpty()){
+            q.setSearchString​("*");
+        }
         String receipt = q.toString();
         logger.info(receipt);
 

@@ -79,4 +79,19 @@ public class QueryTester {
         );
 
     }
+
+    /**
+     * tests oversize
+     */
+    @Test
+    public void testOversizedQueryStringConstructor(){
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 65506; i++) {
+            builder.append("A");
+        }
+        String queryString = builder.toString();
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Query(queryString);
+        });
+    }
 }
