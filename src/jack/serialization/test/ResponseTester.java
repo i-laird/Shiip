@@ -77,6 +77,16 @@ public class ResponseTester {
     }
 
     /**
+     * service list tamper
+     */
+    @Test
+    @DisplayName("modify service list and call again")
+    public void testServiceListTamper(){
+        Response response = new Response();
+        assertThrows( UnsupportedOperationException.class, () -> response.getServiceList().add("bad"));
+    }
+
+    /**
      * to string
      */
     @Nested
@@ -134,19 +144,6 @@ public class ResponseTester {
             assertEquals(expected, response.toString());
         }
 
-        /**
-         * service list tamper
-         */
-        @Test
-        @DisplayName("modify service list and call again")
-        public void testServiceListTamper(){
-            Response response = new Response();
-            response.addService("aaa", VALID_PORT);
-            List<String> serviceListOriginal = response.getServiceList();
-            List<String> record = new ArrayList<>(serviceListOriginal);
-            serviceListOriginal.add("bad");
-            assertEquals(record, response.getServiceList());
-        }
     }
 
     /**
