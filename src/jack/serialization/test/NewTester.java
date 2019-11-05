@@ -8,14 +8,8 @@ package jack.serialization.test;
 
 import jack.serialization.Message;
 import jack.serialization.New;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import static jack.serialization.test.ResponseTester.VALID_PORT;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Ian Laird and Andrew Walker

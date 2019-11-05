@@ -15,8 +15,11 @@ import java.util.Objects;
  */
 public abstract class HostPortMessage extends Message {
 
-    protected String host;
-    protected int port;
+    // the name of the host
+    protected String host = "";
+
+    // a default port for the message
+    protected int port = PORT_LOWER_BOUND;
 
     /**
      * gets the host
@@ -35,6 +38,7 @@ public abstract class HostPortMessage extends Message {
     public HostPortMessage(String host, int port){
         setHost(host);
         setPort(port);
+        this.testPayloadLength();
     }
 
     /**
@@ -45,6 +49,7 @@ public abstract class HostPortMessage extends Message {
     public final void setHost(String host) throws IllegalArgumentException{
         nameValidator(host);
         this.host = host;
+        this.testPayloadLength();
     }
 
     /**
@@ -55,6 +60,7 @@ public abstract class HostPortMessage extends Message {
     public final void setPort(int port) throws IllegalArgumentException{
         portValidator(port);
         this.port = port;
+        this.testPayloadLength();
     }
 
     /**

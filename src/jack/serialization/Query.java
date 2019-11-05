@@ -45,6 +45,7 @@ public class Query extends Message{
         }
         queryValidator(searchString);
         this.searchString = searchString;
+        this.testPayloadLength();
     }
 
     /**
@@ -69,6 +70,11 @@ public class Query extends Message{
         return this.getSearchString();
     }
 
+    /**
+     * equality of two query
+     * @param o the other query
+     * @return true means equal
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -77,6 +83,10 @@ public class Query extends Message{
         return Objects.equals(searchString, query.searchString);
     }
 
+    /**
+     * same hashcode if equal
+     * @return the hashcode of the query
+     */
     @Override
     public int hashCode() {
         return Objects.hash(searchString);

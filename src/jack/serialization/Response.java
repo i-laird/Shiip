@@ -57,6 +57,9 @@ public class Response extends Message {
 
         // each string is host:port
         this.hostPort.add(host + ":" + Integer.toString(port));
+
+        // make sure that the maximum size of a message has not been exceeded
+        this.testPayloadLength();
     }
 
     /**
@@ -122,6 +125,11 @@ public class Response extends Message {
         return toReturn;
     }
 
+    /**
+     * see if two Response are equal
+     * @param o the other response
+     * @return true means that they are equal
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -134,6 +142,10 @@ public class Response extends Message {
         return Objects.equals(hostPort, response.hostPort);
     }
 
+    /**
+     * two equal obj will have same hashcode
+     * @return the hashcode of the response
+     */
     @Override
     public int hashCode() {
         return Objects.hash(hostPort);

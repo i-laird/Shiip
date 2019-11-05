@@ -4,7 +4,7 @@
  * Class: Data Comm
  *******************************************************/
 
-package shiip.util;
+package util;
 
 /**
  * Error Codes for Client and Server

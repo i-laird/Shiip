@@ -9,7 +9,7 @@ package shiip.server;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
-import shiip.util.CommandLineParser;
+import util.CommandLineParser;
 import shiip.util.EncoderDecoderWrapper;
 import shiip.client.Client;
 
@@ -42,7 +42,7 @@ import static shiip.serialization.Message.*;
 import static shiip.serialization.Headers.STATUS;
 import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
 import static shiip.serialization.Headers.NAME_PATH;
-import static shiip.util.ErrorCodes.*;
+import static util.ErrorCodes.*;
 
 /**
  * Shiip Server

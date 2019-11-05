@@ -48,6 +48,12 @@ public abstract class Message {
     // if unable to parse the message
     private static final String DECODE_ISSUE = Client.INVALID_MESSAGE + " expected <Op><sp><Payload>";
 
+    // the maximum size of a message (65535 - 8 - 20)
+    public static final int MESSAGE_MAXIMUM_SIZE = 65507;
+
+    // the maximum size of the message payload (minus OP and a space char)
+    public static final int MAXIMUM_MESSAGE_PAYLOAD_SIZE = MESSAGE_MAXIMUM_SIZE - 2;
+
     private static List<String> acceptableOP = new LinkedList<>();
 
     static {
@@ -59,7 +65,7 @@ public abstract class Message {
     }
 
     // the lowest valid port
-    private static final int PORT_LOWER_BOUND = 1;
+    protected static final int PORT_LOWER_BOUND = 1;
 
     // the highest valid port
     private static final int PORT_UPPER_BOUND = 65535;
@@ -83,6 +89,10 @@ public abstract class Message {
             throw new IllegalArgumentException("msgbytes cannot be null", new NullPointerException("msgbytes"));
         }
 
+        if(msgBytes.length > MESSAGE_MAXIMUM_SIZE){
+            throw new IllegalArgumentException("Maximum length of a UDP packet exceeded");
+        }
+
         // convert to a String
         String msgString = new String(msgBytes, ENC);
 
@@ -96,16 +106,20 @@ public abstract class Message {
             throw new IllegalArgumentException(DECODE_ISSUE);
         }
 
-        // if the message is of length 3 it must be a response
+        // if the message is of length 3 it must be a response or query
         if(msgBytes.length == SHORTEST_POSSIBLE_LENGTH){
 
+            char firstChar = msgString.charAt(0);
             // see if it is an invalid message
-            if(msgString.charAt(0) != 'R'){
+            if((firstChar != 'R') && (firstChar != 'Q')){
                 throw new IllegalArgumentException(DECODE_ISSUE);
             }
 
             // an empty response
-            return new Response();
+            if(firstChar == 'R'){
+                return new Response();
+            }
+            return new Query("");
         }
 
         // now get the code
@@ -138,7 +152,6 @@ public abstract class Message {
      * @return the serialized message
      */
     public byte[] encode() {
-        // TODO check about the one letter or many
         String message = this.getOperation().toUpperCase().charAt(0) + " " + this.getPayload();
         return message.getBytes(ENC);
     }
@@ -170,6 +183,18 @@ public abstract class Message {
      */
     public String getToStringPayload(){
         return this.getPayload();
+    }
+
+    /**
+     * makes sure that the payload of the message is not too long
+     */
+    protected void testPayloadLength(){
+
+        // make sure that the newly created message is not too long
+        String payload = this.getPayload();
+        if(payload.length() > MAXIMUM_MESSAGE_PAYLOAD_SIZE){
+            throw new IllegalArgumentException("Maximum size of a datagram exceeded");
+        }
     }
 
     /**
@@ -206,7 +231,9 @@ public abstract class Message {
      * @throws IllegalArgumentException if the query is invalid
      */
     protected static void queryValidator(String query) throws IllegalArgumentException{
-        if(query.equals("*")){
+
+        // both star and empty string are valid queries
+        if("*".equals(query) || "".equals(query)){
             return;
         }
 

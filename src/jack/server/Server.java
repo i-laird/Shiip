@@ -9,7 +9,7 @@ package jack.server;
 import jack.serialization.*;
 import jack.serialization.Error;
 import jack.util.HostPortPair;
-import shiip.util.CommandLineParser;
+import util.CommandLineParser;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -22,8 +22,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import static shiip.util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
-import static shiip.util.ErrorCodes.NETWORK_ERROR;
+import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
+import static util.ErrorCodes.NETWORK_ERROR;
+import static jack.serialization.Message.MESSAGE_MAXIMUM_SIZE;
 
 
 /**
@@ -39,9 +40,6 @@ public class Server {
 
     // the port number should be the first arg
     private static final int JACK_SERVER_ARG_PORT_POS = 0;
-
-    // the size of the receive buffer (65535 - 8 - 20)
-    private static final int RECEIVE_BUFFER_SIZE = 65507;
 
     // the logger for the server
     private static final Logger logger = Logger.getLogger("jack server");
@@ -105,14 +103,14 @@ public class Server {
      */
     public void go(){
         // create the buffer
-        byte [] buffer = new byte[RECEIVE_BUFFER_SIZE];
+        byte [] buffer = new byte[MESSAGE_MAXIMUM_SIZE];
 
         // run forever
         while(true){
             try {
 
                 // create the datagram packet
-                DatagramPacket toReceive = new DatagramPacket(buffer, RECEIVE_BUFFER_SIZE);
+                DatagramPacket toReceive = new DatagramPacket(buffer, MESSAGE_MAXIMUM_SIZE);
                 this.sock.receive(toReceive);
                 byte [] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
                 Message m = Message.decode(receivedBytes);

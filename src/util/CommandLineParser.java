@@ -4,13 +4,13 @@
  * Class: Data Comm
  *******************************************************/
 
-package shiip.util;
+package util;
 
 import java.net.*;
 
-import static shiip.util.ErrorCodes.BAD_PORT_ERROR;
-import static shiip.util.ErrorCodes.BAD_URL_ERROR;
-import static shiip.util.ErrorCodes.BAD_PORT_NUM_ERROR;
+import static util.ErrorCodes.BAD_PORT_ERROR;
+import static util.ErrorCodes.BAD_URL_ERROR;
+import static util.ErrorCodes.BAD_PORT_NUM_ERROR;
 
 
 /**

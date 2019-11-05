@@ -9,16 +9,17 @@ package jack.client;
 import jack.serialization.*;
 import jack.serialization.Error;
 import jack.util.HostPortPair;
-import shiip.util.CommandLineParser;
+import util.CommandLineParser;
 
 import java.io.IOException;
 import java.net.*;
 import java.util.Arrays;
 
-import static shiip.util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
-import static shiip.util.ErrorCodes.NETWORK_ERROR;
-import static shiip.util.ErrorCodes.ERROR_MESSAGE_RECEIVED;
-import static shiip.util.ErrorCodes.ERROR_OP_SPECIFIED;
+import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
+import static util.ErrorCodes.NETWORK_ERROR;
+import static util.ErrorCodes.ERROR_MESSAGE_RECEIVED;
+import static util.ErrorCodes.ERROR_OP_SPECIFIED;
+import static jack.serialization.Message.MESSAGE_MAXIMUM_SIZE;
 
 /**
  * jack Client
@@ -28,6 +29,9 @@ public class Client {
 
     // only one parameter should be passed to jack server
     private static final int JACK_CLIENT_ARG_COUNT = 4;
+
+    // if no payload is present
+    private static final int JACK_CLIENT_ARG_COUNT_NO_PAYLOAD = 3;
 
     // the server is the first command line param
     private static final int JACK_CLIENT_SERVER_ARG_POS = 0;
@@ -46,9 +50,6 @@ public class Client {
 
     // the total number of times to send a message before giving up
     private static final int TOTAL_NUMBER_ATTEMPT_TRANSMISSIONS = 3;
-
-    // the size of the receive buffer (65535 - 8 - 20)
-    private static final int RECEIVE_BUFFER_SIZE = 65507;
 
     // for a communication problem
     private static final String COMMUNICATION_PROBLEM = "Communication problem: ";
@@ -95,7 +96,6 @@ public class Client {
     private String payload;
 
     // if client needs to keep trying to receive the response
-    // TODO rn this always resends, but we want it to wait for three seconds always
     private boolean repeat;
 
     // the socket for the client
@@ -133,9 +133,16 @@ public class Client {
      *     payload
      */
     public static void main(String[] args) {
+        String payload = null;
         if(args.length != JACK_CLIENT_ARG_COUNT){
-            System.err.println("Usage: <server (name or Ip address)> <port> <Op> <Payload>");
-            System.exit(INVALID_PARAM_NUMBER_ERROR);
+            if(args.length != JACK_CLIENT_ARG_COUNT_NO_PAYLOAD) {
+                System.err.println("Usage: <server (name or Ip address)> <port> <Op> <Payload>");
+                System.exit(INVALID_PARAM_NUMBER_ERROR);
+            }
+            payload = "";
+        }
+        else{
+            payload = args[JACK_CLIENT_PAYLOAD_ARG_POS];
         }
 
         // will make sure that it is a valid port number
@@ -144,7 +151,7 @@ public class Client {
         // make sure that the server is valid too
         InetAddress server_ipAddr = CommandLineParser.getIpAddress(args[JACK_CLIENT_SERVER_ARG_POS]);
 
-        Client client = new Client(server_ipAddr, server_port, args[JACK_CLIENT_OP_ARG_POS], args[JACK_CLIENT_PAYLOAD_ARG_POS]);
+        Client client = new Client(server_ipAddr, server_port, args[JACK_CLIENT_OP_ARG_POS], payload);
         client.go();
 
     }
@@ -178,7 +185,7 @@ public class Client {
         // make the datagram packet that is to be sent
         this.toSend = new DatagramPacket(bytes, 0, bytes.length, this.server_ip, this.server_port);
 
-        this.receiveBuffer = new byte [RECEIVE_BUFFER_SIZE];
+        this.receiveBuffer = new byte [MESSAGE_MAXIMUM_SIZE];
 
         this.messagesSent = 0;
         this.timeoutOccurred = true;
@@ -231,7 +238,7 @@ public class Client {
             this.timeoutRemaining = (int)(this.timeMessageExpected - currTime);
         }
         this.sock.setSoTimeout(this.timeoutRemaining);
-        DatagramPacket received = new DatagramPacket(receiveBuffer, RECEIVE_BUFFER_SIZE);
+        DatagramPacket received = new DatagramPacket(receiveBuffer, MESSAGE_MAXIMUM_SIZE);
         try {
             sock.receive(received);
             try {

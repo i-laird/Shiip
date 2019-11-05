@@ -11,6 +11,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -27,6 +30,9 @@ public class ResponseTester {
     // not an allowed port num
     public static int PORT_TOO_HIGH = 65536;
 
+    /**
+     * tests a null host
+     */
     @Test
     @DisplayName("Null host")
     public void testNullHost(){
@@ -34,6 +40,9 @@ public class ResponseTester {
         assertThrows(IllegalArgumentException.class, () -> response.addService(null, VALID_PORT));
     }
 
+    /**
+     * bad port vals
+     */
     @Test
     @DisplayName("Bad port vals")
     public void testBadPorts(){
@@ -44,6 +53,9 @@ public class ResponseTester {
         );
     }
 
+    /**
+     * service list one elem
+     */
     @Test
     @DisplayName("test service list one element")
     public void testServiceList(){
@@ -52,6 +64,9 @@ public class ResponseTester {
         assertEquals(1, response.getServiceList().size());
     }
 
+    /**
+     * test service list dup elem
+     */
     @Test
     @DisplayName("test service list dup element")
     public void testServiceListDup(){
@@ -61,9 +76,16 @@ public class ResponseTester {
         assertEquals(1, response.getServiceList().size());
     }
 
+    /**
+     * to string
+     */
     @Nested
     @DisplayName("to string")
     public class testToString{
+
+        /**
+         * no elem
+         */
         @Test
         @DisplayName("no elem")
         public void testToStringEmpty(){
@@ -72,6 +94,9 @@ public class ResponseTester {
             assertEquals(expected, response.toString());
         }
 
+        /**
+         * one elem
+         */
         @Test
         @DisplayName("one elem")
         public void testToStringOne(){
@@ -81,6 +106,9 @@ public class ResponseTester {
             assertEquals(expected, response.toString());
         }
 
+        /**
+         * two elem non alphabetically
+         */
         @Test
         @DisplayName("two elem (entered non alphabetical)")
         public void testToStringTwo(){
@@ -92,6 +120,9 @@ public class ResponseTester {
             assertEquals(expected, response.toString());
         }
 
+        /**
+         * two elem entered alphabetically
+         */
         @Test
         @DisplayName("two elem (entered alphabetical)")
         public void testToStringTwoAlphabetical(){
@@ -102,12 +133,32 @@ public class ResponseTester {
             String expected = "RESPONSE [aaa:" + port + "][localhost:" + port + "]";
             assertEquals(expected, response.toString());
         }
+
+        /**
+         * service list tamper
+         */
+        @Test
+        @DisplayName("modify service list and call again")
+        public void testServiceListTamper(){
+            Response response = new Response();
+            response.addService("aaa", VALID_PORT);
+            List<String> serviceListOriginal = response.getServiceList();
+            List<String> record = new ArrayList<>(serviceListOriginal);
+            serviceListOriginal.add("bad");
+            assertEquals(record, response.getServiceList());
+        }
     }
 
+    /**
+     * equality
+     */
     @Nested
     @DisplayName("equality")
     public class TestEquality{
 
+        /**
+         * empty response
+         */
         @Test
         @DisplayName("empty response")
         public void testEmptyResponse(){
@@ -116,6 +167,9 @@ public class ResponseTester {
             assertEquals(r1, r2);
         }
 
+        /**
+         * equal with services
+         */
         @Test
         @DisplayName("equal with services")
         public void testEqualServices(){
@@ -126,6 +180,9 @@ public class ResponseTester {
             assertEquals(r1, r2);
         }
 
+        /**
+         * unequal with services
+         */
         @Test
         @DisplayName("unequal with services")
         public void testUnequalServices(){
@@ -136,10 +193,16 @@ public class ResponseTester {
         }
     }
 
+    /**
+     * hash code
+     */
     @Nested
     @DisplayName("hash code")
     public class TestHashcode {
 
+        /**
+         * hashcode empty response
+         */
         @Test
         @DisplayName("hashcode empty response")
         public void testHashCode() {
@@ -148,6 +211,9 @@ public class ResponseTester {
             assertEquals(r1.hashCode(), r2.hashCode());
         }
 
+        /**
+         * hashcode with services
+         */
         @Test
         @DisplayName("hashcode with services")
         public void testEqualServices(){

@@ -26,6 +26,7 @@ public class Error extends Message{
      */
     public Error(String errorMessage) throws IllegalArgumentException{
         setErrorMessage​(errorMessage);
+        this.testPayloadLength();
     }
 
     /**
@@ -74,6 +75,11 @@ public class Error extends Message{
         return this.getErrorMessage();
     }
 
+    /**
+     * equality of error messages
+     * @param o the error message to test
+     * @return true means equal
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -82,6 +88,10 @@ public class Error extends Message{
         return Objects.equals(errorMessage, error.errorMessage);
     }
 
+    /**
+     * same hashcode for equal objects
+     * @return hashcode
+     */
     @Override
     public int hashCode() {
         return Objects.hash(errorMessage);
