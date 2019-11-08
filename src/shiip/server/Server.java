@@ -9,6 +9,7 @@ package shiip.server;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 
+import shiip.server.exception.ConnectionPrefaceException;
 import util.CommandLineParser;
 import shiip.util.EncoderDecoderWrapper;
 import shiip.client.Client;
@@ -34,15 +35,15 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import java.util.logging.FileHandler;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import static shiip.serialization.Message.*;
 import static shiip.serialization.Headers.STATUS;
-import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
 import static shiip.serialization.Headers.NAME_PATH;
 import static util.ErrorCodes.*;
+
+// all strings needed for the server
+import static shiip.util.ServerStrings.*;
 
 /**
  * Shiip Server
@@ -74,50 +75,6 @@ public class Server extends Thread{
 
     // the wait if the client is inactive
     private static final int CLIENT_INACTIVE_TIMEOUT = 1000 * 20;
-
-    // private strings ******************************************************
-
-    // for a parsing error that is encountered
-    private static final String UNABLE_TO_PARSE = "Unable to parse: ";
-
-    // unexpected message
-    private static final String UNEXPECTED_MESSAGE = "Unexpected message: ";
-
-    // for an invalid message
-    private static final String INVALID_MESSAGE = "Invalid message: ";
-
-    // received message
-    private static final String RECEIVED_MESSAGE = "Received message: ";
-
-    // cannot open the requested file
-    private static final String UNABLE_TO_OPEN_FILE = "File not found";
-
-    // cannot access the requested directory
-    private static final String CANNOT_REQUEST_DIRECTORY = "Cannot request directory: ";
-
-    // no path in the Headers frame
-    private static final String NO_PATH_SPECIFIED = "No or bad path";
-
-    // duplicate ClientStream id
-    private static final String DUPLICATE_STREAM_ID = "Duplicate request: ";
-
-    // illegal stream id
-    private static final String ILLEGAL_STREAM_ID = "Illegal stream ID: ";
-
-    // 404 for no path specified
-    private static final String ERROR_404_NO_PATH = "404 No or bad path";
-
-    // 404 error for file not found
-    private static final String ERROR_404_FILE = "404 File not found";
-
-    // 404 error for directory not found
-    private static final String ERROR_404_DIRECTORY = "404 Cannot request directory";
-
-    // if settings frame not sent during the startup
-    private static final String ERROR_NO_CONNECTION_SETTINGS_FRAME = "Error Did not receive Settings Frame";
-
-    // for a bad connection preface
-    private static final String CONNECTION_PREFACE_ERROR = "Bad Preface: ";
 
     // MISC *****************************************************************
 
@@ -151,49 +108,6 @@ public class Server extends Thread{
     private int lastEncounteredStreamId = 0;
 
     /**
-     * @author Ian Laird
-     * for an invalid connection preface
-     */
-    private class ConnectionPrefaceException extends Throwable{
-
-        // the connection preface that was received
-        private String receivedString = "";
-
-        /**
-         * default constructor
-         */
-        public ConnectionPrefaceException(){
-            super();
-        }
-
-        /**
-         * constructor
-         * @param message the message for the exception
-         */
-        public ConnectionPrefaceException(String message){
-            super(message);
-        }
-
-        /**
-         * custom constructor
-         * @param message the message
-         * @param receivedString the connection preface that was received
-         */
-        public ConnectionPrefaceException(String message, String receivedString){
-            super(message);
-            this.receivedString = receivedString;
-        }
-
-        /**
-         * gets the connection preface that was received
-         * @return the connection preface
-         */
-        public String getReceivedString() {
-            return receivedString;
-        }
-    }
-
-    /**
      * main method of the server
      * @param args
      *     0: port
@@ -205,52 +119,22 @@ public class Server extends Thread{
             System.err.println("Usage: <port> <threadNum> <doc root>");
             System.exit(INVALID_PARAM_NUMBER_ERROR);
         }
+
+        // make sure that the public constants are valid numbers
+        CommandLineParser.ensureServerConstants(MAXDATASIZE, MINDATAINTERVAL);
+
+        // setup the logger
+        util.LoggerConfig.setupLogger(logger, "connections.log");
+
         int port = CommandLineParser.getPort(args[SERVER_ARG_PORT_POS]);
         int threadNum = CommandLineParser.getThreadNum(args[SERVER_ARG_THREAD_NUM_POS]);
         String documentRoot = args[SERVER_ARG_DOC_ROOT_POS];
 
-        // do not log to the console
-        logger.setUseParentHandlers(false);
-
-        // setup the logger
-        try {
-            FileHandler logFile = new FileHandler("connections.log");
-            SimpleFormatter formatter = new SimpleFormatter();
-            logFile.setFormatter(formatter);
-            logger.addHandler(logFile);
-        }catch(IOException e){
-            System.err.println("Error: Unable to create fileHandler for connections.log");
-            System.exit(LOGGER_PROBLEM);
-        }
-
-        directory_base= new File(documentRoot);
-        if(!directory_base.exists()){
-            System.err.println("Error: Doc root does not exist");
-            System.exit(ERROR_DOC_ROOT);
-        }
-
-        // make sure that the public constants are valid numbers
-        if(MAXDATASIZE <= 0 || MAXDATASIZE > MAXIMUM_PAYLOAD_SIZE){
-            System.err.println("ERROR: Invalid MAXDATASIZE size");
-            System.exit(BAD_PUBLIC_VALUE);
-        }
-        if(MINDATAINTERVAL < 0){
-            System.err.println("ERROR: Invalid MINDATAINTERVAL");
-            System.exit(BAD_PUBLIC_VALUE);
-        }
+        directory_base = CommandLineParser.getDirectoryBase(documentRoot);
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 
-        ServerSocket ss = null;
-
-        try {
-            ss = TLSFactory.getServerListeningSocket
-                    (port, "mykeystore", "secret");
-        }catch(Exception e){
-            logger.severe("Unable to create the Server Socket");
-            logger.severe(e.getMessage());
-            System.exit(SOCKET_CREATION_ERROR);
-        }
+        ServerSocket ss = CommandLineParser.openTLSServerSocket(logger, port, "mykeystore", "secret");
 
         // run forever accepting connections to the server
         while(true){
