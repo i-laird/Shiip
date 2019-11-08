@@ -37,9 +37,6 @@ import java.util.concurrent.Executors;
 
 import java.util.logging.Logger;
 
-import static shiip.serialization.Message.*;
-import static shiip.serialization.Headers.STATUS;
-import static shiip.serialization.Headers.NAME_PATH;
 import static util.ErrorCodes.*;
 
 // all strings needed for the server
@@ -128,9 +125,8 @@ public class Server extends Thread{
 
         int port = CommandLineParser.getPort(args[SERVER_ARG_PORT_POS]);
         int threadNum = CommandLineParser.getThreadNum(args[SERVER_ARG_THREAD_NUM_POS]);
-        String documentRoot = args[SERVER_ARG_DOC_ROOT_POS];
 
-        directory_base = CommandLineParser.getDirectoryBase(documentRoot);
+        directory_base = CommandLineParser.getDirectoryBase(args[SERVER_ARG_DOC_ROOT_POS]);
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
 
@@ -192,7 +188,7 @@ public class Server extends Thread{
                 this.socket.setSoTimeout(CLIENT_INACTIVE_TIMEOUT);
                 try {
                     m = this.messageReceiver.receiveMessage();
-                    this.handleMessage(m);
+                    ServerMessageHandler.handleMessage(logger, m, streams, directory_base, messageSender, lastEncounteredStreamId);
                 }catch(BadAttributeException e){
                     logger.info(INVALID_MESSAGE + e.getMessage());
                 }catch(EOFException e2){
@@ -228,111 +224,6 @@ public class Server extends Thread{
     }
 
     /**
-     * handles a message but calling the correct subroutine
-     * @param m the message to handle
-     */
-    private void handleMessage(Message m) throws IOException{
-        switch(m.getCode()){
-            case DATA_TYPE:
-                this.handleDataFrame((Data)m);
-                break;
-            case SETTINGS_TYPE:
-                this.handleSettingsFrame((Settings)m);
-                break;
-            case HEADER_TYPE:
-                this.handleHeadersFrame((Headers)m);
-                break;
-            case WINDOW_UPDATE_TYPE:
-                this.handleWindowUpdateFrame((Window_Update)m);
-                break;
-        }
-    }
-
-    /**
-     * handles a received {@link Data} frame
-     * @param d the data frame
-     */
-    private void handleDataFrame(Data d){
-        logger.info(UNEXPECTED_MESSAGE + d.toString());
-    }
-
-    /**
-     * handles a received {@link Settings} frame
-     * @param s the settings frame
-     */
-    private void handleSettingsFrame(Settings s){
-        logger.info(RECEIVED_MESSAGE + s.toString());
-    }
-
-    /**
-     * handles a received {@link Window_Update} frame
-     * @param w the window update frame
-     */
-    private void handleWindowUpdateFrame(Window_Update w){
-        logger.info(RECEIVED_MESSAGE + w.toString());
-    }
-
-    /**
-     * handles a received {@link Headers} frame
-     * @param h the headers frame
-     */
-    private void handleHeadersFrame(Headers h) throws IOException{
-        String path = h.getValue(Headers.NAME_PATH);
-
-        // see if the stream id has already been encountered
-        if(streams.containsKey(h.getStreamID())){
-            logger.info(DUPLICATE_STREAM_ID + h.toString());
-            return;
-        }
-
-        // see if there is a path specified
-        if(Objects.isNull(path) || path.isEmpty()){
-            logger.severe(NO_PATH_SPECIFIED);
-            this.send404File(h.getStreamID(), ERROR_404_NO_PATH);
-            return;
-        }
-
-        // see if the file exists and has correct permissions
-        String fileName = h.getValue(NAME_PATH);
-        String slashPrepender = fileName.startsWith("/") ? "" : "/";
-        String filePath = directory_base.getCanonicalPath() + slashPrepender + fileName;
-        File file = new File(filePath);
-
-        // see if a directory
-        if(file.exists() && file.isDirectory()){
-            logger.severe(CANNOT_REQUEST_DIRECTORY);
-            this.send404File(h.getStreamID(), ERROR_404_DIRECTORY);
-            return;
-        }
-
-        // see if exists and has permissions
-        if(!file.exists() || (file.isFile() && !file.canRead())){
-            logger.severe(UNABLE_TO_OPEN_FILE + fileName);
-            this.send404File(h.getStreamID(), ERROR_404_FILE);
-            return;
-        }
-
-        // now make sure that the stream id is valid
-        if(!testValidStreamId(h.getStreamID())){
-            logger.info(ILLEGAL_STREAM_ID + h.toString());
-            return;
-        }
-
-        // send file
-        this.lastEncounteredStreamId = h.getStreamID();
-        ServerStream serverStream =
-                new ServerStream(h.getStreamID(), new FileInputStream(file),
-                                this.messageSender, (int)file.length());
-        this.streams.put(h.getStreamID(), serverStream);
-
-        // send a 200 status message
-        send404File(h.getStreamID(), "200 file found");
-
-        // spin off a new thread
-        serverStream.start();
-    }
-
-    /**
      * sets up the connection to the client
      */
     private void setupConnection()
@@ -357,21 +248,6 @@ public class Server extends Thread{
         Message m = this.messageReceiver.receiveMessage();
         if(m.getCode() != Settings.SETTINGS_TYPE){
             throw new IOException(ERROR_NO_CONNECTION_SETTINGS_FRAME);
-        }
-    }
-
-    /**
-     * sends a 404 message to the client
-     * @param streamId the is of the stream that has 404
-     * @param message404 the specific message to send
-     */
-    private void send404File(int streamId, String message404){
-        try {
-            Headers toSend = new Headers(streamId, true);
-            toSend.addValue(STATUS, message404);
-            this.messageSender.sendFrame(toSend);
-        }catch(BadAttributeException | IOException e){
-            logger.severe("Unable to send 404 message");
         }
     }
 

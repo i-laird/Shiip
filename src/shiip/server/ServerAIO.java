@@ -7,14 +7,23 @@
 package shiip.server;
 
 // all strings needed for the server
+import util.CommandLineParser;
+
 import java.io.File;
+import java.net.ServerSocket;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import static shiip.util.ServerStrings.*;
 import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
 
+/**
+ * Asynchronous SHiip server
+ * @author Ian Laird
+ */
 public class ServerAIO {
 
     // public constants as defined in the handout ****************************
@@ -48,10 +57,26 @@ public class ServerAIO {
     // the base directory
     private static File directory_base = null;
 
+    /**
+     * runs the server
+     * @param args
+     *     0 : the port number
+     *     1 : the document root
+     */
     public static void main(String[] args) {
         if(args.length != AIO_SERVER_ARG_COUNT){
             System.err.println("Usage: <port> <doc root>");
             System.exit(INVALID_PARAM_NUMBER_ERROR);
         }
+
+        // make sure that the public constants are valid numbers
+        CommandLineParser.ensureServerConstants(MAXDATASIZE, MINDATAINTERVAL);
+
+        // setup the logger
+        util.LoggerConfig.setupLogger(logger, "connections.log");
+
+        int port = CommandLineParser.getPort(args[AIO_SERVER_ARG_PORT_POS]);
+        directory_base = CommandLineParser.getDirectoryBase(args[AIO_SERVER_ARG_DOC_ROOT_POS]);
+
     }
 }
