@@ -28,10 +28,8 @@ public class MessageReceiver {
      * @param decoder the decoder to use
      */
     public MessageReceiver(InputStream in, Decoder decoder) {
-        synchronized (this) {
-            this.deframer = new Deframer(in);
-            this.decoder = decoder;
-        }
+        this.deframer = new Deframer(in);
+        this.decoder = decoder;
     }
 
     /**
@@ -41,6 +39,8 @@ public class MessageReceiver {
      * @throws BadAttributeException if the message has bad attributes
      */
     public Message receiveMessage() throws IOException, BadAttributeException{
-        return Message.decode(deframer.getFrame(), decoder);
+        synchronized (this) {
+            return Message.decode(deframer.getFrame(), decoder);
+        }
     }
 }

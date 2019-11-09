@@ -46,6 +46,13 @@ public class Framer {
      * @throws NullPointerException if the message is null
      */
     public void putFrame(byte [] message) throws IOException, NullPointerException{
+        byte [] framedMessage = getFramed(message);
+
+        //write the framed message to the output stream
+        out.write(framedMessage);
+    }
+
+    public static byte [] getFramed(byte [] message)throws IOException, NullPointerException{
         message = Objects.requireNonNull(message, "The message cannot be null");
 
         //see if the message is too long (the six bytes of header are not included)
@@ -75,8 +82,6 @@ public class Framer {
         for(int i = 0; i < message.length; i++){
             framedMessage[i + PREFIX_SIZE] = message[i];
         }
-
-        //write the framed message to the output stream
-        out.write(framedMessage);
+        return framedMessage;
     }
 }

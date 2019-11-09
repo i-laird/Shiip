@@ -188,7 +188,7 @@ public class Server extends Thread{
                 this.socket.setSoTimeout(CLIENT_INACTIVE_TIMEOUT);
                 try {
                     m = this.messageReceiver.receiveMessage();
-                    ServerMessageHandler.handleMessage(logger, m, streams, directory_base, messageSender, lastEncounteredStreamId);
+                    ServerMessageHandler.handleMessage(true, logger, m, streams, directory_base, messageSender, lastEncounteredStreamId);
                 }catch(BadAttributeException e){
                     logger.info(INVALID_MESSAGE + e.getMessage());
                 }catch(EOFException e2){

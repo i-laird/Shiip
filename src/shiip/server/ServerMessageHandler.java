@@ -31,11 +31,12 @@ public class ServerMessageHandler {
      * @param m the message to handle
      * @param streams the map from integer to server stream
      * @param directory_base the base directory
+     * @param isThreaded true means threaded
      * @param messageSender the mesage sender
      * @param lastEncounteredStreamId the last encountered stream id
      * @throws IOException if network error occurs
      */
-    public static void handleMessage(Logger logger, Message m, Map<Integer, ServerStream> streams, File directory_base, MessageSender messageSender, Integer lastEncounteredStreamId ) throws IOException{
+    public static void handleMessage(boolean isThreaded, Logger logger, Message m, Map<Integer, ServerStream> streams, File directory_base, MessageSender messageSender, Integer lastEncounteredStreamId ) throws IOException{
         switch(m.getCode()){
             case DATA_TYPE:
                 handleDataFrame(logger, (Data)m);
@@ -44,7 +45,7 @@ public class ServerMessageHandler {
                 handleSettingsFrame(logger, (Settings)m);
                 break;
             case HEADER_TYPE:
-                handleHeadersFrame(logger, (Headers)m, streams, directory_base, messageSender, lastEncounteredStreamId);
+                handleHeadersFrame(isThreaded, logger, (Headers)m, streams, directory_base, messageSender, lastEncounteredStreamId);
                 break;
             case WINDOW_UPDATE_TYPE:
                 handleWindowUpdateFrame(logger, (Window_Update)m);
@@ -89,7 +90,7 @@ public class ServerMessageHandler {
      * @param lastEncounteredStreamId the last encountered stream id
      * @throws IOException if network error occurs
      */
-    private static void handleHeadersFrame(Logger logger, Headers h, Map<Integer, ServerStream> streams, File directory_base, MessageSender messageSender, Integer lastEncounteredStreamId ) throws IOException {
+    private static void handleHeadersFrame(boolean isThreaded, Logger logger, Headers h, Map<Integer, ServerStream> streams, File directory_base, MessageSender messageSender, Integer lastEncounteredStreamId ) throws IOException {
         String path = h.getValue(Headers.NAME_PATH);
 
         // see if the stream id has already been encountered
@@ -131,18 +132,26 @@ public class ServerMessageHandler {
             return;
         }
 
-        // send file
-        lastEncounteredStreamId = h.getStreamID();
-        ServerStream serverStream =
-                new ServerStream(h.getStreamID(), new FileInputStream(file),
-                        messageSender, (int)file.length());
-        streams.put(h.getStreamID(), serverStream);
-
         // send a 200 status message
         send404File(logger, h.getStreamID(), "200 file found", messageSender);
 
-        // spin off a new thread
-        serverStream.start();
+        lastEncounteredStreamId = h.getStreamID();
+
+        // send file
+        if(isThreaded) {
+            ThreadedServerStream threadedServerStream =
+                    new ThreadedServerStream(lastEncounteredStreamId, new FileInputStream(file),
+                            messageSender, (int) file.length());
+            streams.put(h.getStreamID(), threadedServerStream);
+            // spin off a new thread
+            new Thread(threadedServerStream).start();
+        }
+        else{
+            UnthreadedServerStream unthreadedServerStream = new UnthreadedServerStream(lastEncounteredStreamId, messageSender, (int) file.length());
+            streams.put(h.getStreamID(), unthreadedServerStream);
+            unthreadedServerStream.run();
+        }
+
     }
 
     /**

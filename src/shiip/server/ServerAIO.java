@@ -7,17 +7,20 @@
 package shiip.server;
 
 // all strings needed for the server
+import shiip.server.attachment.ConnectionAttachment;
+import shiip.server.completionHandlers.ConnectionHandler;
 import util.CommandLineParser;
 
 import java.io.File;
-import java.net.ServerSocket;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.AcceptPendingException;
+import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static shiip.util.ServerStrings.*;
 import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
 
 /**
@@ -33,6 +36,9 @@ public class ServerAIO {
 
     // the min data interval of the server
     public static final int MINDATAINTERVAL = 5;
+
+    // the size of the byte buffer
+    public static final int BUFFER_SIZE = 256;
 
     // private constants ****************************************************
 
@@ -77,6 +83,26 @@ public class ServerAIO {
 
         int port = CommandLineParser.getPort(args[AIO_SERVER_ARG_PORT_POS]);
         directory_base = CommandLineParser.getDirectoryBase(args[AIO_SERVER_ARG_DOC_ROOT_POS]);
+
+        try (AsynchronousServerSocketChannel listenChannel = AsynchronousServerSocketChannel.open()) {
+            // Bind local port
+            listenChannel.bind(new InetSocketAddress(Integer.parseInt(args[0])));
+
+            // create the attachment for the connection
+            ConnectionAttachment connectionAttachment = new ConnectionAttachment(listenChannel, logger);
+
+            // accept a connection
+            listenChannel.accept(connectionAttachment, new ConnectionHandler());
+
+            // Block until current thread dies
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, "Server Interrupted", e);
+        }catch(IOException e2){
+            logger.log(Level.WARNING, "Unable to create Socket", e2);
+        }catch(AcceptPendingException e3){
+            //TODO do I need this
+        }
 
     }
 }

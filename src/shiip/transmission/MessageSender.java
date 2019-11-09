@@ -25,6 +25,10 @@ public class MessageSender {
     //the encoder for this connection
     private Encoder encoder = null;
 
+    public MessageSender(){
+
+    }
+
     /**
      * constructor
      * @param out the output stream to send messages to
