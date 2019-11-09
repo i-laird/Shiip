@@ -23,7 +23,7 @@ public class Query extends Message{
      * @throws IllegalArgumentException if any validation problem with searchString, including null, etc.
      */
     public Query(String searchString) throws IllegalArgumentException{
-        this.setSearchString​(searchString);
+        this.setSearchString(searchString);
     }
 
     /**
@@ -39,7 +39,7 @@ public class Query extends Message{
      * @param searchString the string to search for
      * @throws IllegalArgumentException if search string fails validation, including null
      */
-    public final void setSearchString​(String searchString) throws IllegalArgumentException{
+    public final void setSearchString(String searchString) throws IllegalArgumentException{
         if(Objects.isNull(searchString)){
             throw new IllegalArgumentException("search string cannot be null", new NullPointerException("search string cannot be null"));
         }

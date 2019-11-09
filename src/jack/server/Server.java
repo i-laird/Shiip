@@ -158,7 +158,7 @@ public class Server {
 
         // if it is empty just treat it like a wildcard
         if(q.getSearchString().isEmpty()){
-            q.setSearchString​("*");
+            q.setSearchString("*");
         }
         String receipt = q.toString();
         logger.info(receipt);
