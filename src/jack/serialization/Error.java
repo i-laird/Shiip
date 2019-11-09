@@ -25,7 +25,7 @@ public class Error extends Message{
      * @throws IllegalArgumentException if any validation problem with errorMessage, including null, etc.
      */
     public Error(String errorMessage) throws IllegalArgumentException{
-        setErrorMessage​(errorMessage);
+        setErrorMessage(errorMessage);
         this.testPayloadLength();
     }
 
@@ -42,7 +42,7 @@ public class Error extends Message{
      * @param errorMessage the error message
      * @throws IllegalArgumentException if validation fails, including null
      */
-    public final void setErrorMessage​(String errorMessage) throws IllegalArgumentException{
+    public final void setErrorMessage(String errorMessage) throws IllegalArgumentException{
         if(Objects.isNull(errorMessage)){
             throw new IllegalArgumentException("error message cannot be null", new NullPointerException("error message cannot be null"));
         }
