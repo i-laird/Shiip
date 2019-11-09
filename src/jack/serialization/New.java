@@ -46,7 +46,7 @@ public class New extends HostPortMessage{
      * @return the operation
      */
     @Override
-    public String getOperation(){
+    public String getFullOperation(){
         return NEW_OP;
     }
 }

@@ -133,7 +133,7 @@ public class Server {
      */
     public void handleMessage(Message m, DatagramPacket lastReceived) throws IOException{
         Message response = null;
-        switch(m.getOperation().toUpperCase()){
+        switch(m.getFullOperation().toUpperCase()){
             case "QUERY":
                 response = this.handleQ((Query)m);
                 break;

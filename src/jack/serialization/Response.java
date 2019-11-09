@@ -53,6 +53,7 @@ public class Response extends Message {
         if(Objects.isNull(host)){
             throw new IllegalArgumentException("host cannot be null", new NullPointerException("host cannot be null"));
         }
+        nameValidator(host);
         portValidator(port);
 
         // each string is host:port
@@ -67,7 +68,7 @@ public class Response extends Message {
      * @return the operation
      */
     @Override
-    public String getOperation(){
+    public String getFullOperation(){
         return RESPONSE_OP;
     }
 

@@ -53,7 +53,7 @@ public class Query extends Message{
      * @return the operation
      */
     @Override
-    public String getOperation(){
+    public String getFullOperation(){
         return QUERY_OP;
     }
 

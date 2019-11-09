@@ -124,6 +124,6 @@ public abstract class HostPortMessage extends Message {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(host, port);
+        return Objects.hash(this.getFullOperation(), host, port);
     }
 }

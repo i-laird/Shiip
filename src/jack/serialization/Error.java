@@ -57,7 +57,7 @@ public class Error extends Message{
      * @return the operation
      */
     @Override
-    public String getOperation(){
+    public String getFullOperation(){
         return ERROR_OP;
     }
 

@@ -152,7 +152,7 @@ public abstract class Message {
      * @return the serialized message
      */
     public byte[] encode() {
-        String message = this.getOperation().toUpperCase().charAt(0) + " " + this.getPayload();
+        String message = this.getFullOperation().toUpperCase().charAt(0) + " " + this.getPayload();
         return message.getBytes(ENC);
     }
 
@@ -160,7 +160,15 @@ public abstract class Message {
      * gets the operation
      * @return the operation
      */
-    public abstract String getOperation();
+    public abstract String getFullOperation();
+
+    /**
+     * gets the operation
+     * @return the OP
+     */
+    public String getOperation(){
+        return getFullOperation().substring(0, 1);
+    }
 
     /**
      * gets the payload of a message
@@ -174,7 +182,7 @@ public abstract class Message {
      */
     @Override
     public final String toString(){
-        return this.getOperation() + " " + this.getToStringPayload();
+        return this.getFullOperation() + " " + this.getToStringPayload();
     }
 
     /**

@@ -297,7 +297,7 @@ public class Client {
 
         Message m = Message.decode(receivedBytes);
 
-        switch(m.getOperation().toUpperCase()){
+        switch(m.getFullOperation().toUpperCase()){
             case "QUERY":
                 this.handleQ((Query)m);
                 break;
