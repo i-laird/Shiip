@@ -77,11 +77,12 @@ public class NIODeframer {
         // allocate the receive buffer for the message
         if(Objects.isNull(receiveBuffer)){
             int len = ByteBuffer.wrap(lengthBytes).getInt();
+            len += HEADER_SIZE;
             if(len > MAXIMUM_PAYLOAD_SIZE){
                 throw new IllegalArgumentException(
                         "maximum greater than the allowed payload size");
             }
-            receiveBuffer = new byte [ len];
+            receiveBuffer = new byte [len];
         }
 
         // now write the buffer into the receive buffer

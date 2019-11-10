@@ -20,8 +20,16 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.logging.Level;
 
+/**
+ * @author Ian laird
+ */
 public class ConnectionHandler implements CompletionHandler<AsynchronousSocketChannel, ConnectionAttachment> {
 
+    /**
+     * runs for completion of a connection
+     * @param clientChan the connection channel
+     * @param attachment the attachment of the connection
+     */
     @Override
     public void completed(AsynchronousSocketChannel clientChan, ConnectionAttachment attachment) {
 
@@ -41,13 +49,18 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
         readAttachment.setDecoder(decoder);
         readAttachment.setDeframer(deframer);
         readAttachment.setByteBuffer(byteBuffer);
-        readAttachment.setAsynchronousMessageSender(new AsynchronousMessageSender(clientChan, encoder));
+        readAttachment.setAsynchronousMessageSender(new AsynchronousMessageSender(clientChan, encoder, attachment.getLogger()));
 
         // now handle a read
         clientChan.read(byteBuffer, readAttachment, new ReadHandler());
 
     }
 
+    /**
+     * failure of the connection
+     * @param e the exception
+     * @param attachment the attachment for the connection
+     */
     @Override
     public void failed(Throwable e, ConnectionAttachment attachment) {
         attachment.getLogger().log(Level.WARNING, "Connection failed", e);

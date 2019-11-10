@@ -25,6 +25,9 @@ public class MessageSender {
     //the encoder for this connection
     private Encoder encoder = null;
 
+    /**
+     * default constructor
+     */
     public MessageSender(){
 
     }

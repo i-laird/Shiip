@@ -3,18 +3,38 @@ package shiip.transmission;
 import com.twitter.hpack.Encoder;
 import shiip.serialization.Framer;
 import shiip.serialization.Message;
+import shiip.server.attachment.WriteAttachment;
+import shiip.server.completionHandlers.WriteHandler;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.logging.Logger;
 
+/**
+ * @author Ian Laird
+ */
 public class AsynchronousMessageSender extends MessageSender {
 
+    // the socket channel
     private AsynchronousSocketChannel asynchronousSocketChannel;
+
+    // the encoder to use
     private Encoder encoder;
 
-    public AsynchronousMessageSender(AsynchronousSocketChannel asynchronousSocketChannel, Encoder encoder) {
+    // the logger to use
+    private Logger logger;
+
+    /**
+     * constructor
+     * @param asynchronousSocketChannel the socket channel to use
+     * @param encoder the encoder to use
+     * @param logger the logger to use
+     */
+    public AsynchronousMessageSender(AsynchronousSocketChannel asynchronousSocketChannel, Encoder encoder, Logger logger) {
         this.asynchronousSocketChannel = asynchronousSocketChannel;
         this.encoder = encoder;
+        this.logger = logger;
     }
 
     /**
@@ -25,7 +45,14 @@ public class AsynchronousMessageSender extends MessageSender {
     public void sendFrame(Message m) throws IOException{
         byte [] toSend = Framer.getFramed(m.encode(this.encoder));
 
-        //TODO actually do the write
+        ByteBuffer bytes = ByteBuffer.wrap(toSend);
+
+        WriteAttachment writeAttachment = new WriteAttachment();
+        writeAttachment.setAsynchronousSocketChannel(this.asynchronousSocketChannel);
+        writeAttachment.setByteBuffer(bytes);
+        writeAttachment.setLogger(logger);
+
+        asynchronousSocketChannel.write(bytes, writeAttachment, new WriteHandler());
     }
 
 }

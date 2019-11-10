@@ -19,7 +19,11 @@ import java.io.InputStream;
  * @author Ian laird
  */
 public class MessageReceiver {
+
+    // the deframer to use
     private Deframer deframer = null;
+
+    // the decoder to use
     private Decoder decoder = null;
 
     /**

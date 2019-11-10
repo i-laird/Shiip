@@ -12,6 +12,8 @@ import shiip.transmission.MessageSender;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.AsynchronousFileChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -147,7 +149,8 @@ public class ServerMessageHandler {
             new Thread(threadedServerStream).start();
         }
         else{
-            UnthreadedServerStream unthreadedServerStream = new UnthreadedServerStream(lastEncounteredStreamId, messageSender, (int) file.length());
+            AsynchronousFileChannel asynchronousFileChannel = AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.READ);
+            UnthreadedServerStream unthreadedServerStream = new UnthreadedServerStream(asynchronousFileChannel, lastEncounteredStreamId, messageSender, (int) file.length());
             streams.put(h.getStreamID(), unthreadedServerStream);
             unthreadedServerStream.run();
         }
