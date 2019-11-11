@@ -45,6 +45,8 @@ public class ReadAttachment {
     // the last encountered stream id
     private Integer lastEncounteredStreamId;
 
+    private int currStreamId;
+
     /**
      * gets the async socket channel
      * @return the socket channel
@@ -173,5 +175,13 @@ public class ReadAttachment {
      */
     public void setLastEncounteredStreamId(Integer lastEncounteredStreamId) {
         this.lastEncounteredStreamId = lastEncounteredStreamId;
+    }
+
+    public int getCurrStreamId() {
+        return currStreamId;
+    }
+
+    public void setCurrStreamId(int currStreamId) {
+        this.currStreamId = currStreamId;
     }
 }
