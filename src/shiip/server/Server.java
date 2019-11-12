@@ -242,7 +242,7 @@ public class Server extends Thread{
             //get the bytes that were read
             byte [] readBytes = Arrays.copyOfRange(clientConnectionPreface, 0, numRead);
             throw new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, ENC) );
-        }
+    }
 
         // now read in the settings frame
         Message m = this.messageReceiver.receiveMessage();

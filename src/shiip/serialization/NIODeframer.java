@@ -23,12 +23,6 @@ import static shiip.serialization.Framer.HEADER_SIZE;
  */
 public class NIODeframer {
 
-    // the connection preface
-    public static final byte [] CLIENT_CONNECTION_PREFACE =
-            {0x50, 0x52, 0x49, 0x20, 0x2a, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f,
-                    0x32, 0x2e, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x53, 0x4d, 0x0d, 0x0a,
-                    0x0d, 0x0a};
-
     // the size of an int in bytes
     private static final int INT_SIZE_BYTES = 4;
 
@@ -36,13 +30,11 @@ public class NIODeframer {
     private int numBytesInReceiveBuffer;
     private byte [] lengthBytes;
     private int numLengthBytesRead;
-    private boolean connectionPrefaceActive;
     private byte [] previousBufferContents;
 
     public NIODeframer(){
         receiveBuffer = null;
         numLengthBytesRead = 1;
-        connectionPrefaceActive = false;
         lengthBytes = new byte[INT_SIZE_BYTES];
         lengthBytes[0] = (byte)0;
         numBytesInReceiveBuffer = 0;
