@@ -6,6 +6,7 @@
 
 package shiip.server.attachment;
 
+import java.io.File;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.util.logging.Logger;
 
@@ -19,6 +20,9 @@ public class ConnectionAttachment {
 
     // the logger
     private Logger logger;
+
+    // the file base
+    private File fileBase;
 
     /**
      * get the socket channel
@@ -56,9 +60,19 @@ public class ConnectionAttachment {
      * custom constructor
      * @param asynchronousServerSocketChannel the socket channel
      * @param logger the logger to use
+     * @param FileBase the file base
      */
-    public ConnectionAttachment(AsynchronousServerSocketChannel asynchronousServerSocketChannel, Logger logger) {
+    public ConnectionAttachment(AsynchronousServerSocketChannel asynchronousServerSocketChannel, Logger logger, File FileBase) {
         this.asynchronousServerSocketChannel = asynchronousServerSocketChannel;
         this.logger = logger;
+        this.fileBase = FileBase;
+    }
+
+    public File getFileBase() {
+        return fileBase;
+    }
+
+    public void setFileBase(File fileBase) {
+        this.fileBase = fileBase;
     }
 }

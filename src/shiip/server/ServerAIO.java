@@ -95,7 +95,7 @@ public class ServerAIO {
             listenChannel.bind(new InetSocketAddress(Integer.parseInt(args[0])));
 
             // create the attachment for the connection
-            ConnectionAttachment connectionAttachment = new ConnectionAttachment(listenChannel, logger);
+            ConnectionAttachment connectionAttachment = new ConnectionAttachment(listenChannel, logger, directory_base);
 
             // accept a connection
             listenChannel.accept(connectionAttachment, new ConnectionHandler());

@@ -9,6 +9,7 @@ package shiip.server.completionHandlers;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 import shiip.serialization.NIODeframer;
+import shiip.server.attachment.ConnectionPrefaceAttachment;
 import shiip.server.attachment.ReadAttachment;
 import shiip.server.ServerAIO;
 import shiip.server.attachment.ConnectionAttachment;
@@ -46,36 +47,12 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
 
         ByteBuffer [] connPreface = {ByteBuffer.allocate(bytesToRead)};
 
+        ConnectionPrefaceAttachment connectionPrefaceAttachment = new ConnectionPrefaceAttachment(connPreface, clientChan);
 
+        //TODO put a semaphore before and after this
 
         // read in the connection preface
-        clientChan.read(connPreface, 0, bytesToRead, (long)3, TimeUnit.SECONDS, connPreface,
-                new CompletionHandler<Long, ByteBuffer []>() {
-                    @Override
-                    public void completed(Long result, ByteBuffer [] attachment) {
-                        if(result == -1){
-                            //TODO this is an error
-                        }
-                        ByteBuffer bb = attachment[0];
-
-                        int numLeft = ServerAIO.CLIENT_CONNECTION_PREFACE.length - bb.position();
-                        // if the whole preface has not been read in yet go again
-                        if(numLeft > 0){
-                            clientChan.read(connPreface, 0, numLeft, (long)3, TimeUnit.SECONDS, connPreface, this);
-                        }
-
-                        // now ensure that the preface read is valid
-                        byte [] readBytes = bb.array();
-                        if(!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)){
-                            failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, StandardCharsets.US_ASCII)), attachment);
-                        }
-                    }
-
-                    @Override
-                    public void failed(Throwable exc, ByteBuffer [] attachment) {
-
-                    }
-        });
+        clientChan.read(connPreface, 0, bytesToRead, (long)3, TimeUnit.SECONDS, connectionPrefaceAttachment, new ConnectionPrefaceHandler());
 
         // get the encoder and decoder for the connection
         Encoder encoder = EncoderDecoderWrapper.getEncoder();
@@ -93,7 +70,10 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
         readAttachment.setDecoder(decoder);
         readAttachment.setDeframer(deframer);
         readAttachment.setByteBuffer(byteBuffer);
+        readAttachment.setLogger(attachment.getLogger());
+        readAttachment.setDirectoryBase(attachment.getFileBase());
         readAttachment.setAsynchronousMessageSender(new AsynchronousMessageSender(clientChan, encoder, attachment.getLogger()));
+        readAttachment.setLastEncounteredStreamId(0);
 
         // now handle a read
         clientChan.read(byteBuffer, readAttachment, new ReadHandler());
