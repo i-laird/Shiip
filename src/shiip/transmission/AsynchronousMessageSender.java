@@ -63,4 +63,11 @@ public class AsynchronousMessageSender extends MessageSender {
         asynchronousSocketChannel.write(bytes, writeAttachment, new WriteHandler());
     }
 
+    /**
+     * get the async socket channel
+     * @return the socket channel
+     */
+    public AsynchronousSocketChannel getAsynchronousSocketChannel() {
+        return asynchronousSocketChannel;
+    }
 }

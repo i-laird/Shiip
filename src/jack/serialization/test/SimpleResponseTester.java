@@ -45,7 +45,7 @@ public class SimpleResponseTester {
 
     /**
      * decode
-     * @throws IOException
+     * @throws IOException for a network error
      */
     @DisplayName("decode")
     @Test

@@ -7,6 +7,7 @@
 package shiip.server;
 
 import shiip.serialization.*;
+import shiip.transmission.AsynchronousMessageSender;
 import shiip.transmission.MessageSender;
 
 import java.io.File;
@@ -155,8 +156,7 @@ public class ServerMessageHandler {
         }
         else{
             AsynchronousFileChannel asynchronousFileChannel = AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.READ);
-            //TODO fix this
-            UnthreadedServerStream unthreadedServerStream = new UnthreadedServerStream(asynchronousFileChannel, lastEncounteredStreamId, messageSender, (int) file.length());
+            UnthreadedServerStream unthreadedServerStream = new UnthreadedServerStream(logger, asynchronousFileChannel, lastEncounteredStreamId, (AsynchronousMessageSender)messageSender, (int) file.length());
             streams.put(h.getStreamID(), unthreadedServerStream);
             unthreadedServerStream.run();
         }

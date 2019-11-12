@@ -39,10 +39,9 @@ public class UnthreadedServerStream extends ServerStream {
      * @param ms sends messages to output stream
      * @param bytesToRead the number of bytes to be read from the input stream
      * @param logger the logger
-     * @param socketChannel the socket channel
      * @param asynchronousFileChannel the async file channel
      */
-    public UnthreadedServerStream(Logger logger, AsynchronousSocketChannel socketChannel, AsynchronousFileChannel asynchronousFileChannel, int streamId, MessageSender ms, int bytesToRead){
+    public UnthreadedServerStream(Logger logger, AsynchronousFileChannel asynchronousFileChannel, int streamId, AsynchronousMessageSender ms, int bytesToRead){
         this.asynchronousFileChannel = asynchronousFileChannel;
         this.messageSender = ms;
         this.bytesProcessed = 0;
@@ -51,7 +50,7 @@ public class UnthreadedServerStream extends ServerStream {
         this.streamId = streamId;
         this.nextAllowedSendTime = System.currentTimeMillis();
         this.logger = logger;
-        this.socketChannel = socketChannel;
+        this.socketChannel = ms.getAsynchronousSocketChannel();
     }
 
     /**
