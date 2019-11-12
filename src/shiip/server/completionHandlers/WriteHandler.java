@@ -14,6 +14,8 @@ import java.util.logging.Level;
 
 /**
  * @author Ian Laird
+ * @version 1.0
+ * handles a write
  */
 public class WriteHandler implements CompletionHandler<Integer, WriteAttachment> {
 

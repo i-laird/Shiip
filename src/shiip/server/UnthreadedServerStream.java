@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 6
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.server;
 
 import shiip.server.attachment.FileReadAttachment;
@@ -12,17 +18,29 @@ import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.logging.Logger;
 
+/**
+ * an async server stream
+ * @author Ian Laird
+ * @version 1.0
+ */
 public class UnthreadedServerStream extends ServerStream {
 
+    // the async file channel
     private AsynchronousFileChannel asynchronousFileChannel = null;
+
+    // the logger
     private Logger logger;
+
+    // the socket channel
     private AsynchronousSocketChannel socketChannel = null;
 
     /**
-     * constructor
      * @param streamId the id of the stream
      * @param ms sends messages to output stream
      * @param bytesToRead the number of bytes to be read from the input stream
+     * @param logger the logger
+     * @param socketChannel the socket channel
+     * @param asynchronousFileChannel the async file channel
      */
     public UnthreadedServerStream(Logger logger, AsynchronousSocketChannel socketChannel, AsynchronousFileChannel asynchronousFileChannel, int streamId, MessageSender ms, int bytesToRead){
         this.asynchronousFileChannel = asynchronousFileChannel;

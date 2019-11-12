@@ -17,6 +17,8 @@ import java.util.Objects;
 
 /**
  * @author Ian Laird
+ * @version 1.0
+ * handles a read
  */
 public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
 

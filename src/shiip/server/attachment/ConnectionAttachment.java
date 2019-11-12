@@ -68,10 +68,18 @@ public class ConnectionAttachment {
         this.fileBase = FileBase;
     }
 
+    /**
+     * gets the file base
+     * @return the file base
+     */
     public File getFileBase() {
         return fileBase;
     }
 
+    /**
+     * sets the file base
+     * @param fileBase file base
+     */
     public void setFileBase(File fileBase) {
         this.fileBase = fileBase;
     }

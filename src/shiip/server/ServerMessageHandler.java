@@ -25,6 +25,11 @@ import static shiip.serialization.Message.WINDOW_UPDATE_TYPE;
 import static shiip.util.ServerStrings.*;
 import static shiip.util.ServerStrings.ILLEGAL_STREAM_ID;
 
+/**
+ * handles Server Messages
+ * @author Ian Laird
+ * @version 2.0
+ */
 public class ServerMessageHandler {
 
     /**
@@ -150,6 +155,7 @@ public class ServerMessageHandler {
         }
         else{
             AsynchronousFileChannel asynchronousFileChannel = AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.READ);
+            //TODO fix this
             UnthreadedServerStream unthreadedServerStream = new UnthreadedServerStream(asynchronousFileChannel, lastEncounteredStreamId, messageSender, (int) file.length());
             streams.put(h.getStreamID(), unthreadedServerStream);
             unthreadedServerStream.run();

@@ -177,10 +177,18 @@ public class ReadAttachment {
         this.lastEncounteredStreamId = lastEncounteredStreamId;
     }
 
+    /**
+     * gets the current stream id
+     * @return the current stream id
+     */
     public int getCurrStreamId() {
         return currStreamId;
     }
 
+    /**
+     * sets the current stream id
+     * @param currStreamId the current stream id
+     */
     public void setCurrStreamId(int currStreamId) {
         this.currStreamId = currStreamId;
     }

@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 6
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.transmission;
 
 import com.twitter.hpack.Encoder;
@@ -12,7 +18,9 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.util.logging.Logger;
 
 /**
+ * async message sender
  * @author Ian Laird
+ * @version 1.0
  */
 public class AsynchronousMessageSender extends MessageSender {
 

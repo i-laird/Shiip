@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 /**
  * @author Ian laird
+ * @version 1.0
  */
 public class WriteAttachment {
 

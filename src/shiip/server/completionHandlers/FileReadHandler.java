@@ -1,3 +1,9 @@
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 6
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.server.completionHandlers;
 
 import shiip.serialization.BadAttributeException;
@@ -8,6 +14,11 @@ import shiip.server.attachment.FileReadAttachment;
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
 
+/**
+ * @author Ian laird
+ * @version 1.0
+ * Handles a file read
+ */
 public class FileReadHandler implements CompletionHandler<Integer, FileReadAttachment> {
 
     /**

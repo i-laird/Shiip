@@ -1,13 +1,18 @@
+/*******************************************************
+ * Author: Ian Laird
+ * Assignment: Prog 6
+ * Class: Data Comm
+ *******************************************************/
+
 package shiip.server;
 
-import shiip.serialization.BadAttributeException;
-import shiip.serialization.Data;
 import shiip.transmission.MessageSender;
 
-import java.io.IOException;
-
-import static shiip.server.Server.MAXDATASIZE;
-
+/**
+ * @author Ian Laird
+ * @version 1.0
+ * An abstraction of a server stream
+ */
 public abstract class ServerStream {
 
     // sends messages to an output stream
