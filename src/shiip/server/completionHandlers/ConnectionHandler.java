@@ -17,11 +17,13 @@ import shiip.server.exception.ConnectionPrefaceException;
 import shiip.transmission.AsynchronousMessageSender;
 import shiip.util.EncoderDecoderWrapper;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -31,6 +33,9 @@ import static shiip.util.ServerStrings.CONNECTION_PREFACE_ERROR;
  * @author Ian laird
  */
 public class ConnectionHandler implements CompletionHandler<AsynchronousSocketChannel, ConnectionAttachment> {
+
+    // the starting value of the connection preface mutex
+    private static final int CONNECTION_PREFACE_MUTEX = 0;
 
     /**
      * runs for completion of a connection
@@ -43,16 +48,28 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
         // make it so that another connection can be accepted
         attachment.getAsynchronousServerSocketChannel().accept(attachment, new ConnectionHandler());
 
+        attachment.setAsynchronousSocketChannel(clientChan);
+
         int bytesToRead = ServerAIO.CLIENT_CONNECTION_PREFACE.length;
 
         ByteBuffer [] connPreface = {ByteBuffer.allocate(bytesToRead)};
 
-        ConnectionPrefaceAttachment connectionPrefaceAttachment = new ConnectionPrefaceAttachment(connPreface, clientChan);
+        // create the semaphore
+        Semaphore sem = new Semaphore(CONNECTION_PREFACE_MUTEX);
 
-        //TODO put a semaphore before and after this
+        ConnectionPrefaceAttachment connectionPrefaceAttachment = new ConnectionPrefaceAttachment(connPreface, clientChan, sem);
 
         // read in the connection preface
         clientChan.read(connPreface, 0, bytesToRead, (long)3, TimeUnit.SECONDS, connectionPrefaceAttachment, new ConnectionPrefaceHandler());
+
+        // wait for the connection preface to be read in
+        sem.acquireUninterruptibly();
+
+        // ensure that the preface read is valid
+        byte[] readBytes = connPreface[0].array();
+        if (!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)) {
+            failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, StandardCharsets.US_ASCII)), attachment);
+        }
 
         // get the encoder and decoder for the connection
         Encoder encoder = EncoderDecoderWrapper.getEncoder();
@@ -87,6 +104,13 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
      */
     @Override
     public void failed(Throwable e, ConnectionAttachment attachment) {
-        attachment.getLogger().log(Level.WARNING, "Connection failed", e);
+        if(e instanceof ConnectionPrefaceException){
+            attachment.getLogger().severe(CONNECTION_PREFACE_ERROR + ((ConnectionPrefaceException)e).getReceivedString());
+        }else {
+            attachment.getLogger().log(Level.WARNING, "Connection failed", e);
+        }
+        try {
+            attachment.getAsynchronousSocketChannel().close();
+        }catch (IOException e2){}
     }
 }

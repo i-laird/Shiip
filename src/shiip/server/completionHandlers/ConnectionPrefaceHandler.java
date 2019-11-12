@@ -8,15 +8,11 @@ package shiip.server.completionHandlers;
 
 import shiip.server.ServerAIO;
 import shiip.server.attachment.ConnectionPrefaceAttachment;
-import shiip.server.exception.ConnectionPrefaceException;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import static shiip.util.ServerStrings.CONNECTION_PREFACE_ERROR;
 
 /**
  * @author Ian Laird
@@ -33,20 +29,19 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Long, Connect
     @Override
     public void completed(Long result, ConnectionPrefaceAttachment attachment) {
         if(result == -1){
-            //TODO this is an error
+            //TODO what to do?
         }
         ByteBuffer bb = attachment.getBb()[0];
 
         int numLeft = ServerAIO.CLIENT_CONNECTION_PREFACE.length - bb.position();
+
         // if the whole preface has not been read in yet go again
         if(numLeft > 0){
             attachment.getAsynchronousSocketChannel().read(attachment.getBb(), 0, numLeft, (long)3, TimeUnit.SECONDS, attachment, this);
-        }
+        }else {
 
-        // now ensure that the preface read is valid
-        byte [] readBytes = bb.array();
-        if(!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)){
-            failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, StandardCharsets.US_ASCII)), attachment);
+            //done
+            attachment.getSem().release();
         }
     }
 
@@ -58,6 +53,13 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Long, Connect
     @Override
     public void failed(Throwable exc, ConnectionPrefaceAttachment attachment) {
 
+        // zero out the byte buffer
+        attachment.getBb()[0].clear();
+        attachment.getBb()[0].put(new byte [ServerAIO.CLIENT_CONNECTION_PREFACE.length]);
+        attachment.getBb()[0].clear();
+
+        // release the mutex
+        attachment.getSem().release();
     }
 
 }

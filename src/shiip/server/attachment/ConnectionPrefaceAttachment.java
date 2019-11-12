@@ -9,6 +9,7 @@ package shiip.server.attachment;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author Ian Laird
@@ -22,14 +23,19 @@ public class ConnectionPrefaceAttachment {
     // the async socket channel
     private AsynchronousSocketChannel asynchronousSocketChannel;
 
+    // used to block until the connection preface has been read in
+    private Semaphore sem;
+
     /**
      * constructor
      * @param bb the byte buffer array
      * @param asynchronousSocketChannel the async socket channel
+     * @param sem the semaphore
      */
-    public ConnectionPrefaceAttachment(ByteBuffer[] bb, AsynchronousSocketChannel asynchronousSocketChannel) {
+    public ConnectionPrefaceAttachment(ByteBuffer[] bb, AsynchronousSocketChannel asynchronousSocketChannel, Semaphore sem) {
         this.bb = bb;
         this.asynchronousSocketChannel = asynchronousSocketChannel;
+        this.sem = sem;
     }
 
     /**
@@ -62,5 +68,13 @@ public class ConnectionPrefaceAttachment {
      */
     public void setAsynchronousSocketChannel(AsynchronousSocketChannel asynchronousSocketChannel) {
         this.asynchronousSocketChannel = asynchronousSocketChannel;
+    }
+
+    public Semaphore getSem() {
+        return sem;
+    }
+
+    public void setSem(Semaphore sem) {
+        this.sem = sem;
     }
 }
