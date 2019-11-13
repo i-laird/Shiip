@@ -120,17 +120,19 @@ public class ServerMessageHandler {
         String filePath = directory_base.getCanonicalPath() + slashPrepender + fileName;
         File file = new File(filePath);
 
+        int streamId = h.getStreamID();
+
         // see if a directory
         if(file.exists() && file.isDirectory()){
             logger.severe(CANNOT_REQUEST_DIRECTORY);
-            send404File(logger, h.getStreamID(), ERROR_404_DIRECTORY, messageSender);
+            send404File(logger, streamId, ERROR_404_DIRECTORY, messageSender);
             return;
         }
 
         // see if exists and has permissions
         if(!file.exists() || (file.isFile() && !file.canRead())){
             logger.severe(UNABLE_TO_OPEN_FILE + fileName);
-            send404File(logger, h.getStreamID(), ERROR_404_FILE, messageSender);
+            send404File(logger, streamId, ERROR_404_FILE, messageSender);
             return;
         }
 
@@ -141,9 +143,9 @@ public class ServerMessageHandler {
         }
 
         // send a 200 status message
-        send404File(logger, h.getStreamID(), "200 file found", messageSender);
+        send404File(logger, streamId, "200 file found", messageSender);
 
-        lastEncounteredStreamId = h.getStreamID();
+        lastEncounteredStreamId = streamId;
 
         // send file
         if(isThreaded) {
@@ -156,8 +158,9 @@ public class ServerMessageHandler {
         }
         else{
             AsynchronousFileChannel asynchronousFileChannel = AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.READ);
-            UnthreadedServerStream unthreadedServerStream = new UnthreadedServerStream(logger, asynchronousFileChannel, lastEncounteredStreamId, (AsynchronousMessageSender)messageSender, (int) file.length());
-            streams.put(h.getStreamID(), unthreadedServerStream);
+            UnthreadedServerStream unthreadedServerStream =
+                    new UnthreadedServerStream(logger, asynchronousFileChannel, streamId, (AsynchronousMessageSender)messageSender, (int) file.length());
+            streams.put(streamId, unthreadedServerStream);
             unthreadedServerStream.run();
         }
 

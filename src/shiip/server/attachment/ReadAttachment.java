@@ -9,11 +9,13 @@ package shiip.server.attachment;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 import shiip.serialization.NIODeframer;
+import shiip.server.ServerStream;
 import shiip.transmission.AsynchronousMessageSender;
 
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -45,6 +47,10 @@ public class ReadAttachment {
     // the last encountered stream id
     private Integer lastEncounteredStreamId;
 
+    // the streams for the connection
+    private Map<Integer, ServerStream> streams;
+
+    // the current stream id
     private int currStreamId;
 
     /**
@@ -191,5 +197,21 @@ public class ReadAttachment {
      */
     public void setCurrStreamId(int currStreamId) {
         this.currStreamId = currStreamId;
+    }
+
+    /**
+     * gets the streams
+     * @return the streams
+     */
+    public Map<Integer, ServerStream> getStreams() {
+        return streams;
+    }
+
+    /**
+     * sets the streams
+     * @param streams the streams
+     */
+    public void setStreams(Map<Integer, ServerStream> streams) {
+        this.streams = streams;
     }
 }

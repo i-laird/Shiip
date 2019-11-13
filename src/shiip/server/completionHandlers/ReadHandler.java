@@ -47,16 +47,17 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
             Message m = null;
             try {
                 m = Message.decode(deframedBytes, readAttachment.getDecoder());
-                //TODO the streams
-                ServerMessageHandler.handleMessage(false, readAttachment.getLogger(), m, null,
+                ServerMessageHandler.handleMessage(false, readAttachment.getLogger(), m, readAttachment.getStreams(),
                         readAttachment.getDirectoryBase(), readAttachment.getAsynchronousMessageSender(), readAttachment.getLastEncounteredStreamId());
             } catch (BadAttributeException | IOException e) {
                 failed(e, readAttachment);
+                return;
             }
         }
 
         // get ready to read more
-        readAttachment.getAsynchronousSocketChannel().read(readAttachment.getByteBuffer(), readAttachment, new ReadHandler());
+        //TODO will this work
+        readAttachment.getAsynchronousSocketChannel().read(readAttachment.getByteBuffer(), readAttachment, this);
 
     }
 

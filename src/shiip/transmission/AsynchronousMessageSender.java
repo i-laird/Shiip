@@ -50,7 +50,7 @@ public class AsynchronousMessageSender extends MessageSender {
      * @param m message to send
      * @throws IOException if unable to send the message
      */
-    public void sendFrame(Message m) throws IOException{
+    public synchronized void sendFrame(Message m) throws IOException{
         byte [] toSend = Framer.getFramed(m.encode(this.encoder));
 
         ByteBuffer bytes = ByteBuffer.wrap(toSend);

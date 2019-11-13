@@ -31,22 +31,27 @@ public class FileReadHandler implements CompletionHandler<Integer, FileReadAttac
 
         boolean isEnd = false;
         byte [] readBytes = null;
+
+        // if no bytes were read
         if(numRead == -1){
             readBytes = new byte[0];
             isEnd = true;
         }
+
+        // if some bytes were read
         else{
             readBytes = new byte[numRead];
             readAttachment.getReadAttachment().getByteBuffer().get(readBytes, 0, numRead);
             readAttachment.getReadAttachment().getByteBuffer().clear();
         }
 
-        //create data packet and send it
+        //create data packet from whatever was read and send it
         try {
             Message m = new Data(readAttachment.getReadAttachment().getCurrStreamId(), isEnd, readBytes);
             readAttachment.getReadAttachment().getAsynchronousMessageSender().sendFrame(m);
-        }catch (BadAttributeException | IOException e){
+        }catch( BadAttributeException | IOException e){
             failed(e, readAttachment);
+            return; //terminate
         }
 
         // increment the number read from the file channel
@@ -57,8 +62,11 @@ public class FileReadHandler implements CompletionHandler<Integer, FileReadAttac
             readAttachment.getFileChannel()
                     .read(readAttachment.getReadAttachment()
                                     .getByteBuffer(),
-                            readAttachment.getNumRead(),
-                            readAttachment, new FileReadHandler());
+
+                            // says the position in the byte buffer to write to
+                            // (0 because byte buffer has been cleared out)
+                            0,
+                            readAttachment, this); //TODO will 'this' work
         }
 
     }
@@ -71,5 +79,6 @@ public class FileReadHandler implements CompletionHandler<Integer, FileReadAttac
     @Override
     public void failed(Throwable throwable, FileReadAttachment readAttachment) {
 
+        //nothing needs to be done
     }
 }

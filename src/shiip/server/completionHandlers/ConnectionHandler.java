@@ -9,6 +9,7 @@ package shiip.server.completionHandlers;
 import com.twitter.hpack.Decoder;
 import com.twitter.hpack.Encoder;
 import shiip.serialization.NIODeframer;
+import shiip.server.ServerStream;
 import shiip.server.attachment.ConnectionPrefaceAttachment;
 import shiip.server.attachment.ReadAttachment;
 import shiip.server.ServerAIO;
@@ -23,6 +24,9 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -81,6 +85,9 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
         // create the byte buffer for this connection
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(ServerAIO.BUFFER_SIZE);
 
+        // create the streams for the connection
+        Map<Integer, ServerStream> streams = new HashMap<>();
+
         // create the read attachment
         ReadAttachment readAttachment = new ReadAttachment();
         readAttachment.setAsynchronousSocketChannel(clientChan);
@@ -91,6 +98,7 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
         readAttachment.setDirectoryBase(attachment.getFileBase());
         readAttachment.setAsynchronousMessageSender(new AsynchronousMessageSender(clientChan, encoder, attachment.getLogger()));
         readAttachment.setLastEncounteredStreamId(0);
+        readAttachment.setStreams(streams);
 
         // now handle a read
         clientChan.read(byteBuffer, readAttachment, new ReadHandler());
