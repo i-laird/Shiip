@@ -24,6 +24,8 @@ public class FileReadAttachment {
     // the number of bytes read TODO check this
     int numRead = 0;
 
+    int streamId;
+
     /**
      * gets the read attachement
      * @return the read attachment
@@ -70,5 +72,13 @@ public class FileReadAttachment {
      */
     public void setNumRead(int numRead) {
         this.numRead = numRead;
+    }
+
+    public int getStreamId() {
+        return streamId;
+    }
+
+    public void setStreamId(int streamId) {
+        this.streamId = streamId;
     }
 }

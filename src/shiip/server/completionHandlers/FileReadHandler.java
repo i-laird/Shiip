@@ -13,6 +13,7 @@ import shiip.server.attachment.FileReadAttachment;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
+import java.util.Arrays;
 
 /**
  * @author Ian laird
@@ -40,14 +41,13 @@ public class FileReadHandler implements CompletionHandler<Integer, FileReadAttac
 
         // if some bytes were read
         else{
-            readBytes = new byte[numRead];
-            readAttachment.getReadAttachment().getByteBuffer().get(readBytes, 0, numRead);
+            readBytes = Arrays.copyOf(readAttachment.getReadAttachment().getByteBuffer().array(), numRead);
             readAttachment.getReadAttachment().getByteBuffer().clear();
         }
 
         //create data packet from whatever was read and send it
         try {
-            Message m = new Data(readAttachment.getReadAttachment().getCurrStreamId(), isEnd, readBytes);
+            Message m = new Data(readAttachment.getStreamId(), isEnd, readBytes);
             readAttachment.getReadAttachment().getAsynchronousMessageSender().sendFrame(m);
         }catch( BadAttributeException | IOException e){
             failed(e, readAttachment);
@@ -65,7 +65,7 @@ public class FileReadHandler implements CompletionHandler<Integer, FileReadAttac
 
                             // says the position in the byte buffer to write to
                             // (0 because byte buffer has been cleared out)
-                            0,
+                            readAttachment.getNumRead(),
                             readAttachment, this); //TODO will 'this' work
         }
 

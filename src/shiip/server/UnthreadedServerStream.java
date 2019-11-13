@@ -60,7 +60,7 @@ public class UnthreadedServerStream extends ServerStream {
     public void run() {
 
         // create the byte buffer of maximum size allowed
-        ByteBuffer bb = ByteBuffer.allocateDirect(ServerAIO.MAXDATASIZE);
+        ByteBuffer bb = ByteBuffer.allocate(ServerAIO.MAXDATASIZE);
 
         //create the read attachment
         ReadAttachment ra = new ReadAttachment();
@@ -74,6 +74,7 @@ public class UnthreadedServerStream extends ServerStream {
         fra.setReadAttachment(ra);
         fra.setFileChannel(asynchronousFileChannel);
         fra.setNumRead(this.bytesProcessed);
+        fra.setStreamId(streamId);
 
         // now actually perform the read
         this.asynchronousFileChannel.read(bb,
