@@ -13,6 +13,7 @@ import shiip.server.attachment.ReadAttachment;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -35,15 +36,14 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
         }
 
         // get all of the bytes that were read into the byte buffer
-        byte [] readBytes = new byte[numRead];
-        readAttachment.getByteBuffer().get(readBytes, 0, numRead);
+        byte [] readBytes = Arrays.copyOf(readAttachment.getByteBuffer().array(), numRead);
         readAttachment.getByteBuffer().clear();
 
-        // get deframed bytes
+        //keep trying to get messages from the read
         byte [] deframedBytes = readAttachment.getDeframer().getFrame(readBytes);
 
         //if a message does exist handle it
-        if(Objects.nonNull(deframedBytes)) {
+        while(Objects.nonNull(deframedBytes)) {
             Message m = null;
             try {
                 m = Message.decode(deframedBytes, readAttachment.getDecoder());
@@ -53,6 +53,7 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
                 failed(e, readAttachment);
                 return;
             }
+            deframedBytes = readAttachment.getDeframer().getFrame(new byte [0]);
         }
 
         // get ready to read more

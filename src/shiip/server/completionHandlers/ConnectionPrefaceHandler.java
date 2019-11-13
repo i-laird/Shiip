@@ -11,7 +11,6 @@ import shiip.server.attachment.ConnectionPrefaceAttachment;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -19,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0
  * Handles a Connection Preface read
  */
-public class ConnectionPrefaceHandler implements CompletionHandler<Long, ConnectionPrefaceAttachment> {
+public class ConnectionPrefaceHandler implements CompletionHandler<Integer, ConnectionPrefaceAttachment> {
 
     /**
      * completed
@@ -27,17 +26,17 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Long, Connect
      * @param attachment the attachment
      */
     @Override
-    public void completed(Long result, ConnectionPrefaceAttachment attachment) {
+    public void completed(Integer result, ConnectionPrefaceAttachment attachment) {
         if(result == -1){
             //TODO what to do?
         }
-        ByteBuffer bb = attachment.getBb()[0];
+        ByteBuffer bb = attachment.getBb();
 
         int numLeft = ServerAIO.CLIENT_CONNECTION_PREFACE.length - bb.position();
 
         // if the whole preface has not been read in yet go again
         if(numLeft > 0){
-            attachment.getAsynchronousSocketChannel().read(attachment.getBb(), 0, numLeft, (long)3, TimeUnit.SECONDS, attachment, this);
+            attachment.getAsynchronousSocketChannel().read(bb, attachment, this);
         }else {
 
             //done
@@ -54,9 +53,9 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Long, Connect
     public void failed(Throwable exc, ConnectionPrefaceAttachment attachment) {
 
         // zero out the byte buffer
-        attachment.getBb()[0].clear();
-        attachment.getBb()[0].put(new byte [ServerAIO.CLIENT_CONNECTION_PREFACE.length]);
-        attachment.getBb()[0].clear();
+        attachment.getBb().clear();
+        attachment.getBb().put(new byte [ServerAIO.CLIENT_CONNECTION_PREFACE.length]);
+        attachment.getBb().clear();
 
         // release the mutex
         attachment.getSem().release();

@@ -56,7 +56,7 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
 
         int bytesToRead = ServerAIO.CLIENT_CONNECTION_PREFACE.length;
 
-        ByteBuffer [] connPreface = {ByteBuffer.allocate(bytesToRead)};
+        ByteBuffer connPreface = ByteBuffer.allocate(bytesToRead);
 
         // create the semaphore
         Semaphore sem = new Semaphore(CONNECTION_PREFACE_MUTEX);
@@ -64,13 +64,13 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
         ConnectionPrefaceAttachment connectionPrefaceAttachment = new ConnectionPrefaceAttachment(connPreface, clientChan, sem);
 
         // read in the connection preface
-        clientChan.read(connPreface, 0, bytesToRead, (long)3, TimeUnit.SECONDS, connectionPrefaceAttachment, new ConnectionPrefaceHandler());
+        clientChan.read(connPreface, connectionPrefaceAttachment, new ConnectionPrefaceHandler());
 
         // wait for the connection preface to be read in
         sem.acquireUninterruptibly();
 
         // ensure that the preface read is valid
-        byte[] readBytes = connPreface[0].array();
+        byte[] readBytes = connPreface.array();
         if (!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)) {
             failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, StandardCharsets.US_ASCII)), attachment);
         }
@@ -83,7 +83,7 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
         NIODeframer deframer = new NIODeframer();
 
         // create the byte buffer for this connection
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(ServerAIO.BUFFER_SIZE);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(ServerAIO.BUFFER_SIZE);
 
         // create the streams for the connection
         Map<Integer, ServerStream> streams = new HashMap<>();

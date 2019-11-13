@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import shiip.serialization.Deframer;
+import shiip.serialization.NIODeframer;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -139,6 +140,24 @@ public class DeframerTester {
         }catch(IOException e){
             fail(e.getMessage());
         }
+    }
+
+    /**
+     * tests that messages can be correctly deframed
+     *
+     * @see Deframer
+     * @param testString the String that is being tested
+     * @param byteRepresentationOfStrings framed testString
+     * @param displayName the name to be displayed for the test
+     */
+    @DisplayName("correct usage NIO")
+    @ParameterizedTest(name = "{2}")
+    @MethodSource("testsSource")
+    public void testCorrectUsageNIO(String testString,
+                                 byte [] byteRepresentationOfStrings, String displayName){
+        NIODeframer deframer = new NIODeframer();
+        byte[] deframedMessage = deframer.getFrame(byteRepresentationOfStrings);
+        assertArrayEquals(deframedMessage, testString.getBytes());
     }
 
     /**

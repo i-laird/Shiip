@@ -17,8 +17,8 @@ import java.util.concurrent.Semaphore;
  */
 public class ConnectionPrefaceAttachment {
 
-    // the array of byte buffers
-    private ByteBuffer [] bb;
+    // the byte buffer
+    private ByteBuffer  bb;
 
     // the async socket channel
     private AsynchronousSocketChannel asynchronousSocketChannel;
@@ -32,7 +32,7 @@ public class ConnectionPrefaceAttachment {
      * @param asynchronousSocketChannel the async socket channel
      * @param sem the semaphore
      */
-    public ConnectionPrefaceAttachment(ByteBuffer[] bb, AsynchronousSocketChannel asynchronousSocketChannel, Semaphore sem) {
+    public ConnectionPrefaceAttachment(ByteBuffer bb, AsynchronousSocketChannel asynchronousSocketChannel, Semaphore sem) {
         this.bb = bb;
         this.asynchronousSocketChannel = asynchronousSocketChannel;
         this.sem = sem;
@@ -42,7 +42,7 @@ public class ConnectionPrefaceAttachment {
      * gets the bb array
      * @return getter
      */
-    public ByteBuffer[] getBb() {
+    public ByteBuffer getBb() {
         return bb;
     }
 
@@ -50,7 +50,7 @@ public class ConnectionPrefaceAttachment {
      * sets the bb array
      * @param bb the bb array to use
      */
-    public void setBb(ByteBuffer[] bb) {
+    public void setBb(ByteBuffer bb) {
         this.bb = bb;
     }
 

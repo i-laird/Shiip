@@ -91,8 +91,12 @@ public class NIODeframer {
 
         // if a whole message has been read in put the left overs in the record
         previousBufferContents = Arrays.copyOfRange(expandedBuffer, offset, expandedBuffer.length);
+        numLengthBytesRead = 1;
+        numBytesInReceiveBuffer = 0;
+        byte [] toReturn = receiveBuffer;
+        receiveBuffer = null;
 
-        return receiveBuffer;
+        return toReturn;
     }
 
     /**
@@ -106,8 +110,8 @@ public class NIODeframer {
      * @return the concat of the arrays
      */
     private static byte [] concatArrays(byte [] arrayOne, byte [] arrayTwo, int startOne, int endOne, int startTwo, int endTwo){
-        int bytesInOne = endOne = startOne;
-        int bytesInTwo = endTwo = startTwo;
+        int bytesInOne = endOne - startOne;
+        int bytesInTwo = endTwo - startTwo;
 
         byte [] toReturn = new byte [bytesInOne + bytesInTwo];
 
