@@ -131,7 +131,7 @@ public class ServerMessageHandler {
 
         // see if exists and has permissions
         if(!file.exists() || (file.isFile() && !file.canRead())){
-            logger.severe(UNABLE_TO_OPEN_FILE + fileName);
+            logger.severe(UNABLE_TO_OPEN_FILE);
             send404File(logger, streamId, ERROR_404_FILE, messageSender);
             return;
         }
