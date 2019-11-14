@@ -269,6 +269,9 @@ public class Client {
             case 'A':
                 return new ACK(HostPortPair.getFromString(payload)).encode();
             case 'R':
+                if(this.payload.charAt(this.payload.length() - 1) != ' '){
+                    this.payload = this.payload + " ";
+                }
                 return Response.decodeResponse(this.payload).encode();
             case 'E':
                 return new Error(this.payload).encode();
