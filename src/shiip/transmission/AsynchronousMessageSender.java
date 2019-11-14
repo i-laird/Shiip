@@ -15,6 +15,7 @@ import shiip.server.completionHandlers.WriteHandler;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
 /**
@@ -33,6 +34,8 @@ public class AsynchronousMessageSender extends MessageSender {
     // the logger to use
     private Logger logger;
 
+    private Semaphore sem = new Semaphore(1);
+
     /**
      * constructor
      * @param asynchronousSocketChannel the socket channel to use
@@ -50,8 +53,11 @@ public class AsynchronousMessageSender extends MessageSender {
      * @param m message to send
      * @throws IOException if unable to send the message
      */
-    public synchronized void sendFrame(Message m) throws IOException{
-        byte [] toSend = Framer.getFramed(m.encode(this.encoder));
+    public void sendFrame(Message m) throws IOException{
+        byte[] toSend = null;
+        synchronized (this) {
+            toSend = Framer.getFramed(m.encode(this.encoder));
+        }
 
         ByteBuffer bytes = ByteBuffer.wrap(toSend);
 
@@ -59,6 +65,9 @@ public class AsynchronousMessageSender extends MessageSender {
         writeAttachment.setAsynchronousSocketChannel(this.asynchronousSocketChannel);
         writeAttachment.setByteBuffer(bytes);
         writeAttachment.setLogger(logger);
+        writeAttachment.setSem(sem);
+
+        sem.acquireUninterruptibly();
 
         asynchronousSocketChannel.write(bytes, writeAttachment, new WriteHandler());
     }
