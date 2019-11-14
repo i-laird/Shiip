@@ -31,7 +31,9 @@ public class WriteHandler implements CompletionHandler<Integer, WriteAttachment>
             writeAttachment.getAsynchronousSocketChannel()
                     .write(writeAttachment.getByteBuffer(), writeAttachment, new WriteHandler());
         }
-
+        else{
+            writeAttachment.getSem().release();
+        }
     }
 
     /**
@@ -45,6 +47,8 @@ public class WriteHandler implements CompletionHandler<Integer, WriteAttachment>
             writeAttachment.getAsynchronousSocketChannel().close();
         }catch (IOException e){
             writeAttachment.getLogger().log(Level.WARNING, "Close Failed", e);
+        }finally {
+            writeAttachment.getSem().release();
         }
     }
 }

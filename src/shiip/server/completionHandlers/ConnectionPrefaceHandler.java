@@ -6,11 +6,25 @@
 
 package shiip.server.completionHandlers;
 
+import com.twitter.hpack.Decoder;
+import com.twitter.hpack.Encoder;
+import shiip.serialization.NIODeframer;
 import shiip.server.ServerAIO;
+import shiip.server.ServerStream;
 import shiip.server.attachment.ConnectionPrefaceAttachment;
+import shiip.server.attachment.ReadAttachment;
+import shiip.server.exception.ConnectionPrefaceException;
+import shiip.transmission.AsynchronousMessageSender;
+import shiip.util.EncoderDecoderWrapper;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static shiip.util.ServerStrings.CONNECTION_PREFACE_ERROR;
 
 
 /**
@@ -39,8 +53,41 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
             attachment.getAsynchronousSocketChannel().read(bb, attachment, this);
         }else {
 
-            //done
-            attachment.getSem().release();
+            // connection preface has been successfully read in so now begin reading
+
+            // ensure that the preface read is valid
+            byte[] readBytes = bb.array();
+            if (!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)) {
+                failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, StandardCharsets.US_ASCII)), attachment);
+            }
+
+            // get the encoder and decoder for the connection
+            Encoder encoder = EncoderDecoderWrapper.getEncoder();
+            Decoder decoder = EncoderDecoderWrapper.getDecoder();
+
+            // each connection gets its own non blocking deframer
+            NIODeframer deframer = new NIODeframer();
+
+            // create the byte buffer for this connection
+            ByteBuffer byteBuffer = ByteBuffer.allocate(ServerAIO.BUFFER_SIZE);
+
+            // create the streams for the connection
+            Map<Integer, ServerStream> streams = new HashMap<>();
+
+            // create the read attachment
+            ReadAttachment readAttachment = new ReadAttachment();
+            readAttachment.setAsynchronousSocketChannel(attachment.getAsynchronousSocketChannel());
+            readAttachment.setDecoder(decoder);
+            readAttachment.setDeframer(deframer);
+            readAttachment.setByteBuffer(byteBuffer);
+            readAttachment.setLogger(attachment.getConnectionAttachment().getLogger());
+            readAttachment.setDirectoryBase(attachment.getConnectionAttachment().getFileBase());
+            readAttachment.setAsynchronousMessageSender(new AsynchronousMessageSender(attachment.getAsynchronousSocketChannel(), encoder, attachment.getConnectionAttachment().getLogger()));
+            readAttachment.setLastEncounteredStreamId(0);
+            readAttachment.setStreams(streams);
+
+            // now handle a read
+            attachment.getAsynchronousSocketChannel().read(byteBuffer, readAttachment, new ReadHandler());
         }
     }
 
@@ -57,8 +104,6 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
         attachment.getBb().put(new byte [ServerAIO.CLIENT_CONNECTION_PREFACE.length]);
         attachment.getBb().clear();
 
-        // release the mutex
-        attachment.getSem().release();
     }
 
 }

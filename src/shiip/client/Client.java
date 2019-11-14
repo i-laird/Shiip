@@ -139,8 +139,8 @@ public class Client {
         List<String> paths = Arrays.asList(Arrays.copyOfRange(args, PATH_START_POS, args.length));
         Socket socket = null;
         try {
-            //socket = new Socket(args[SERVER_URL_ARG_POS], port);
-            socket = TLSFactory.getClientSocket(args[SERVER_URL_ARG_POS], port);
+            socket = new Socket(args[SERVER_URL_ARG_POS], port);
+            //socket = TLSFactory.getClientSocket(args[SERVER_URL_ARG_POS], port);
         }catch(Exception e){
             System.err.println("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);
@@ -411,8 +411,7 @@ public class Client {
 		    this.socket.getOutputStream().close();
             this.socket.close();
         }catch(IOException e){
-            System.err.println("Error: Unable to close the socket");
-            System.exit(ERROR_CLOSING_SOCKET);
+            // nothing needs to be done
         }
 	}
 }

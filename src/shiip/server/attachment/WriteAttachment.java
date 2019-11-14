@@ -8,6 +8,7 @@ package shiip.server.attachment;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
 /**
@@ -24,6 +25,9 @@ public class WriteAttachment {
 
     // the byte buffer that is to be written
     private ByteBuffer byteBuffer;
+
+    // the semaphore for writing
+    private Semaphore sem;
 
     /**
      * get the async socket channel
@@ -71,5 +75,13 @@ public class WriteAttachment {
      */
     public void setByteBuffer(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;
+    }
+
+    public Semaphore getSem() {
+        return sem;
+    }
+
+    public void setSem(Semaphore sem) {
+        this.sem = sem;
     }
 }

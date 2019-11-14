@@ -32,7 +32,7 @@ public class ServerAIO {
     // public constants as defined in the handout ****************************
 
     // the max data size of the server
-    public static final int MAXDATASIZE = 100;
+    public static final int MAXDATASIZE = 105;
 
     // the min data interval of the server
     public static final int MINDATAINTERVAL = 5;
