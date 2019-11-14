@@ -23,8 +23,7 @@ public class ConnectionPrefaceAttachment {
     // the async socket channel
     private AsynchronousSocketChannel asynchronousSocketChannel;
 
-    // used to block until the connection preface has been read in
-    private Semaphore sem;
+    private ConnectionAttachment connectionAttachment;
 
     /**
      * constructor
@@ -32,10 +31,10 @@ public class ConnectionPrefaceAttachment {
      * @param asynchronousSocketChannel the async socket channel
      * @param sem the semaphore
      */
-    public ConnectionPrefaceAttachment(ByteBuffer bb, AsynchronousSocketChannel asynchronousSocketChannel, Semaphore sem) {
+    public ConnectionPrefaceAttachment(ByteBuffer bb, AsynchronousSocketChannel asynchronousSocketChannel, ConnectionAttachment connectionAttachment) {
         this.bb = bb;
         this.asynchronousSocketChannel = asynchronousSocketChannel;
-        this.sem = sem;
+        this.connectionAttachment = connectionAttachment;
     }
 
     /**
@@ -70,11 +69,11 @@ public class ConnectionPrefaceAttachment {
         this.asynchronousSocketChannel = asynchronousSocketChannel;
     }
 
-    public Semaphore getSem() {
-        return sem;
+    public ConnectionAttachment getConnectionAttachment() {
+        return connectionAttachment;
     }
 
-    public void setSem(Semaphore sem) {
-        this.sem = sem;
+    public void setConnectionAttachment(ConnectionAttachment connectionAttachment) {
+        this.connectionAttachment = connectionAttachment;
     }
 }

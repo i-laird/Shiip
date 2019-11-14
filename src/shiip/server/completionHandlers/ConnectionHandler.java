@@ -58,50 +58,11 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
 
         ByteBuffer connPreface = ByteBuffer.allocate(bytesToRead);
 
-        // create the semaphore
-        Semaphore sem = new Semaphore(CONNECTION_PREFACE_MUTEX);
-
-        ConnectionPrefaceAttachment connectionPrefaceAttachment = new ConnectionPrefaceAttachment(connPreface, clientChan, sem);
+        ConnectionPrefaceAttachment connectionPrefaceAttachment =
+                new ConnectionPrefaceAttachment(connPreface, clientChan, attachment);
 
         // read in the connection preface
         clientChan.read(connPreface, connectionPrefaceAttachment, new ConnectionPrefaceHandler());
-
-        // wait for the connection preface to be read in
-        sem.acquireUninterruptibly();
-
-        // ensure that the preface read is valid
-        byte[] readBytes = connPreface.array();
-        if (!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)) {
-            failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, StandardCharsets.US_ASCII)), attachment);
-        }
-
-        // get the encoder and decoder for the connection
-        Encoder encoder = EncoderDecoderWrapper.getEncoder();
-        Decoder decoder = EncoderDecoderWrapper.getDecoder();
-
-        // each connection gets its own non blocking deframer
-        NIODeframer deframer = new NIODeframer();
-
-        // create the byte buffer for this connection
-        ByteBuffer byteBuffer = ByteBuffer.allocate(ServerAIO.BUFFER_SIZE);
-
-        // create the streams for the connection
-        Map<Integer, ServerStream> streams = new HashMap<>();
-
-        // create the read attachment
-        ReadAttachment readAttachment = new ReadAttachment();
-        readAttachment.setAsynchronousSocketChannel(clientChan);
-        readAttachment.setDecoder(decoder);
-        readAttachment.setDeframer(deframer);
-        readAttachment.setByteBuffer(byteBuffer);
-        readAttachment.setLogger(attachment.getLogger());
-        readAttachment.setDirectoryBase(attachment.getFileBase());
-        readAttachment.setAsynchronousMessageSender(new AsynchronousMessageSender(clientChan, encoder, attachment.getLogger()));
-        readAttachment.setLastEncounteredStreamId(0);
-        readAttachment.setStreams(streams);
-
-        // now handle a read
-        clientChan.read(byteBuffer, readAttachment, new ReadHandler());
 
     }
 
