@@ -241,6 +241,11 @@ public class Server extends Thread{
 
             //get the bytes that were read
             byte [] readBytes = Arrays.copyOfRange(clientConnectionPreface, 0, numRead);
+            try {
+                this.socket.close();
+            }catch (IOException e){
+                // suppress this exception so that the connection preface exception can be thrown
+            }
             throw new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, ENC) );
     }
 
