@@ -240,6 +240,10 @@ public abstract class Message {
      */
     protected static void queryValidator(String query) throws IllegalArgumentException{
 
+        if(query.isEmpty()){
+            throw new IllegalArgumentException("no empty string allowed");
+        }
+
         // both star and empty string are valid queries
         if("*".equals(query) || "".equals(query)){
             return;

@@ -21,13 +21,13 @@ import java.util.stream.Collectors;
 public class Response extends Message {
 
     // the host and port pairs stored as a string
-    private Set<String> hostPort;
+    private Map<String, Set<Integer>> hostPort;
 
     /**
      * Construct response with empty host:port list
      */
     public Response(){
-        this.hostPort = new TreeSet<>();
+        this.hostPort = new TreeMap<>();
     }
 
     /**
@@ -37,7 +37,9 @@ public class Response extends Message {
      * @return service list
      */
     public List<String> getServiceList(){
-        return this.hostPort.stream().collect(Collectors.toUnmodifiableList());
+        List<String> toReturn = new LinkedList<>();
+        this.hostPort.entrySet().stream().forEach( x -> x.getValue().forEach(y -> toReturn.add(x.getKey() + ":" + y.toString())));
+        return Collections.unmodifiableList(toReturn);
     }
 
     /**
@@ -56,8 +58,15 @@ public class Response extends Message {
         nameValidator(host);
         portValidator(port);
 
-        // each string is host:port
-        this.hostPort.add(host + ":" + Integer.toString(port));
+        // see if this host already exists
+        Set<Integer> ports = hostPort.get(host);
+
+        if(Objects.isNull(ports)){
+            ports = new TreeSet<Integer>();
+            hostPort.put(host, ports);
+        }
+
+        ports.add(port);
 
         // make sure that the maximum size of a message has not been exceeded
         this.testPayloadLength();
@@ -83,7 +92,7 @@ public class Response extends Message {
     @Override
     public String getPayload(){
         StringBuilder stringBuilder = new StringBuilder();
-        for(String s: this.hostPort){
+        for(String s: this.getServiceList()){
             stringBuilder.append(s).append(" ");
         }
         return stringBuilder.toString();
@@ -96,7 +105,7 @@ public class Response extends Message {
     @Override
     public String getToStringPayload() {
         StringBuilder stringBuilder = new StringBuilder();
-        for(String s: this.hostPort){
+        for(String s: this.getServiceList()){
             stringBuilder.append("[").append(s).append("]");
         }
         return stringBuilder.toString();
