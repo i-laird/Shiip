@@ -25,7 +25,7 @@ import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
  * @author Ian laird
  * The Jack multicast client
  */
-public class MulticastClient extends Thread {
+public class MulticastClient {
 
     // the expected number of args
     private static final int EXPECTED_ARG_NUM = 2;
@@ -59,24 +59,16 @@ public class MulticastClient extends Thread {
         }
         InetAddress server = CommandLineParser.getIpAddress(args[SERVER_POS]);
         int port = CommandLineParser.getPort(args[SERVER_PORT_POS]);
-        Scanner in = new Scanner(System.in);
         MulticastSocket sock = null;
 
+        MulticastClient client = null;
         try {
-            MulticastClient client = new MulticastClient(server, port);
+            client = new MulticastClient(server, port);
 
-            //forever read in user input
-            while(true){
-                String readLine = in.next();
-                if(readLine.matches("quit")){
-
-                    client.interrupt();
-                    break;
-                }
-            }
-            client.join();
-        }catch(IOException | InterruptedException e){}
-
+        }catch(IOException e){
+            System.err.println("Unable to create multicast client");
+        }
+        client.run();
     }
 
     /**
@@ -92,12 +84,21 @@ public class MulticastClient extends Thread {
         this.port = port;
     }
 
-    @Override
     public void run() {
         byte[] buffer = new byte[MESSAGE_MAXIMUM_SIZE];
+        Scanner in = new Scanner(System.in);
 
         while (true) {
             try {
+                while(in.hasNext()) {
+                    String readLine = in.next();
+                    if (readLine.matches("quit")) {
+                        sock.leaveGroup(server);
+                        sock.close();
+                        return;
+                    }
+                }
+
                 sock.setSoTimeout(CHECK_FOR_KILLED);
                 DatagramPacket toReceive = new DatagramPacket(buffer, MESSAGE_MAXIMUM_SIZE);
                 sock.receive(toReceive);
@@ -108,7 +109,7 @@ public class MulticastClient extends Thread {
                     System.out.println(m.toString());
                 }
             } catch (IOException e) {
-                if (!(e instanceof SocketTimeoutException && !this.isInterrupted())) {
+                if (!(e instanceof SocketTimeoutException)) {
                     try {
                         sock.leaveGroup(server);
                         sock.close();
