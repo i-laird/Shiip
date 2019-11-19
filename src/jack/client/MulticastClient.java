@@ -39,10 +39,13 @@ public class MulticastClient {
     // the amount of time to check if interrupted
     private static final int CHECK_FOR_KILLED = 100;
 
+    // the multicast socket
     private MulticastSocket sock;
 
+    // the inet address of the server
     private InetAddress server;
 
+    // the port number of the server
     private int port;
 
 

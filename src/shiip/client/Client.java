@@ -150,7 +150,7 @@ public class Client {
         Encoder encoder = EncoderDecoderWrapper.getEncoder();
         Decoder decoder = EncoderDecoderWrapper.getDecoder();
         
-		// create the connection
+		// create the connectiong
 		Client shiipConnection = 
 			new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
         
