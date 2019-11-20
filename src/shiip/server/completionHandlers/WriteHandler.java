@@ -11,7 +11,6 @@ import shiip.server.attachment.WriteAttachment;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
-import java.util.logging.Level;
 
 /**
  * @author Ian Laird
