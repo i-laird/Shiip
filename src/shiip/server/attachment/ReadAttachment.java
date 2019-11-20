@@ -7,7 +7,6 @@
 package shiip.server.attachment;
 
 import com.twitter.hpack.Decoder;
-import com.twitter.hpack.Encoder;
 import shiip.serialization.NIODeframer;
 import shiip.server.ServerStream;
 import shiip.transmission.AsynchronousMessageSender;
@@ -16,6 +15,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 /**

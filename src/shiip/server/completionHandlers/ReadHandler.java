@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.nio.channels.CompletionHandler;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+import static shiip.server.Server.CLIENT_INACTIVE_TIMEOUT;
 
 /**
  * @author Ian Laird
@@ -31,8 +34,13 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
     @Override
     public void completed(Integer numRead, ReadAttachment readAttachment) {
 
+        // TODO what if only input closed
+        // if none were read it must mean that the socket closed
         if(numRead == -1){
-            //TODO
+            try {
+                readAttachment.getAsynchronousSocketChannel().close();
+            }catch (IOException e){}
+            return;
         }
 
         // get all of the bytes that were read into the byte buffer
@@ -57,8 +65,8 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
         }
 
         // get ready to read more
-        //TODO will this work
-        readAttachment.getAsynchronousSocketChannel().read(readAttachment.getByteBuffer(), readAttachment, this);
+        readAttachment.getAsynchronousSocketChannel().read(
+                readAttachment.getByteBuffer(), CLIENT_INACTIVE_TIMEOUT, TimeUnit.MILLISECONDS, readAttachment, this);
 
     }
 
@@ -69,6 +77,8 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
      */
     @Override
     public void failed(Throwable throwable, ReadAttachment readAttachment) {
-
+        try {
+            readAttachment.getAsynchronousSocketChannel().close();
+        }catch (IOException e){}
     }
 }

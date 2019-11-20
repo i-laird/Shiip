@@ -22,9 +22,7 @@ import java.util.logging.Logger;
 import static shiip.serialization.Headers.NAME_PATH;
 import static shiip.serialization.Headers.STATUS;
 import static shiip.serialization.Message.*;
-import static shiip.serialization.Message.WINDOW_UPDATE_TYPE;
 import static shiip.util.ServerStrings.*;
-import static shiip.util.ServerStrings.ILLEGAL_STREAM_ID;
 
 /**
  * handles Server Messages

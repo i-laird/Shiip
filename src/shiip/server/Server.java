@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import static util.ErrorCodes.*;
@@ -71,7 +72,7 @@ public class Server extends Thread{
     private static final int SERVER_ARG_DOC_ROOT_POS = 2;
 
     // the wait if the client is inactive
-    private static final int CLIENT_INACTIVE_TIMEOUT = 1000 * 20;
+    public static final int CLIENT_INACTIVE_TIMEOUT = 1000 * 20;
 
     // MISC *****************************************************************
 
@@ -176,9 +177,14 @@ public class Server extends Thread{
         try{
             this.setupConnection();
         }catch(IOException | BadAttributeException e){
-            logger.severe("Unable to establish the session: " + e.getMessage());
+            if(e instanceof SocketTimeoutException){
+                logger.severe("timeout occurred");
+            }
+            else {
+                logger.severe("Unable to establish the session: " + e.getMessage());
+            }
             return;
-        }catch(ConnectionPrefaceException e2){
+        }catch(ConnectionPrefaceException e2) {
             logger.severe(CONNECTION_PREFACE_ERROR + e2.getReceivedString());
             return;
         }
@@ -227,10 +233,12 @@ public class Server extends Thread{
      * sets up the connection to the client
      */
     private void setupConnection()
-            throws IOException, BadAttributeException, ConnectionPrefaceException{
+            throws IOException, BadAttributeException, ConnectionPrefaceException, SocketTimeoutException{
 
         // read in the connection preface octets
         byte [] clientConnectionPreface = new byte [Client.CLIENT_CONNECTION_PREFACE.length];
+
+        socket.setSoTimeout(CLIENT_INACTIVE_TIMEOUT);
 
         // does not need to be synchronized because no other threads have been spun off yet
         int numRead = in.readNBytes

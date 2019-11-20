@@ -10,9 +10,7 @@ import shiip.server.attachment.FileReadAttachment;
 import shiip.server.attachment.ReadAttachment;
 import shiip.server.completionHandlers.FileReadHandler;
 import shiip.transmission.AsynchronousMessageSender;
-import shiip.transmission.MessageSender;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.AsynchronousSocketChannel;

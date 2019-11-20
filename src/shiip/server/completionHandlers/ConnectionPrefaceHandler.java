@@ -17,13 +17,18 @@ import shiip.server.exception.ConnectionPrefaceException;
 import shiip.transmission.AsynchronousMessageSender;
 import shiip.util.EncoderDecoderWrapper;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
+import java.nio.channels.InterruptedByTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.concurrent.TimeUnit;
 
+import static shiip.server.Server.CLIENT_INACTIVE_TIMEOUT;
 import static shiip.util.ServerStrings.CONNECTION_PREFACE_ERROR;
 
 
@@ -41,16 +46,22 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
      */
     @Override
     public void completed(Integer result, ConnectionPrefaceAttachment attachment) {
-        if(result == -1){
-            //TODO what to do?
-        }
         ByteBuffer bb = attachment.getBb();
+
+        // if unable to read in the whole conenction preface terminate the connection
+        if(result == -1){
+            // TODO check this logic
+            byte [] readBytes = Arrays.copyOfRange(bb.array(), 0, bb.position());
+            failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR,
+                    new String(readBytes, StandardCharsets.US_ASCII)), attachment);
+        }
 
         int numLeft = ServerAIO.CLIENT_CONNECTION_PREFACE.length - bb.position();
 
         // if the whole preface has not been read in yet go again
         if(numLeft > 0){
-            attachment.getAsynchronousSocketChannel().read(bb, attachment, this);
+            attachment.getAsynchronousSocketChannel().read(
+                    bb, CLIENT_INACTIVE_TIMEOUT, TimeUnit.MILLISECONDS, attachment, this);
         }else {
 
             // connection preface has been successfully read in so now begin reading
@@ -58,7 +69,8 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
             // ensure that the preface read is valid
             byte[] readBytes = bb.array();
             if (!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)) {
-                failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR, new String(readBytes, StandardCharsets.US_ASCII)), attachment);
+                failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR,
+                        new String(readBytes, StandardCharsets.US_ASCII)), attachment);
             }
 
             // get the encoder and decoder for the connection
@@ -82,12 +94,15 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
             readAttachment.setByteBuffer(byteBuffer);
             readAttachment.setLogger(attachment.getConnectionAttachment().getLogger());
             readAttachment.setDirectoryBase(attachment.getConnectionAttachment().getFileBase());
-            readAttachment.setAsynchronousMessageSender(new AsynchronousMessageSender(attachment.getAsynchronousSocketChannel(), encoder, attachment.getConnectionAttachment().getLogger()));
+            readAttachment.setAsynchronousMessageSender(
+                    new AsynchronousMessageSender(attachment.getAsynchronousSocketChannel(),
+                            encoder, attachment.getConnectionAttachment().getLogger()));
             readAttachment.setLastEncounteredStreamId(0);
             readAttachment.setStreams(streams);
 
             // now handle a read
-            attachment.getAsynchronousSocketChannel().read(byteBuffer, readAttachment, new ReadHandler());
+            attachment.getAsynchronousSocketChannel().read(
+                    byteBuffer, CLIENT_INACTIVE_TIMEOUT, TimeUnit.MILLISECONDS, readAttachment, new ReadHandler());
         }
     }
 
@@ -99,6 +114,21 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
     @Override
     public void failed(Throwable exc, ConnectionPrefaceAttachment attachment) {
 
+        // if the error is a bad connection preface then terminate
+        if(exc instanceof ConnectionPrefaceException){
+            attachment.getConnectionAttachment().getLogger().severe(
+                    CONNECTION_PREFACE_ERROR + ((ConnectionPrefaceException)exc).getReceivedString());
+        }else if(exc instanceof InterruptedByTimeoutException){
+            attachment.getConnectionAttachment().getLogger().log(Level.WARNING, "Timeout occurred", exc);
+        }
+
+        // close the socket
+        try {
+            attachment.getAsynchronousSocketChannel().close();
+        }catch(IOException e){}
+
+
+        // TODO why is this here
         // zero out the byte buffer
         attachment.getBb().clear();
         attachment.getBb().put(new byte [ServerAIO.CLIENT_CONNECTION_PREFACE.length]);

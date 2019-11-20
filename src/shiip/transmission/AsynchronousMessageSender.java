@@ -16,9 +16,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
 /**
@@ -37,6 +35,7 @@ public class AsynchronousMessageSender extends MessageSender {
     // the logger to use
     private Logger logger;
 
+    // the output buffer for the connection
     private final Queue<ByteBuffer> outputBuffer;
 
     /**

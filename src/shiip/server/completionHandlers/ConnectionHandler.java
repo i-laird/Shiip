@@ -6,32 +6,18 @@
 
 package shiip.server.completionHandlers;
 
-import com.twitter.hpack.Decoder;
-import com.twitter.hpack.Encoder;
-import shiip.serialization.NIODeframer;
-import shiip.server.ServerStream;
 import shiip.server.attachment.ConnectionPrefaceAttachment;
-import shiip.server.attachment.ReadAttachment;
 import shiip.server.ServerAIO;
 import shiip.server.attachment.ConnectionAttachment;
-import shiip.server.exception.ConnectionPrefaceException;
-import shiip.transmission.AsynchronousMessageSender;
-import shiip.util.EncoderDecoderWrapper;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
-import static shiip.util.ServerStrings.CONNECTION_PREFACE_ERROR;
+import java.util.concurrent.TimeUnit;
+
+import static shiip.server.Server.CLIENT_INACTIVE_TIMEOUT;
 
 /**
  * @author Ian laird
@@ -62,7 +48,7 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
                 new ConnectionPrefaceAttachment(connPreface, clientChan, attachment);
 
         // read in the connection preface
-        clientChan.read(connPreface, connectionPrefaceAttachment, new ConnectionPrefaceHandler());
+        clientChan.read(connPreface, CLIENT_INACTIVE_TIMEOUT, TimeUnit.MILLISECONDS, connectionPrefaceAttachment, new ConnectionPrefaceHandler());
 
     }
 
@@ -73,11 +59,6 @@ public class ConnectionHandler implements CompletionHandler<AsynchronousSocketCh
      */
     @Override
     public void failed(Throwable e, ConnectionAttachment attachment) {
-        if(e instanceof ConnectionPrefaceException){
-            attachment.getLogger().severe(CONNECTION_PREFACE_ERROR + ((ConnectionPrefaceException)e).getReceivedString());
-        }else {
-            attachment.getLogger().log(Level.WARNING, "Connection failed", e);
-        }
         try {
             attachment.getAsynchronousSocketChannel().close();
         }catch (IOException e2){}

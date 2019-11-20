@@ -14,7 +14,6 @@ import util.CommandLineParser;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.AcceptPendingException;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -69,6 +68,7 @@ public class ServerAIO {
     // the base directory
     private static File directory_base = null;
 
+
     /**
      * runs the server
      * @param args
@@ -106,8 +106,6 @@ public class ServerAIO {
             logger.log(Level.WARNING, "Server Interrupted", e);
         }catch(IOException e2){
             logger.log(Level.WARNING, "Unable to create Socket", e2);
-        }catch(AcceptPendingException e3){
-            //TODO do I need this
         }
 
     }
