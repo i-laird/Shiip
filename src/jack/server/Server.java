@@ -50,6 +50,9 @@ public class Server {
     // for an invalid message
     private static final String INVALID_MESSAGE = "Invalid message: ";
 
+    // for an unexpected message type
+    private static final String UNEXPECTED_MESSAGE_TYPE = "Unexpected message type: ";
+
     // the charset that is being used
     private static final Charset ENC = StandardCharsets.US_ASCII;
 
@@ -107,20 +110,26 @@ public class Server {
         // create the buffer
         byte [] buffer = new byte[MESSAGE_MAXIMUM_SIZE];
 
+        DatagramPacket toReceive = null;
         // run forever
         while(true){
             try {
+                try {
 
-                // create the datagram packet
-                DatagramPacket toReceive = new DatagramPacket(buffer, MESSAGE_MAXIMUM_SIZE);
-                this.sock.receive(toReceive);
-                byte [] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
-                Message m = Message.decode(receivedBytes);
-                this.handleMessage(m, toReceive);
-            }catch(IOException e){
+                    // create the datagram packet
+                    toReceive = new DatagramPacket(buffer, MESSAGE_MAXIMUM_SIZE);
+                    this.sock.receive(toReceive);
+                    byte[] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
+                    Message m = Message.decode(receivedBytes);
+                    this.handleMessage(m, toReceive);
+                } catch (IllegalArgumentException e2) {
+                    logger.severe(INVALID_MESSAGE + e2.getMessage());
+                    Error error = new Error(INVALID_MESSAGE + e2.getMessage());
+                    toReceive.setData(error.encode());
+                    this.sock.send(toReceive);
+                }
+            }catch(IOException e) {
                 logger.severe(COMMUNICATION_PROBLEM + e.getMessage());
-            }catch(IllegalArgumentException e2){
-                logger.severe(INVALID_MESSAGE + e2.getMessage());
             }
         }
     }
@@ -199,7 +208,7 @@ public class Server {
      */
     private Message handleRAE(Message m){
 
-        String errorMessage = INVALID_MESSAGE + m.toString();
+        String errorMessage = UNEXPECTED_MESSAGE_TYPE + m.toString();
 
         // log the invalid message
         logger.severe(errorMessage);
