@@ -54,7 +54,7 @@ public class Query extends Message{
      */
     @Override
     public String getFullOperation(){
-        return QUERY_OP;
+        return QUERY_OP_FULL;
     }
 
     /**

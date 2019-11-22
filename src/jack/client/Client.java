@@ -19,7 +19,7 @@ import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
 import static util.ErrorCodes.NETWORK_ERROR;
 import static util.ErrorCodes.ERROR_MESSAGE_RECEIVED;
 import static util.ErrorCodes.ERROR_OP_SPECIFIED;
-import static jack.serialization.Message.MESSAGE_MAXIMUM_SIZE;
+import static jack.serialization.Message.*;
 
 /**
  * jack Client
@@ -259,21 +259,21 @@ public class Client {
      */
     private byte [] getMessageToSend(){
         switch(this.op.charAt(0)){
-            case 'Q':
+            case QUERY_OP:
                 qSent = true;
                 return new Query(this.payload).encode();
-            case 'N':
+            case NEW_OP:
                 nSent = true;
                 this.optionallySent = new New(HostPortPair.getFromString(this.payload));
                 return this.optionallySent.encode();
-            case 'A':
+            case ACK_OP:
                 return new ACK(HostPortPair.getFromString(payload)).encode();
-            case 'R':
+            case RESPONSE_OP:
                 if(this.payload.charAt(this.payload.length() - 1) != ' '){
                     this.payload = this.payload + " ";
                 }
                 return Response.decodeResponse(this.payload).encode();
-            case 'E':
+            case ERROR_OP:
                 return new Error(this.payload).encode();
             default:
                 System.err.println(BAD_PARAMETERS + "unexpected op " + this.op);

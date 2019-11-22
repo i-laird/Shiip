@@ -9,7 +9,6 @@ package jack.serialization;
 import jack.util.HostPortPair;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Ian Laird
@@ -78,7 +77,7 @@ public class Response extends Message {
      */
     @Override
     public String getFullOperation(){
-        return RESPONSE_OP;
+        return RESPONSE_OP_FULL;
     }
 
     /**

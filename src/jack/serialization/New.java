@@ -47,6 +47,6 @@ public class New extends HostPortMessage{
      */
     @Override
     public String getFullOperation(){
-        return NEW_OP;
+        return NEW_OP_FULL;
     }
 }

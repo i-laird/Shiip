@@ -46,6 +46,6 @@ public class ACK extends HostPortMessage{
      */
     @Override
     public String getFullOperation(){
-        return ACK_OP;
+        return ACK_OP_FULL;
     }
 }

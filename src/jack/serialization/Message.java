@@ -28,22 +28,37 @@ public abstract class Message {
     public static final String RESPONSE_REGEX = "(" + NAME_REGEX + ":[0-9]+ )*";
 
     // the charset that is being used
-    protected static final Charset ENC = StandardCharsets.US_ASCII;
+    public static final Charset ENC = StandardCharsets.US_ASCII;
 
     // the op for query message
-    protected static final String QUERY_OP    = "QUERY";
+    public static final String QUERY_OP_FULL = "QUERY";
 
     // the op for response message
-    protected static final String RESPONSE_OP = "RESPONSE";
+    public static final String RESPONSE_OP_FULL = "RESPONSE";
 
     // the op for new message
-    protected static final String NEW_OP      = "NEW";
+    public static final String NEW_OP_FULL = "NEW";
 
     // the op for ack message
-    protected static final String ACK_OP      = "ACK";
+    public static final String ACK_OP_FULL = "ACK";
 
     // the op for error message
-    protected static final String ERROR_OP    = "ERROR";
+    public static final String ERROR_OP_FULL = "ERROR";
+
+    // the op for a query
+    public static final char QUERY_OP    = 'Q';
+
+    // the op for a new
+    public static final char NEW_OP      = 'N';
+
+    // the op for an ack
+    public static final char ACK_OP      = 'A';
+
+    // the op for a response
+    public static final char RESPONSE_OP = 'R';
+
+    // the op for an error
+    public static final char ERROR_OP    = 'E';
 
     // if unable to parse the message
     private static final String DECODE_ISSUE = Client.INVALID_MESSAGE + " expected <Op><sp><Payload>";
@@ -57,11 +72,11 @@ public abstract class Message {
     private static List<String> acceptableOP = new LinkedList<>();
 
     static {
-        acceptableOP.add(QUERY_OP);
-        acceptableOP.add(RESPONSE_OP);
-        acceptableOP.add(NEW_OP);
-        acceptableOP.add(ACK_OP);
-        acceptableOP.add(ERROR_OP);
+        acceptableOP.add(QUERY_OP_FULL);
+        acceptableOP.add(RESPONSE_OP_FULL);
+        acceptableOP.add(NEW_OP_FULL);
+        acceptableOP.add(ACK_OP_FULL);
+        acceptableOP.add(ERROR_OP_FULL);
     }
 
     // the lowest valid port
@@ -111,12 +126,12 @@ public abstract class Message {
 
             char firstChar = msgString.charAt(0);
             // see if it is an invalid message
-            if((firstChar != 'R') && (firstChar != 'Q')){
+            if((firstChar != RESPONSE_OP) && (firstChar != QUERY_OP)){
                 throw new IllegalArgumentException(DECODE_ISSUE);
             }
 
             // an empty response
-            if(firstChar == 'R'){
+            if(firstChar == RESPONSE_OP){
                 return new Response();
             }
             return new Query("");
@@ -130,17 +145,17 @@ public abstract class Message {
 
         HostPortPair parsed = null;
         switch(OP_char){
-            case 'Q':
+            case QUERY_OP:
                 return new Query(payload);
-            case 'R':
+            case RESPONSE_OP:
                 return Response.decodeResponse(payload);
-            case 'N':
+            case NEW_OP:
                 parsed = HostPortPair.getFromString(payload);
                 return new New(parsed.getHost(), parsed.getPort());
-            case 'A':
+            case ACK_OP:
                 parsed = HostPortPair.getFromString(payload);
                 return new ACK(parsed.getHost(), parsed.getPort());
-            case 'E':
+            case ERROR_OP:
                 return new Error(payload);
             default:
                 throw new IllegalArgumentException(Client.INVALID_MESSAGE + "Unrecognized OP");
