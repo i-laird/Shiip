@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.channels.CompletionHandler;
 import java.util.Arrays;
 
+import static shiip.server.completionHandlers.ConnectionPrefaceHandler.READ_FAILED;
 /**
  * @author Ian laird
  * @version 1.0
@@ -34,14 +35,16 @@ public class FileReadHandler implements CompletionHandler<Integer, FileReadAttac
         byte [] readBytes = null;
 
         // if no bytes were read
-        if(numRead == -1){
+        if(numRead == READ_FAILED){
             readBytes = new byte[0];
             isEnd = true;
         }
 
         // if some bytes were read
         else{
-            readBytes = Arrays.copyOf(readAttachment.getReadAttachment().getByteBuffer().array(), numRead);
+            readBytes = Arrays.copyOf(
+                    readAttachment.getReadAttachment().getByteBuffer().array(),
+                    numRead);
             readAttachment.getReadAttachment().getByteBuffer().clear();
         }
 

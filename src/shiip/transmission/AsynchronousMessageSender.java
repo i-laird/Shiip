@@ -44,7 +44,9 @@ public class AsynchronousMessageSender extends MessageSender {
      * @param encoder the encoder to use
      * @param logger the logger to use
      */
-    public AsynchronousMessageSender(AsynchronousSocketChannel asynchronousSocketChannel, Encoder encoder, Logger logger) {
+    public AsynchronousMessageSender(
+            AsynchronousSocketChannel asynchronousSocketChannel,
+            Encoder encoder, Logger logger) {
         this.asynchronousSocketChannel = asynchronousSocketChannel;
         this.encoder = encoder;
         this.logger = logger;

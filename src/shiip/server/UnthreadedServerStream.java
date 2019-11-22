@@ -39,7 +39,9 @@ public class UnthreadedServerStream extends ServerStream {
      * @param logger the logger
      * @param asynchronousFileChannel the async file channel
      */
-    public UnthreadedServerStream(Logger logger, AsynchronousFileChannel asynchronousFileChannel, int streamId, AsynchronousMessageSender ms, int bytesToRead){
+    public UnthreadedServerStream(
+            Logger logger, AsynchronousFileChannel asynchronousFileChannel,
+            int streamId, AsynchronousMessageSender ms, int bytesToRead){
         this.asynchronousFileChannel = asynchronousFileChannel;
         this.messageSender = ms;
         this.bytesProcessed = 0;

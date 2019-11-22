@@ -18,6 +18,8 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static shiip.server.Server.CLIENT_INACTIVE_TIMEOUT;
+import static shiip.server.completionHandlers.ConnectionPrefaceHandler.READ_FAILED;
+
 
 /**
  * @author Ian Laird
@@ -36,7 +38,7 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
 
         // TODO what if only input closed
         // if none were read it must mean that the socket closed
-        if(numRead == -1){
+        if(numRead == READ_FAILED){
             try {
                 readAttachment.getAsynchronousSocketChannel().close();
             }catch (IOException e){}
@@ -44,19 +46,27 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
         }
 
         // get all of the bytes that were read into the byte buffer
-        byte [] readBytes = Arrays.copyOf(readAttachment.getByteBuffer().array(), numRead);
+        byte [] readBytes =
+                Arrays.copyOf(readAttachment.getByteBuffer().array(), numRead);
         readAttachment.getByteBuffer().clear();
 
         //keep trying to get messages from the read
-        byte [] deframedBytes = readAttachment.getDeframer().getFrame(readBytes);
+        byte [] deframedBytes =
+                readAttachment.getDeframer().getFrame(readBytes);
 
         //if a message does exist handle it
         while(Objects.nonNull(deframedBytes)) {
             Message m = null;
             try {
                 m = Message.decode(deframedBytes, readAttachment.getDecoder());
-                ServerMessageHandler.handleMessage(false, readAttachment.getLogger(), m, readAttachment.getStreams(),
-                        readAttachment.getDirectoryBase(), readAttachment.getAsynchronousMessageSender(), readAttachment.getLastEncounteredStreamId());
+                ServerMessageHandler.handleMessage(
+                        false,
+                        readAttachment.getLogger(),
+                        m,
+                        readAttachment.getStreams(),
+                        readAttachment.getDirectoryBase(),
+                        readAttachment.getAsynchronousMessageSender(),
+                        readAttachment.getLastEncounteredStreamId());
             } catch (BadAttributeException | IOException e) {
                 failed(e, readAttachment);
                 return;
@@ -66,7 +76,8 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
 
         // get ready to read more
         readAttachment.getAsynchronousSocketChannel().read(
-                readAttachment.getByteBuffer(), CLIENT_INACTIVE_TIMEOUT, TimeUnit.MILLISECONDS, readAttachment, this);
+                readAttachment.getByteBuffer(), CLIENT_INACTIVE_TIMEOUT,
+                TimeUnit.MILLISECONDS, readAttachment, this);
 
     }
 

@@ -59,7 +59,6 @@ public class WriteHandler implements CompletionHandler<Integer, WriteAttachment>
         try {
             writeAttachment.getAsynchronousSocketChannel().close();
         }catch (IOException e){
-            //writeAttachment.getLogger().log(Level.WARNING, "Close Failed", e);
         }finally {
             synchronized (writeAttachment.getOutputBuffer()) {
                 writeAttachment.getOutputBuffer().poll();

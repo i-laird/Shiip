@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static shiip.server.Server.CLIENT_INACTIVE_TIMEOUT;
 import static shiip.util.ServerStrings.CONNECTION_PREFACE_ERROR;
+import static shiip.client.Client.CLIENT_CONNECTION_PREFACE;
 
 
 /**
@@ -38,6 +39,9 @@ import static shiip.util.ServerStrings.CONNECTION_PREFACE_ERROR;
  * Handles a Connection Preface read
  */
 public class ConnectionPrefaceHandler implements CompletionHandler<Integer, ConnectionPrefaceAttachment> {
+
+    // bytes failed to be read
+    public static final int READ_FAILED = -1;
 
     /**
      * completed
@@ -49,14 +53,14 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
         ByteBuffer bb = attachment.getBb();
 
         // if unable to read in the whole conenction preface terminate the connection
-        if(result == -1){
+        if(result == READ_FAILED){
             // TODO check this logic
             byte [] readBytes = Arrays.copyOfRange(bb.array(), 0, bb.position());
             failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR,
                     new String(readBytes, StandardCharsets.US_ASCII)), attachment);
         }
 
-        int numLeft = ServerAIO.CLIENT_CONNECTION_PREFACE.length - bb.position();
+        int numLeft = CLIENT_CONNECTION_PREFACE.length - bb.position();
 
         // if the whole preface has not been read in yet go again
         if(numLeft > 0){
@@ -68,7 +72,7 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
 
             // ensure that the preface read is valid
             byte[] readBytes = bb.array();
-            if (!Arrays.equals(ServerAIO.CLIENT_CONNECTION_PREFACE, readBytes)) {
+            if (!Arrays.equals(CLIENT_CONNECTION_PREFACE, readBytes)) {
                 failed(new ConnectionPrefaceException(CONNECTION_PREFACE_ERROR,
                         new String(readBytes, StandardCharsets.US_ASCII)), attachment);
             }
@@ -131,7 +135,7 @@ public class ConnectionPrefaceHandler implements CompletionHandler<Integer, Conn
         // TODO why is this here
         // zero out the byte buffer
         attachment.getBb().clear();
-        attachment.getBb().put(new byte [ServerAIO.CLIENT_CONNECTION_PREFACE.length]);
+        attachment.getBb().put(new byte [CLIENT_CONNECTION_PREFACE.length]);
         attachment.getBb().clear();
 
     }

@@ -39,12 +39,6 @@ public class ServerAIO {
     // the size of the byte buffer
     public static final int BUFFER_SIZE = 256;
 
-    // the connection preface
-    public static final byte [] CLIENT_CONNECTION_PREFACE =
-            {0x50, 0x52, 0x49, 0x20, 0x2a, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f,
-                    0x32, 0x2e, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x53, 0x4d, 0x0d, 0x0a,
-                    0x0d, 0x0a};
-
     // private constants ****************************************************
 
     // the number of arguments for the aio shiip server
@@ -55,9 +49,6 @@ public class ServerAIO {
 
     // the position of the document root in the args
     private static final int AIO_SERVER_ARG_DOC_ROOT_POS = 1;
-
-    // the wait if the client is inactive
-    private static final int CLIENT_INACTIVE_TIMEOUT = 1000 * 20;
 
     // used for logging the server
     private static final Logger logger = Logger.getLogger("SHiip AIO Server");
