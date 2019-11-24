@@ -109,7 +109,7 @@ public class NIODeframer {
      * @param endTwo the end index of the second array exclusive
      * @return the concat of the arrays
      */
-    private static byte [] concatArrays(byte [] arrayOne, byte [] arrayTwo, int startOne, int endOne, int startTwo, int endTwo){
+    public static byte [] concatArrays(byte [] arrayOne, byte [] arrayTwo, int startOne, int endOne, int startTwo, int endTwo){
         int bytesInOne = endOne - startOne;
         int bytesInTwo = endTwo - startTwo;
 
