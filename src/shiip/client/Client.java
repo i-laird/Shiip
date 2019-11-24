@@ -41,6 +41,12 @@ import java.io.OutputStream;
  */
 public class Client {
 
+    // for if TLS is enabled
+    public static final boolean TLS_ENABLED = true;
+
+    // for if TLS is not enabled
+    public static final boolean TLS_NOT_ENABLED = false;
+
     // command line args *************************************************
 
     // there must be a server a port, and at least one path
@@ -127,8 +133,18 @@ public class Client {
      *    all other params are assumed to be paths
      */
     public static void main(String [] args){
-		
-		// ensure not too few args
+		calledByMain(args, TLS_ENABLED);
+    }
+
+	// methods *********************************************************
+
+    /**
+     * creates a Client
+     * @param args the command line params
+     * @param tls true means it is enabled
+     */
+    public static void calledByMain(String [] args, boolean tls){
+        // ensure not too few args
         if(args.length < MINIMUM_COMMAND_LINE_PARAMS_CLIENt){
             System.err.println("Usage: <server> <port> [<path> ...]");
             System.exit(INVALID_PARAM_NUMBER_ERROR);
@@ -139,27 +155,29 @@ public class Client {
         List<String> paths = Arrays.asList(Arrays.copyOfRange(args, PATH_START_POS, args.length));
         Socket socket = null;
         try {
-            socket = new Socket(args[SERVER_URL_ARG_POS], port);
-            //socket = TLSFactory.getClientSocket(args[SERVER_URL_ARG_POS], port);
+            if(tls == TLS_ENABLED) {
+                socket = TLSFactory.getClientSocket(args[SERVER_URL_ARG_POS], port);
+            }
+            else {
+                socket = new Socket(args[SERVER_URL_ARG_POS], port);
+            }
         }catch(Exception e){
             System.err.println("Error: Unable to create the socket");
             System.exit(SOCKET_CREATION_ERROR);
         }
-		
-		// create encoder and decoder
+
+        // create encoder and decoder
         Encoder encoder = EncoderDecoderWrapper.getEncoder();
         Decoder decoder = EncoderDecoderWrapper.getDecoder();
-        
-		// create the connectiong
-		Client shiipConnection = 
-			new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
-        
-		// run the connection
-		shiipConnection.go();
-		shiipConnection.closeSession();
-    }
 
-	// methods *********************************************************
+        // create the connectiong
+        Client shiipConnection =
+                new Client(socket, encoder, decoder, paths, args[SERVER_URL_ARG_POS]);
+
+        // run the connection
+        shiipConnection.go();
+        shiipConnection.closeSession();
+    }
 
     /**
      * creates a Client
