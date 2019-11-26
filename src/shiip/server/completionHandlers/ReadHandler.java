@@ -13,6 +13,7 @@ import shiip.server.attachment.ReadAttachment;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
+import java.nio.channels.InterruptedByTimeoutException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -106,8 +107,11 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
      */
     @Override
     public void failed(Throwable throwable, ReadAttachment readAttachment) {
-        try {
-            readAttachment.getAsynchronousSocketChannel().close();
-        }catch (IOException e){}
+        if(throwable instanceof InterruptedByTimeoutException) {
+            try {
+                readAttachment.getAsynchronousSocketChannel().close();
+            } catch (IOException e) {
+            }
+        }
     }
 }
