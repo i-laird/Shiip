@@ -78,14 +78,15 @@ public class NIODeframer {
             return null;
         }
 
+        boolean lengthTooLong = false;
+
         // allocate the receive buffer for the message
         if(Objects.isNull(receiveBuffer)){
             int len = ByteBuffer.wrap(lengthBytes).getInt();
-            len += HEADER_SIZE;
             if(len > MAXIMUM_PAYLOAD_SIZE){
-                throw new IllegalArgumentException(
-                        "maximum greater than the allowed payload size");
+                lengthTooLong = true;
             }
+            len += HEADER_SIZE;
             receiveBuffer = new byte [len];
         }
 
@@ -108,6 +109,13 @@ public class NIODeframer {
         byte [] toReturn = receiveBuffer;
         receiveBuffer = null;
 
+        // now actually return the message
+        // note that if the message has an invalid length now an exception will be thrown
+        if(lengthTooLong){
+            lengthTooLong = false;
+            throw new IllegalArgumentException(
+                    "maximum greater than the allowed payload size");
+        }
         return toReturn;
     }
 

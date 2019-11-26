@@ -19,12 +19,21 @@ import java.util.Objects;
  * @author Ian Laird
  */
 public class Framer {
+
+    // the size of the prefix
     public static final int PREFIX_SIZE = 3;
+
+    // the maximum allowed payload size
     public static final int MAXIMUM_PAYLOAD_SIZE = 16384;
+
+    // the maximum allowed header size
     public static final int HEADER_SIZE = 6;
+
+    // the maximum allowed payload and header size
     public static final int MAXIMUM_PAYLOAD_AND_HEADER_SIZE =
             MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE;
 
+    // the output stream
     private OutputStream out = null;
 
     /**

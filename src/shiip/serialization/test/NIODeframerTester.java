@@ -8,18 +8,23 @@ package shiip.serialization.test;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import shiip.serialization.Deframer;
 import shiip.serialization.NIODeframer;
 
-import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+/*the maximum allowed size of a payload*/
+import static shiip.serialization.Framer.MAXIMUM_PAYLOAD_SIZE;
+
+/*the size of a shiip header*/
+import static shiip.serialization.Framer.HEADER_SIZE;
 
 /**
  * @author Ian Laird
  * tests
  */
-public class NonBlockingDeframeTesting {
+public class NIODeframerTester {
 
     /**
      * test provided by dr Donahoo
@@ -70,11 +75,31 @@ public class NonBlockingDeframeTesting {
     @DisplayName("Too long of payload")
     @Test
     void testIllegalArgumentException(){
-        byte [] tooLongOfPayload = new byte [3000];
-        tooLongOfPayload[0] = DeframerTester.MAX_BYTE;
-        tooLongOfPayload[1] = DeframerTester.MAX_BYTE;
-        tooLongOfPayload[2] = DeframerTester.MAX_BYTE;
+        byte [] tooLongOfPayload = new byte [MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE + 3 + 1];
+        ByteBuffer intConverter = ByteBuffer.wrap(new byte [4]).putInt(MAXIMUM_PAYLOAD_SIZE + 1);
+        byte [] size = intConverter.array();
+        tooLongOfPayload[0] = size[1];
+        tooLongOfPayload[1] = size[2];
+        tooLongOfPayload[2] = size[3];
         NIODeframer deframer = new NIODeframer();
         assertThrows(IllegalArgumentException.class, () -> deframer.getFrame(tooLongOfPayload));
+    }
+
+    /**
+     * Tests that a {@link IllegalArgumentException} is thrown when the length
+     * of the payload is given to be too long
+     */
+    @DisplayName("Too long of payload followed by valid message")
+    @Test
+    void testBadFollowedByGood(){
+        byte [] tooLongOfPayload = new byte [MAXIMUM_PAYLOAD_SIZE + HEADER_SIZE + 3 + 1];
+        ByteBuffer intConverter = ByteBuffer.wrap(new byte [4]).putInt(MAXIMUM_PAYLOAD_SIZE + 1);
+        byte [] size = intConverter.array();
+        tooLongOfPayload[0] = size[1];
+        tooLongOfPayload[1] = size[2];
+        tooLongOfPayload[2] = size[3];
+        NIODeframer deframer = new NIODeframer();
+        assertThrows(IllegalArgumentException.class, () -> deframer.getFrame(tooLongOfPayload));
+        assertArrayEquals(deframer.getFrame(new byte[] { 0, 0, 1, 0, 0, 0, 0, 0, 0, 'a' }), new byte [] {0, 0, 0, 0, 0, 0, 'a' });
     }
 }

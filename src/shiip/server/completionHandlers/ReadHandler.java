@@ -51,13 +51,26 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
                 Arrays.copyOf(readAttachment.getByteBuffer().array(), numRead);
         readAttachment.getByteBuffer().clear();
 
-        try {
-            //keep trying to get messages from the read
-            byte[] deframedBytes =
-                    readAttachment.getDeframer().getFrame(readBytes);
+        byte[] deframedBytes = null;
+        boolean flag = false;
 
-            //if a message does exist handle it
-            while(Objects.nonNull(deframedBytes)) {
+        // keep going until no message can be handles
+        // will go at least once guaranteed
+        while(true) {
+            try {
+                byte[] bytesToUse = null;
+                if (!flag) {
+                    bytesToUse = readBytes;
+                } else {
+                    bytesToUse = new byte[0];
+                }
+                flag = true;
+                deframedBytes = readAttachment.getDeframer().getFrame(bytesToUse);
+
+                // if there is no message present break out
+                if(Objects.isNull(deframedBytes)){
+                    break;
+                }
                 Message m = null;
                 try {
                     m = Message.decode(deframedBytes, readAttachment.getDecoder());
@@ -73,10 +86,10 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
                     failed(e, readAttachment);
                     return;
                 }
-                deframedBytes = readAttachment.getDeframer().getFrame(new byte [0]);
+            }catch(IllegalArgumentException e2){
+                readAttachment.getLogger().info(INVALID_MESSAGE + e2.getMessage());
+                deframedBytes = null;
             }
-        }catch(IllegalArgumentException e){
-            readAttachment.getLogger().info(INVALID_MESSAGE + e.getMessage());
         }
 
         // get ready to read more
