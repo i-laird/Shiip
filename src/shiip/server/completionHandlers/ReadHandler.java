@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import static shiip.server.Server.CLIENT_INACTIVE_TIMEOUT;
 import static shiip.server.completionHandlers.ConnectionPrefaceHandler.READ_FAILED;
+import static shiip.util.ServerStrings.INVALID_MESSAGE;
 
 
 /**
@@ -50,28 +51,32 @@ public class ReadHandler implements CompletionHandler<Integer, ReadAttachment> {
                 Arrays.copyOf(readAttachment.getByteBuffer().array(), numRead);
         readAttachment.getByteBuffer().clear();
 
-        //keep trying to get messages from the read
-        byte [] deframedBytes =
-                readAttachment.getDeframer().getFrame(readBytes);
+        try {
+            //keep trying to get messages from the read
+            byte[] deframedBytes =
+                    readAttachment.getDeframer().getFrame(readBytes);
 
-        //if a message does exist handle it
-        while(Objects.nonNull(deframedBytes)) {
-            Message m = null;
-            try {
-                m = Message.decode(deframedBytes, readAttachment.getDecoder());
-                ServerMessageHandler.handleMessage(
-                        false,
-                        readAttachment.getLogger(),
-                        m,
-                        readAttachment.getStreams(),
-                        readAttachment.getDirectoryBase(),
-                        readAttachment.getAsynchronousMessageSender(),
-                        readAttachment.getLastEncounteredStreamId());
-            } catch (BadAttributeException | IOException e) {
-                failed(e, readAttachment);
-                return;
+            //if a message does exist handle it
+            while(Objects.nonNull(deframedBytes)) {
+                Message m = null;
+                try {
+                    m = Message.decode(deframedBytes, readAttachment.getDecoder());
+                    ServerMessageHandler.handleMessage(
+                            false,
+                            readAttachment.getLogger(),
+                            m,
+                            readAttachment.getStreams(),
+                            readAttachment.getDirectoryBase(),
+                            readAttachment.getAsynchronousMessageSender(),
+                            readAttachment.getLastEncounteredStreamId());
+                } catch (BadAttributeException | IOException e) {
+                    failed(e, readAttachment);
+                    return;
+                }
+                deframedBytes = readAttachment.getDeframer().getFrame(new byte [0]);
             }
-            deframedBytes = readAttachment.getDeframer().getFrame(new byte [0]);
+        }catch(IllegalArgumentException e){
+            readAttachment.getLogger().info(INVALID_MESSAGE + e.getMessage());
         }
 
         // get ready to read more

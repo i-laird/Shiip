@@ -26,12 +26,24 @@ public class NIODeframer {
     // the size of an int in bytes
     private static final int INT_SIZE_BYTES = 4;
 
+    // the receive buffer
     private byte [] receiveBuffer;
+
+    // the number of bytes in the receive buffer
     private int numBytesInReceiveBuffer;
+
+    // the length bytes
     private byte [] lengthBytes;
+
+    // the number of length bytes read
     private int numLengthBytesRead;
+
+    // the previous contents of the buffer
     private byte [] previousBufferContents;
 
+    /**
+     * the default constructor
+     */
     public NIODeframer(){
         receiveBuffer = null;
         numLengthBytesRead = 1;
