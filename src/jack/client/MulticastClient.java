@@ -106,7 +106,7 @@ public class MulticastClient {
                 DatagramPacket toReceive = new DatagramPacket(buffer, MESSAGE_MAXIMUM_SIZE);
                 sock.receive(toReceive);
 
-                if(sock.getPort() == this.port) {
+                if(toReceive.getPort() == this.port) {
                     byte[] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
                     Message m = Message.decode(receivedBytes);
                     System.out.println(m.toString());
