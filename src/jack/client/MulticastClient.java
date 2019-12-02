@@ -10,16 +10,13 @@ import jack.serialization.Message;
 import util.CommandLineParser;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.util.Arrays;
 import java.util.Scanner;
 
 import static jack.serialization.Message.MESSAGE_MAXIMUM_SIZE;
 import static util.ErrorCodes.INVALID_PARAM_NUMBER_ERROR;
-
+import static util.ErrorCodes.NETWORK_ERROR;
 
 /**
  * @author Ian laird
@@ -45,9 +42,6 @@ public class MulticastClient {
     // the inet address of the server
     private InetAddress server;
 
-    // the port number of the server
-    private int port;
-
 
     /**
      * runs the multicast client
@@ -69,7 +63,8 @@ public class MulticastClient {
             client = new MulticastClient(server, port);
 
         }catch(IOException e){
-            System.err.println("Unable to create multicast client");
+            System.err.println("Unable to create multicast client: " + e.getMessage());
+            System.exit(NETWORK_ERROR);
         }
         client.run();
     }
@@ -84,7 +79,6 @@ public class MulticastClient {
         this.sock = new MulticastSocket();
         sock.joinGroup(server);
         this.server = server;
-        this.port = port;
     }
 
     public void run() {
@@ -106,11 +100,9 @@ public class MulticastClient {
                 DatagramPacket toReceive = new DatagramPacket(buffer, MESSAGE_MAXIMUM_SIZE);
                 sock.receive(toReceive);
 
-                if(toReceive.getPort() == this.port) {
-                    byte[] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
-                    Message m = Message.decode(receivedBytes);
-                    System.out.println(m.toString());
-                }
+                byte[] receivedBytes = Arrays.copyOfRange(toReceive.getData(), 0, toReceive.getLength());
+                Message m = Message.decode(receivedBytes);
+                System.out.println(m.toString());
             } catch (IOException e) {
                 if (!(e instanceof SocketTimeoutException)) {
                     try {
