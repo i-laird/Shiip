@@ -22,7 +22,7 @@ import static util.ErrorCodes.NETWORK_ERROR;
  * @author Ian laird
  * The Jack multicast client
  */
-public class MulticastClient {
+public class MulticastClient extends Thread {
 
     // the expected number of args
     private static final int EXPECTED_ARG_NUM = 2;
@@ -66,7 +66,20 @@ public class MulticastClient {
             System.err.println("Unable to create multicast client: " + e.getMessage());
             System.exit(NETWORK_ERROR);
         }
-        client.run();
+        client.start();
+        Scanner in = new Scanner(System.in);
+        while(true){
+            String readLine = in.next();
+            if (readLine.matches("quit")) {
+                break;
+            }
+        }
+        client.interrupt();
+        try {
+            client.join();
+        }catch (InterruptedException e){
+            System.err.println("Process interrupted");
+        }
     }
 
     /**
@@ -86,19 +99,9 @@ public class MulticastClient {
      */
     public void run() {
         byte[] buffer = new byte[MESSAGE_MAXIMUM_SIZE];
-        Scanner in = new Scanner(System.in);
 
-        while (true) {
+        while (!this.isInterrupted()) {
             try {
-                while(in.hasNext()) {
-                    String readLine = in.next();
-                    if (readLine.matches("quit")) {
-                        sock.leaveGroup(server);
-                        sock.close();
-                        return;
-                    }
-                }
-
                 sock.setSoTimeout(CHECK_FOR_KILLED);
                 DatagramPacket toReceive = new DatagramPacket(buffer, MESSAGE_MAXIMUM_SIZE);
                 sock.receive(toReceive);
@@ -108,13 +111,21 @@ public class MulticastClient {
                 System.out.println(m.toString());
             } catch (IOException e) {
                 if (!(e instanceof SocketTimeoutException)) {
-                    try {
-                        sock.leaveGroup(server);
-                        sock.close();
-                        return;
-                    } catch (IOException e2) { }
+                    break;
                 }
             }
         }
+        terminate();
+    }
+
+    /**
+     * terminates the client
+     */
+    public void terminate(){
+        try {
+            sock.leaveGroup(server);
+            sock.close();
+            return;
+        } catch (IOException e2) { }
     }
 }
