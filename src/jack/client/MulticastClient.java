@@ -34,7 +34,7 @@ public class MulticastClient extends Thread {
     private static final int SERVER_PORT_POS = 1;
 
     // the amount of time to check if interrupted
-    private static final int CHECK_FOR_KILLED = 100;
+    private static final int CHECK_FOR_KILLED = 250;
 
     // the multicast socket
     private MulticastSocket sock;
@@ -54,7 +54,14 @@ public class MulticastClient extends Thread {
             System.err.println("Usage: MulticastClient <server> <port>");
             System.exit(INVALID_PARAM_NUMBER_ERROR);
         }
-        InetAddress server = CommandLineParser.getIpAddress(args[SERVER_POS]);
+        InetAddress server = null;
+        try {
+            server = InetAddress.getByName(args[SERVER_POS]);
+        }catch(UnknownHostException e){
+            System.err.println(e.getMessage());
+            System.exit(NETWORK_ERROR);
+        }
+
         int port = CommandLineParser.getPort(args[SERVER_PORT_POS]);
         MulticastSocket sock = null;
 
@@ -89,7 +96,7 @@ public class MulticastClient extends Thread {
      * @throws IOException if io error occurs
      */
     public MulticastClient(InetAddress server, int port) throws IOException{
-        this.sock = new MulticastSocket();
+        this.sock = new MulticastSocket(port);
         sock.joinGroup(server);
         this.server = server;
     }
