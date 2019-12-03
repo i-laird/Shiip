@@ -29,7 +29,7 @@ public class ConnectionPrefaceAttachment {
      * constructor
      * @param bb the byte buffer array
      * @param asynchronousSocketChannel the async socket channel
-     * @param sem the semaphore
+     * @param connectionAttachment the connection attachment
      */
     public ConnectionPrefaceAttachment(ByteBuffer bb, AsynchronousSocketChannel asynchronousSocketChannel, ConnectionAttachment connectionAttachment) {
         this.bb = bb;
