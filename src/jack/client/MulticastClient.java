@@ -81,6 +81,9 @@ public class MulticastClient {
         this.server = server;
     }
 
+    /**
+     * runs the client
+     */
     public void run() {
         byte[] buffer = new byte[MESSAGE_MAXIMUM_SIZE];
         Scanner in = new Scanner(System.in);
